@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>First Queen 4</title>
+  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26;
+      --border: #2a2a3e; --border2: #3a3a5e;
+      --accent: #a044ff; --text: #e8e8f0; --muted: #6b6b8a;
+      --green: #4aff8a; --blue: #4a9eff; --red: #ff4a6a;
+      --yellow: #ffd84a; --purple: #c44aff;
+      --font-pixel: 'Press Start 2P', monospace;
+      --font-body: 'Noto Sans KR', sans-serif;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+    header { padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+    .header-links { margin-left: auto; }
+    .logo { font-family: var(--font-pixel); font-size: 10px; color: var(--accent); }
+    .game-status { font-family: var(--font-pixel); font-size: 7px; padding: 4px 8px; border-radius: 2px; }
+    .status-off  { background: var(--red);   color: #fff; }
+    .status-load { background: var(--blue);  color: #000; }
+    .status-on   { background: var(--green); color: #000; }
+    main { max-width: 1300px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+    .player-wrapper { position: relative; background: #000; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .player-wrapper:fullscreen,.player-wrapper:-webkit-full-screen,.player-wrapper:-moz-full-screen { overflow: visible; border-radius: 0; border: none; }
+    #canvas { width: 100%; aspect-ratio: 4/3; max-height: 52vh; display: block; }
+    #splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 10; transition: opacity .4s; }
+    #splash.hidden { opacity: 0; pointer-events: none; }
+    .splash-icon { font-size: 64px; margin-bottom: 12px; }
+    .splash-ttl { font-family: var(--font-pixel); font-size: 11px; color: var(--accent); margin-bottom: 6px; line-height: 2; }
+    .splash-sub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .save-notice { font-size: 11px; color: var(--blue); min-height: 16px; margin-bottom: 18px; }
+    .play-btn { font-family: var(--font-pixel); font-size: 9px; padding: 10px 28px; background: transparent; border: 2px solid var(--accent); color: var(--accent); cursor: pointer; animation: blink 1.8s infinite; }
+    .play-btn:hover { background: var(--accent); color: #fff; animation: none; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    #loading { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 11; }
+    #loading.show { display: flex; }
+    .loading-txt { font-family: var(--font-pixel); font-size: 9px; color: var(--accent); margin-bottom: 14px; animation: blink 1s infinite; }
+    .prog-outer { width: 260px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .prog-inner { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+    .prog-label { font-size: 10px; color: var(--muted); margin-top: 8px; }
+    .game-toolbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 0; align-items: center; }
+    .btn { font-family: var(--font-pixel); font-size: 7px; padding: 7px 10px; border: 1px solid; border-radius: 3px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-start   { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-start:hover { background: transparent; color: var(--accent); }
+    .btn-save    { background: transparent; border-color: var(--blue);  color: var(--blue); }
+    .btn-save:hover  { background: var(--blue);  color: #000; }
+    .btn-dl      { background: transparent; border-color: var(--blue);  color: var(--blue); }
+    .btn-dl:hover    { background: var(--blue);  color: #000; }
+    .btn-ul-s    { background: transparent; border-color: var(--green); color: var(--green); }
+    .btn-ul-s:hover  { background: var(--green); color: #000; }
+    .btn-ghost   { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .8; }
+    .btn-accent  { background: var(--green); border-color: var(--green); color: #000; }
+    .btn-accent:hover { opacity: .8; }
+    .touch-controls { display: none; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
+    @media (pointer: coarse) { .touch-controls { display: flex; justify-content: space-between; align-items: center; } .pc-ctrl { display: none !important; } }
+    .player-wrapper:fullscreen .touch-controls,
+    .player-wrapper:-webkit-full-screen .touch-controls,
+    .player-wrapper:-moz-full-screen .touch-controls {
+      display: flex !important; position: absolute; bottom: 0; left: 0; right: 0;
+      justify-content: space-between; align-items: center;
+      padding: 12px 20px; background: rgba(0,0,0,0.55);
+      border: none; border-radius: 0; margin: 0; z-index: 9999;
+    }
+    .dpad { display: grid; grid-template-columns: repeat(3,56px); grid-template-rows: repeat(3,56px); gap: 3px; }
+    .act-btns { display: flex; flex-direction: column; gap: 8px; }
+    .touch-btn { width:56px; height:56px; background:#1e1e2e; border:2px solid var(--border2); border-radius:8px; color:var(--text); font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; }
+    .touch-btn:active,.touch-btn.pressed { background:var(--accent); border-color:var(--accent); color:#fff; transform:scale(0.9); }
+    .touch-btn.act { width:72px; height:56px; font-family:var(--font-pixel); font-size:7px; background:#1a1a2e; border-color:var(--accent); color:var(--accent); }
+    .dp-up{grid-column:2;grid-row:1} .dp-l{grid-column:1;grid-row:2} .dp-c{grid-column:2;grid-row:2;background:transparent;border:none;pointer-events:none} .dp-r{grid-column:3;grid-row:2} .dp-d{grid-column:2;grid-row:3}
+    .pc-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .ctrl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px; }
+    .ctrl-card h3 { font-family: var(--font-pixel); font-size: 7px; color: var(--accent); margin-bottom: 10px; }
+    .k-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .key { font-family: var(--font-pixel); font-size: 7px; padding: 3px 6px; background: var(--bg); border: 1px solid var(--border2); border-radius: 2px; min-width: 32px; text-align: center; }
+    .k-desc { color: var(--muted); font-size: 11px; }
+    .editor-col { display: flex; flex-direction: column; gap: 12px; }
+    .tabs { display: flex; gap: 3px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px; }
+    .tab { flex:1; font-family:var(--font-pixel); font-size:7px; padding:7px 4px; text-align:center; border:1px solid transparent; border-radius:2px; cursor:pointer; color:var(--muted); transition:all .2s; }
+    .tab:hover { color:var(--text); border-color:var(--border2); }
+    .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .card-hd { padding: 9px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-ttl { font-family: var(--font-pixel); font-size: 8px; color: var(--accent); }
+    .badge { font-family: var(--font-pixel); font-size: 6px; padding: 3px 6px; border-radius: 2px; }
+    .b-green{background:var(--green);color:#000} .b-red{background:var(--red);color:#fff}
+    .b-blue{background:var(--blue);color:#000}   .b-yellow{background:var(--yellow);color:#000}
+    .b-purple{background:var(--purple);color:#fff}
+    .card-body { padding: 12px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .lbl { font-size: 9px; color: var(--muted); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+    .stat-disp { background:var(--bg); color:var(--yellow); border:1px solid var(--border2); border-radius:3px; padding:4px 6px; font-size:13px; font-weight:bold; font-family:monospace; text-align:center; cursor:pointer; min-height:28px; }
+    .stat-disp:hover { border-color:var(--accent); }
+    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); font-family:var(--font-pixel); font-size:8px; padding:9px 18px; border-radius:4px; z-index:9999; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+    #toast.show{opacity:1} #toast.ok{background:var(--green);color:#000} #toast.err{background:var(--red);color:#fff} #toast.nfo{background:var(--blue);color:#000}
+    ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+    .scan-results { max-height:180px; overflow-y:auto; margin-top:6px; }
+    .scan-item { display:flex; align-items:center; gap:8px; padding:5px 8px; margin-bottom:3px; background:var(--bg); border:1px solid var(--border); border-radius:2px; cursor:pointer; transition:border-color .15s; }
+    .scan-item:hover { border-color:var(--accent); }
+    .scan-item.sel { border-color:var(--yellow); background:rgba(255,216,74,.05); }
+    .scan-addr { font-family:monospace; font-size:10px; color:var(--blue); min-width:90px; }
+    .scan-v { font-family:var(--font-pixel); font-size:8px; color:var(--yellow); }
+    .scan-empty { font-size:11px; color:var(--muted); text-align:center; padding:14px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">👑 FQ4</div>
+  <span class="game-status status-off" id="gs">게임 꺼짐</span>
+  <div class="header-links">
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.01</span>
+  </div>
+</header>
+
+<main>
+  <div>
+    <div class="player-wrapper">
+      <div id="splash">
+        <div class="splash-icon">👑</div>
+        <div class="splash-ttl">First Queen IV</div>
+        <div class="splash-sub">DOS Game · 1996</div>
+        <div class="save-notice" id="save-notice"></div>
+        <button class="play-btn" id="btn-play">▶ PLAY</button>
+      </div>
+      <div id="loading">
+        <div class="loading-txt">LOADING...</div>
+        <div class="prog-outer"><div class="prog-inner" id="prog"></div></div>
+        <div class="prog-label" id="prog-label">0 / 0</div>
+      </div>
+      <canvas id="canvas"></canvas>
+      <div class="touch-controls">
+        <div class="dpad">
+          <button class="touch-btn dp-up" data-key="ArrowUp">↑</button>
+          <button class="touch-btn dp-l"  data-key="ArrowLeft">←</button>
+          <div    class="touch-btn dp-c"></div>
+          <button class="touch-btn dp-r"  data-key="ArrowRight">→</button>
+          <button class="touch-btn dp-d"  data-key="ArrowDown">↓</button>
+        </div>
+        <div class="act-btns">
+          <button class="touch-btn act" data-key="Enter">Enter</button>
+          <button class="touch-btn act" data-key="Escape">Esc</button>
+        </div>
+      </div>
+    </div>
+    <div class="game-toolbar">
+      <button class="btn btn-start" id="btn-start">▶ 시작</button>
+      <button class="btn btn-save"  id="btn-save">💾 저장</button>
+      <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
+      <button class="btn btn-ul-s"  id="btn-ul-t">⬆ 불러오기</button>
+      <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
+      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat" style="display:none" />
+    </div>
+    <div class="pc-ctrl">
+      <div class="ctrl-card">
+        <h3>⌨ 기본 조작</h3>
+        <div class="k-row"><span class="key">↑↓←→</span><span class="k-desc">이동</span></div>
+        <div class="k-row"><span class="key">Enter</span><span class="k-desc">확인</span></div>
+        <div class="k-row"><span class="key">Esc</span><span class="k-desc">취소</span></div>
+      </div>
+      <div class="ctrl-card">
+        <h3>🖥 DOSBox</h3>
+        <div class="k-row"><span class="key">Ctrl+F10</span><span class="k-desc">마우스 해제</span></div>
+        <div class="k-row"><span class="key">Alt+Enter</span><span class="k-desc">전체화면</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 에디터 -->
+  <div class="editor-col">
+    <div class="tabs">
+      <div class="tab active" data-tab="gold">💰 골드</div>
+      <div class="tab" data-tab="scan">🔍 스캔</div>
+      <div class="tab" data-tab="stat">⚔ 스탯</div>
+      <div class="tab" data-tab="item">🎒 아이템</div>
+    </div>
+
+    <!-- 💰 골드 -->
+    <div class="tab-panel active card" id="panel-gold">
+      <div class="card-hd">
+        <span class="card-ttl">💰 골드 편집</span>
+        <span class="badge b-yellow">대기중</span>
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          ① 게임에서 현재 골드 확인 → 입력<br>
+          ② <b>🔍 스캔+MAX 적용</b> 클릭
+        </div>
+        <div class="lbl" style="margin-bottom:6px;">현재 골드 입력</div>
+        <div id="gold-cur-in" style="background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;font-family:var(--font-pixel);font-size:20px;color:var(--yellow);text-align:center;margin-bottom:8px;min-height:44px;letter-spacing:2px;">0</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px;">
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('7')">7</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('8')">8</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('9')">9</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:10px;color:var(--red);" onclick="goldPad('C')">C</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('4')">4</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('5')">5</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('6')">6</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:10px;color:var(--yellow);" onclick="goldPad('⌫')">⌫</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('1')">1</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('2')">2</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('3')">3</button>
+          <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('0')">0</button>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:11px;font-size:10px;margin-bottom:6px;" onclick="goldScan()">🔍 스캔 + MAX 적용</button>
+        <div id="gold-log" style="font-size:8px;color:var(--muted);text-align:center;min-height:16px;"></div>
+      </div>
+    </div>
+
+    <!-- 🔍 스캔 (범용) -->
+    <div class="tab-panel card" id="panel-scan">
+      <div class="card-hd">
+        <span class="card-ttl">🔍 메모리 스캔</span>
+        <span class="badge b-blue">범용</span>
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          ① 게임 값 확인 → 입력 → 🔍 스캔<br>
+          ② 값 변경 후 → 🔄 재스캔으로 좁히기<br>
+          ③ 주소 선택 → 값 입력 → ✏ 쓰기
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input id="scan-val" type="number" placeholder="현재 값" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;" />
+          <select id="scan-bits" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 6px;font-size:10px;border-radius:3px;outline:none;">
+            <option value="8">8bit</option>
+            <option value="16" selected>16bit</option>
+            <option value="32">32bit</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:5px;margin-bottom:8px;">
+          <button class="btn btn-primary" style="flex:1;padding:8px;" onclick="doScan(false)">🔍 스캔</button>
+          <button class="btn btn-ghost"   style="flex:1;padding:8px;" onclick="doScan(true)">🔄 재스캔</button>
+          <button class="btn btn-ghost"   style="flex:1;padding:8px;color:var(--red);" onclick="clearScan()">✕ 초기화</button>
+        </div>
+        <div style="font-size:8px;color:var(--muted);margin-bottom:4px;">
+          결과: <span id="scan-count" style="color:var(--yellow);">-</span>개
+          <span id="scan-warn" style="color:var(--red);margin-left:6px;font-size:7px;"></span>
+        </div>
+        <div class="scan-results" id="scan-results">
+          <div class="scan-empty">스캔 결과가 여기에 표시됩니다</div>
+        </div>
+        <hr class="divider">
+        <div class="lbl" style="margin-bottom:4px;">선택 주소: <span id="sel-addr" style="color:var(--blue);font-family:monospace;">없음</span></div>
+        <div style="display:flex;gap:5px;">
+          <input id="write-val" type="number" placeholder="쓸 값" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;" />
+          <button class="btn btn-accent" style="padding:8px 12px;" onclick="doWrite()">✏ 쓰기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⚔ 스탯 -->
+    <div class="tab-panel card" id="panel-stat">
+      <div class="card-hd">
+        <span class="card-ttl">⚔ 스탯 편집</span>
+        <span class="badge b-purple" id="stat-badge">오프셋 미확정</span>
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          🔍 스캔으로 HP/MP 주소 찾기<br>
+          → 베이스 주소 입력 → 📖 읽기 → 편집 → ✅ 적용
+        </div>
+        <div class="lbl" style="margin-bottom:4px;">캐릭터 베이스 주소 (hex)</div>
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <input id="stat-base-in" type="text" placeholder="예: 0x20b9480" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;outline:none;" />
+          <button class="btn btn-primary" style="padding:8px 10px;font-size:8px;" onclick="statBaseSet()">📖 읽기</button>
+        </div>
+        <div id="stat-fields" style="display:none;">
+          <div style="font-size:7px;color:var(--accent);margin-bottom:6px;font-family:var(--font-pixel);">▶ 스탯 (클릭하여 수정)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;" id="stat-grid"></div>
+          <button class="btn btn-accent" style="width:100%;padding:9px;" onclick="statApply()">✅ 전체 적용</button>
+          <div style="margin-top:5px;font-size:7px;color:var(--muted);text-align:center;">적용 후 화면전환 시 반영됨</div>
+        </div>
+        <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
+          ⚠ 오프셋 미확정<br><span style="font-size:8px;">게임 실행 후 스캔으로 베이스 주소 찾기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎒 아이템 -->
+    <div class="tab-panel card" id="panel-item">
+      <div class="card-hd">
+        <span class="card-ttl">🎒 아이템 편집</span>
+        <span class="badge b-purple" id="item-badge">오프셋 미확정</span>
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          🔍 스캔으로 아이템 주소 확정<br>
+          → 베이스 주소 입력 → 슬롯 선택 → 적용
+        </div>
+        <div class="lbl" style="margin-bottom:4px;">아이템 베이스 주소 (hex)</div>
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <input id="item-base-in" type="text" placeholder="예: 0x20b948b" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;outline:none;" />
+          <button class="btn btn-primary" style="padding:8px 10px;font-size:8px;" onclick="itemBaseSet()">📖 읽기</button>
+        </div>
+        <div id="item-fields" style="display:none;">
+          <div class="lbl" style="margin-bottom:4px;">슬롯</div>
+          <select id="item-slot-sel" style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:6px;font-size:9px;margin-bottom:8px;"></select>
+          <div class="lbl" style="margin-bottom:4px;">변경할 아이템</div>
+          <select id="item-new-sel" style="width:100%;background:var(--surface);color:var(--text);border:2px solid var(--green);border-radius:4px;padding:6px;font-size:9px;margin-bottom:8px;"></select>
+          <button class="btn btn-accent" style="width:100%;padding:9px;" onclick="applyItem()">✅ 적용</button>
+        </div>
+        <div id="item-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
+          ⚠ 오프셋 미확정<br><span style="font-size:8px;">게임 실행 후 스캔으로 아이템 주소 찾기</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  ★ 설정 영역 — 게임에 맞게 수정하세요 ★
+// ══════════════════════════════════════════════════════
+var GAME_EXE  = 'FQ4.EXE';   // 실행 파일명
+var SAVE_FILE = null;         // 세이브 파일명 (확인 후 설정, 예: 'FQ4.SAV')
+var GOLD_MAX  = 9999900;      // 골드 MAX 값
+var SCAN_START = 0x1000000;
+var SCAN_END   = 0x2200000;
+
+// 게임 파일 목록 (실제 파일명으로 채우세요)
+var FILES = [
+  'FQ4.EXE',
+  // 'FQ4.SAV', 'DATA.DAT', ... 등 추가
+];
+
+// 스탯 오프셋 (게임 실행 후 스캔으로 확정, 아래 주석 예시 참고)
+// off: 베이스 주소로부터의 거리(hex), bits: 8/16/32
+var STAT_FIELDS = [
+  // 확정 후 아래처럼 채워넣으세요:
+  // {id:'sv_curHP', off:0x??, bits:16, label:'현 HP',  min:0, max:9999},
+  // {id:'sv_maxHP', off:0x??, bits:16, label:'MAX HP', min:0, max:9999},
+  // {id:'sv_curMP', off:0x??, bits:16, label:'현 MP',  min:0, max:9999},
+  // {id:'sv_maxMP', off:0x??, bits:16, label:'MAX MP', min:0, max:9999},
+  // {id:'sv_lv',    off:0x??, bits:8,  label:'LV',     min:1, max:99},
+  // {id:'sv_exp',   off:0x??, bits:32, label:'EXP',    min:0, max:999999},
+  // {id:'sv_atk',   off:0x??, bits:8,  label:'ATK',    min:0, max:999},
+  // {id:'sv_def',   off:0x??, bits:8,  label:'DEF',    min:0, max:999},
+  // {id:'sv_spd',   off:0x??, bits:8,  label:'SPD',    min:0, max:999},
+  // {id:'sv_mag',   off:0x??, bits:8,  label:'MAG',    min:0, max:999},
+];
+
+// 아이템 목록 (게임 데이터 분석 후 채우세요)
+var ITEMS = [
+  // {code:0xFF, name:'없음'},
+  // {code:0x00, name:'아이템명'},
+];
+
+// 아이템 슬롯 수
+var ITEM_SLOT_COUNT = 8;
+// ══════════════════════════════════════════════════════
+
+var fs0 = null, gameStarted = false;
+var goldAddrs = [], scanAddrs = [], scanBits = 16, selAddr = null;
+var statBaseAddr = null, itemBaseAddr = null;
+
+// ─── 메모리 ────────────────────────────────────────────
+function heap(){ return (fs0&&fs0.em&&fs0.em.HEAPU8) ? fs0.em.HEAPU8 : null; }
+function mRead(a,b){
+  var h=heap(); if(!h||a<0||a+(b/8)>h.length) return null;
+  b=b||16;
+  if(b===8)  return h[a];
+  if(b===16) return h[a]|(h[a+1]<<8);
+  return (h[a]|(h[a+1]<<8)|(h[a+2]<<16)|(h[a+3]<<24))>>>0;
+}
+function mWrite(a,v,b){
+  var h=heap(); if(!h||a<0) return false;
+  b=b||16; v=v>>>0;
+  if(b>=8)  h[a]=v&0xFF;
+  if(b>=16) h[a+1]=(v>>8)&0xFF;
+  if(b>=32){ h[a+2]=(v>>16)&0xFF; h[a+3]=(v>>24)&0xFF; }
+  return true;
+}
+function scanMem(v,b,s,e){
+  var h=heap(); if(!h) return [];
+  v=v>>>0; var res=[];
+  for(var i=s; i<e-4; i++){
+    if(mRead(i,b)===v) res.push(i);
+  }
+  return res;
+}
+
+// ─── IndexedDB ─────────────────────────────────────────
+var DB_NAME='fq4-saves';
+function dbOpen(cb){ var r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');}; r.onsuccess=function(e){cb(e.target.result);}; r.onerror=function(){cb(null);}; }
+function dbGet(k,cb){ dbOpen(function(db){ if(!db)return cb(null); var r=db.transaction('files','readonly').objectStore('files').get(k); r.onsuccess=function(e){cb(e.target.result||null);}; r.onerror=function(){cb(null);}; }); }
+function dbPut(k,v,cb){ dbOpen(function(db){ if(!db)return cb&&cb(false); var tx=db.transaction('files','readwrite'); tx.objectStore('files').put(v,k); tx.oncomplete=function(){cb&&cb(true);}; tx.onerror=function(){cb&&cb(false);}; }); }
+
+// ─── 게임 시작 ─────────────────────────────────────────
+function startGame(){
+  if(gameStarted) return;
+  gameStarted=true;
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('loading').classList.add('show');
+  var toLoad=FILES.slice(), loaded=0;
+  function next(){
+    if(!toLoad.length){ initDos(); return; }
+    var f=toLoad.shift();
+    fetch(f).then(function(r){ if(!r.ok) throw new Error(f+' 없음'); return r.arrayBuffer(); })
+    .then(function(buf){
+      loaded++;
+      var p=Math.round(loaded/FILES.length*100);
+      document.getElementById('prog').style.width=p+'%';
+      document.getElementById('prog-label').textContent=loaded+'/'+FILES.length+' ('+f+')';
+      dbPut(f,new Uint8Array(buf)); next();
+    }).catch(function(err){ toast('⚠ '+err.message,'err'); next(); });
+  }
+  next();
+}
+function initDos(){
+  document.getElementById('loading').classList.remove('show');
+  Dos(document.getElementById('canvas'),{wdosboxUrl:'https://js-dos.com/6.22/current/wdosbox.js'}).ready(function(fs,main){
+    fs0=fs;
+    Promise.all(FILES.map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d)fs.createFile(f,d); res(); }); }); }))
+    .then(function(){
+      main(['-c','mount c .','-c','c:','-c',GAME_EXE]).then(function(){
+        setInterval(function(){
+          var h=heap();
+          if(h&&h.length>SCAN_START){
+            document.getElementById('gs').textContent='실행중';
+            document.getElementById('gs').className='game-status status-on';
+          }
+        },2000);
+      });
+    });
+  });
+}
+
+// ─── 저장/다운로드/불러오기 ───────────────────────────
+function doSave(){
+  if(!SAVE_FILE){ toast('⚠ 세이브 파일명 미확정 — SAVE_FILE 설정 필요','err'); return; }
+  var h=heap(); if(!h){ toast('⚠ 게임 먼저 시작','err'); return; }
+  fs0.fs.readFile('/'+SAVE_FILE,function(err,data){
+    if(err){ toast('⚠ 세이브 없음 — 게임에서 먼저 저장하세요','err'); return; }
+    dbPut(SAVE_FILE,data,function(ok){ toast(ok?'💾 저장 완료!':'⚠ 저장 실패', ok?'ok':'err'); });
+  });
+}
+function doDownload(){
+  if(!SAVE_FILE){ toast('⚠ 세이브 파일명 미확정','err'); return; }
+  fs0.fs.readFile('/'+SAVE_FILE,function(err,data){
+    if(err){ toast('⚠ 세이브 없음','err'); return; }
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));
+    a.download=SAVE_FILE; a.click();
+    toast('⬇ 다운로드 완료','ok');
+  });
+}
+function doUpload(file){
+  if(!file) return;
+  var r=new FileReader();
+  r.onload=function(e){
+    var d=new Uint8Array(e.target.result), fn=SAVE_FILE||file.name;
+    dbPut(fn,d,function(){ if(fs0)fs0.fs.createFile('/'+fn,d); toast('⬆ 불러오기 완료 — 게임 재시작 필요','ok'); });
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// ─── 토스트 ────────────────────────────────────────────
+var _tt;
+function toast(msg,type){ var e=document.getElementById('toast'); e.textContent=msg; e.className='show '+(type||'nfo'); clearTimeout(_tt); _tt=setTimeout(function(){e.className='';},2500); }
+
+// ─── 탭 전환 ───────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.tab-panel').forEach(function(x){x.classList.remove('active');});
+    this.classList.add('active');
+    document.getElementById('panel-'+this.dataset.tab).classList.add('active');
+  });
+});
+
+// ─── 골드 ──────────────────────────────────────────────
+function goldPad(k){
+  var el=document.getElementById('gold-cur-in'), cur=el.textContent==='0'?'':el.textContent;
+  if(k==='C'){el.textContent='0';return;}
+  if(k==='⌫'){el.textContent=cur.length<=1?'0':cur.slice(0,-1);return;}
+  var n=cur+k; if(parseInt(n)>GOLD_MAX)return;
+  el.textContent=String(parseInt(n));
+}
+function goldScan(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var cur=parseInt(document.getElementById('gold-cur-in').textContent)||0;
+  if(!cur){toast('⚠ 현재 골드 입력하세요','err');return;}
+  var r32=scanMem(cur,32,SCAN_START,SCAN_END);
+  var r16=scanMem(cur,16,SCAN_START,SCAN_END);
+  var res=r32.length?r32:r16, bits=r32.length?32:16;
+  document.getElementById('gold-log').textContent=res.length+'개 발견 ('+bits+'bit)';
+  if(!res.length){toast('⚠ 결과 없음','err');return;}
+  goldAddrs=res;
+  var cnt=0;
+  res.forEach(function(a){if(mWrite(a,GOLD_MAX,bits))cnt++;});
+  toast('💰 골드 MAX! ('+cnt+'곳)','ok');
+  document.getElementById('gold-log').textContent='✅ '+GOLD_MAX.toLocaleString()+' 적용 ('+cnt+'곳)';
+}
+
+// ─── 범용 스캐너 ───────────────────────────────────────
+function doScan(rescan){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var val=parseInt(document.getElementById('scan-val').value);
+  if(isNaN(val)){toast('⚠ 값을 입력하세요','err');return;}
+  scanBits=parseInt(document.getElementById('scan-bits').value);
+  var res=[];
+  if(rescan&&scanAddrs.length){
+    scanAddrs.forEach(function(a){ if(mRead(a,scanBits)===(val>>>0))res.push(a); });
+  } else {
+    res=scanMem(val,scanBits,SCAN_START,SCAN_END);
+  }
+  scanAddrs=res;
+  document.getElementById('scan-count').textContent=res.length;
+  document.getElementById('scan-warn').textContent=res.length>500?'(너무 많음 — 재스캔으로 좁히세요)':'';
+  renderScan();
+  if(res.length<=500)toast('🔍 '+res.length+'개 발견','ok');
+}
+function renderScan(){
+  var box=document.getElementById('scan-results');
+  if(!scanAddrs.length){box.innerHTML='<div class="scan-empty">결과 없음</div>';return;}
+  var show=scanAddrs.slice(0,100);
+  box.innerHTML=show.map(function(a){
+    var v=mRead(a,scanBits);
+    return '<div class="scan-item'+(a===selAddr?' sel':'')+'" onclick="selectAddr('+a+')">'
+      +'<span class="scan-addr">0x'+a.toString(16)+'</span>'
+      +'<span class="scan-v">'+v+'</span></div>';
+  }).join('')+(scanAddrs.length>100?'<div class="scan-empty">... 외 '+(scanAddrs.length-100)+'개</div>':'');
+}
+function selectAddr(a){
+  selAddr=a;
+  document.getElementById('sel-addr').textContent='0x'+a.toString(16);
+  document.getElementById('write-val').value=mRead(a,scanBits);
+  renderScan();
+}
+function doWrite(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(selAddr===null){toast('⚠ 주소를 선택하세요','err');return;}
+  var v=parseInt(document.getElementById('write-val').value);
+  if(isNaN(v)){toast('⚠ 값을 입력하세요','err');return;}
+  mWrite(selAddr,v,scanBits);
+  toast('✏ 0x'+selAddr.toString(16)+' ← '+v,'ok');
+  renderScan();
+}
+function clearScan(){
+  scanAddrs=[];selAddr=null;
+  document.getElementById('scan-results').innerHTML='<div class="scan-empty">초기화됨</div>';
+  document.getElementById('scan-count').textContent='-';
+  document.getElementById('sel-addr').textContent='없음';
+  document.getElementById('scan-warn').textContent='';
+}
+
+// ─── 스탯 ──────────────────────────────────────────────
+function statBaseSet(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var raw=document.getElementById('stat-base-in').value.trim();
+  var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
+  if(isNaN(base)){toast('⚠ 주소 형식 오류 (예: 0x20b9480)','err');return;}
+  if(!STAT_FIELDS.length){toast('⚠ STAT_FIELDS 미설정 — 오프셋 확정 후 코드 수정','err');return;}
+  statBaseAddr=base;
+  var grid=document.getElementById('stat-grid');
+  grid.innerHTML='';
+  STAT_FIELDS.forEach(function(f){
+    var val=mRead(base+f.off,f.bits);
+    var div=document.createElement('div');
+    div.innerHTML='<div class="lbl" style="font-size:7px;margin-bottom:2px;">'+f.label+'</div>'
+      +'<div id="'+f.id+'" class="stat-disp" data-off="'+f.off+'" data-bits="'+f.bits
+      +'" data-min="'+(f.min||0)+'" data-max="'+(f.max||9999)+'" onclick="statEdit(this)">'+val+'</div>';
+    grid.appendChild(div);
+  });
+  document.getElementById('stat-fields').style.display='block';
+  document.getElementById('stat-pending').style.display='none';
+  document.getElementById('stat-badge').textContent='읽기 완료';
+  document.getElementById('stat-badge').className='badge b-green';
+  toast('📖 스탯 읽기 완료 (base:0x'+base.toString(16)+')','ok');
+}
+function statEdit(el){
+  var cur=parseInt(el.textContent)||0;
+  var mn=parseInt(el.dataset.min)||0, mx=parseInt(el.dataset.max)||9999;
+  var nv=prompt(el.id+' 입력 ('+mn+'~'+mx+')',cur);
+  if(nv===null)return;
+  nv=Math.max(mn,Math.min(mx,parseInt(nv)||0));
+  el.textContent=nv;
+}
+function statApply(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(!statBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
+  STAT_FIELDS.forEach(function(f){
+    var el=document.getElementById(f.id); if(!el)return;
+    mWrite(statBaseAddr+f.off,parseInt(el.textContent)||0,f.bits);
+  });
+  toast('✅ 스탯 적용!','ok');
+}
+
+// ─── 아이템 ────────────────────────────────────────────
+function itemBaseSet(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var raw=document.getElementById('item-base-in').value.trim();
+  var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
+  if(isNaN(base)){toast('⚠ 주소 형식 오류','err');return;}
+  itemBaseAddr=base;
+  var slotSel=document.getElementById('item-slot-sel');
+  slotSel.innerHTML='';
+  for(var s=0;s<ITEM_SLOT_COUNT;s++){
+    var v=mRead(base+s,8);
+    var obj=ITEMS.find(function(x){return x.code===v;});
+    var nm=obj?obj.name:(v===0xFF?'없음':'?0x'+('0'+v.toString(16)).slice(-2).toUpperCase());
+    var opt=document.createElement('option');
+    opt.value=s; opt.textContent='슬롯'+(s+1)+' ['+nm+']';
+    slotSel.appendChild(opt);
+  }
+  var newSel=document.getElementById('item-new-sel');
+  newSel.innerHTML='<option value="255">없음 (FF)</option>';
+  ITEMS.forEach(function(item){
+    if(item.code===0xFF)return;
+    var opt=document.createElement('option');
+    opt.value=item.code; opt.textContent=item.name;
+    newSel.appendChild(opt);
+  });
+  document.getElementById('item-fields').style.display='block';
+  document.getElementById('item-pending').style.display='none';
+  document.getElementById('item-badge').textContent='읽기 완료';
+  document.getElementById('item-badge').className='badge b-green';
+  toast('📖 아이템 읽기 완료','ok');
+}
+function applyItem(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(!itemBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
+  var s=parseInt(document.getElementById('item-slot-sel').value);
+  var code=parseInt(document.getElementById('item-new-sel').value);
+  mWrite(itemBaseAddr+s,code,8);
+  var obj=ITEMS.find(function(x){return x.code===code;});
+  toast('🎒 슬롯'+(s+1)+': '+(obj?obj.name:'없음')+' 적용!','ok');
+}
+
+// ─── 버튼 연결 ─────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click',startGame);
+document.getElementById('btn-play').addEventListener('click',startGame);
+document.getElementById('btn-save').addEventListener('click',doSave);
+document.getElementById('btn-dl').addEventListener('click',doDownload);
+document.getElementById('btn-ul-t').addEventListener('click',function(){document.getElementById('btn-ul').click();});
+document.getElementById('btn-ul').addEventListener('change',function(e){doUpload(e.target.files[0]);});
+document.getElementById('btn-full').addEventListener('click',function(){
+  var w=document.querySelector('.player-wrapper');
+  if(document.fullscreenElement)document.exitFullscreen();
+  else w.requestFullscreen&&w.requestFullscreen();
+});
+document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
+  function fire(d){ var ev=new KeyboardEvent(d?'keydown':'keyup',{key:btn.dataset.key,bubbles:true}); document.getElementById('canvas').dispatchEvent(ev); if(d)btn.classList.add('pressed');else btn.classList.remove('pressed'); }
+  btn.addEventListener('touchstart',function(e){e.preventDefault();fire(true);},{passive:false});
+  btn.addEventListener('touchend',function(e){e.preventDefault();fire(false);},{passive:false});
+  btn.addEventListener('mousedown',function(){fire(true);});
+  btn.addEventListener('mouseup',function(){fire(false);});
+});
+</script>
+</body>
+</html>
