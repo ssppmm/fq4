@@ -119,7 +119,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.01</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.02</span>
   </div>
 </header>
 
@@ -328,7 +328,7 @@
 // ══════════════════════════════════════════════════════
 //  ★ 설정 영역 — 게임에 맞게 수정하세요 ★
 // ══════════════════════════════════════════════════════
-var GAME_EXE  = 'FQ4.EXE';   // 실행 파일명
+var GAME_EXE  = 'FQ4.BAT';   // 실행 파일명
 var SAVE_FILE = null;         // 세이브 파일명 (확인 후 설정, 예: 'FQ4.SAV')
 var GOLD_MAX  = 9999900;      // 골드 MAX 값
 var SCAN_START = 0x1000000;
@@ -336,8 +336,29 @@ var SCAN_END   = 0x2200000;
 
 // 게임 파일 목록 (실제 파일명으로 채우세요)
 var FILES = [
-  'FQ4.EXE',
-  // 'FQ4.SAV', 'DATA.DAT', ... 등 추가
+  'FQ4.BAT','MAIN.EXE','SOUND.EXE','FQ4OPN.EXE',
+  'EVMOVE.COM','GRBUF.COM','HITOBUF.COM',
+  'FQ4.SYS','FQ4.KCT','FQ4.MSG','FQ4.CHR',
+  'FQ4MES','FQ4OMH.BIN','FQ4OMP.BIN',
+  'FQ4P.CHR','FQ4P2.CHR','FQ4GD.0','FQ4GD.1','FQ4GD.2','FQ4GD.3',
+  'ALMAP','BGMBANK1','BGMBANK2','CHRBANK','MAPBANK','FQFBANK','TMP',
+  'BIGFONT.CHR','CLASS.CHR','FONT.CHR','MAGIC.CHR',
+  'FQ4G16.B_','FQ4G16.E_','FQ4G16.G_','FQ4G16.R_',
+  'FQ4GLOGO.B_','FQ4GLOGO.E_','FQ4GLOGO.G_','FQ4GLOGO.R_',
+  'FQOP_01.B_','FQOP_01.E_','FQOP_01.G_','FQOP_01.R_',
+  'FQOP_02.B_','FQOP_02.E_','FQOP_02.G_','FQOP_02.R_',
+  'FQOP_03.B_','FQOP_03.E_','FQOP_03.G_','FQOP_03.R_',
+  'FQOP_04.B_','FQOP_04.E_','FQOP_04.G_','FQOP_04.R_',
+  'FQOP_05.B_','FQOP_05.E_','FQOP_05.G_','FQOP_05.R_',
+  'FQOP_06.B_','FQOP_06.E_','FQOP_06.G_','FQOP_06.R_',
+  'FQOP_07.B_','FQOP_07.E_','FQOP_07.G_','FQOP_07.R_',
+  'FQOP_08.B_','FQOP_08.E_','FQOP_08.G_','FQOP_08.R_',
+  'FQOP_09.B_','FQOP_09.E_','FQOP_09.G_','FQOP_09.R_',
+  'FQOP_10.B_','FQOP_10.E_','FQOP_10.G_','FQOP_10.R_',
+  'SUEMI_A1.B_','SUEMI_A1.E_','SUEMI_A1.G_','SUEMI_A1.R_',
+  'SUEMI_A2.B_','SUEMI_A2.E_','SUEMI_A2.G_','SUEMI_A2.R_',
+  'SUEMI_A3.B_','SUEMI_A3.E_','SUEMI_A3.G_','SUEMI_A3.R_',
+  'INSTALL.BAT','INSTALL1.BAT','IFUE240.inf',
 ];
 
 // 스탯 오프셋 (게임 실행 후 스캔으로 확정, 아래 주석 예시 참고)
