@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.07</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.08</span>
   </div>
 </header>
 
@@ -456,71 +456,40 @@ function dbPut(k,v,cb){ dbOpen(function(db){ if(!db)return cb&&cb(false); var tx
 // ─── 게임 시작 ─────────────────────────────────────────
 function startGame(){
   if(gameStarted) return;
-  gameStarted = true;
-
-  document.getElementById('gs').textContent = '로딩중';
-  document.getElementById('gs').className   = 'game-status status-load';
+  gameStarted=true;
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('loading').classList.add('show');
-
-  var toLoad = FILES.slice();  // 복사본
-  var total  = toLoad.length;
-  var done   = 0;
-
-  function loadNext(){
+  var toLoad=FILES.slice(), loaded=0;
+  function next(){
     if(!toLoad.length){ initDos(); return; }
-    var f = toLoad.shift();
-    document.getElementById('prog-label').textContent = (done+1)+'/'+total+' '+f;
-    fetch(f)
-      .then(function(r){
-        if(!r.ok) throw new Error(f+' 없음');
-        return r.arrayBuffer();
-      })
-      .then(function(buf){
-        done++;
-        document.getElementById('prog').style.width = Math.round(done/total*100)+'%';
-        dbPut(f, new Uint8Array(buf), loadNext);
-      })
-      .catch(function(){
-        done++;
-        document.getElementById('prog').style.width = Math.round(done/total*100)+'%';
-        loadNext();
-      });
+    var f=toLoad.shift();
+    fetch(f).then(function(r){ if(!r.ok) throw new Error(f+' 없음'); return r.arrayBuffer(); })
+    .then(function(buf){
+      loaded++;
+      var p=Math.round(loaded/FILES.length*100);
+      document.getElementById('prog').style.width=p+'%';
+      document.getElementById('prog-label').textContent=loaded+'/'+FILES.length+' ('+f+')';
+      dbPut(f,new Uint8Array(buf)); next();
+    }).catch(function(err){ toast('⚠ '+err.message,'err'); next(); });
   }
-  loadNext();
+  next();
 }
-
 function initDos(){
-  document.getElementById('prog').style.width  = '100%';
-  document.getElementById('prog-label').textContent = 'DOSBox 초기화 중...';
-
-  Dos(document.getElementById('canvas'), {
-    wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js'
-  }).ready(function(fs, main){
-    fs0 = fs;
-
-    // IndexedDB → DOSBox 가상 FS
-    var keys = FILES.slice();
-    function writeNext(){
-      if(!keys.length){
-        document.getElementById('loading').classList.remove('show');
-        main(['-c','mount c .','-c','c:','-c',GAME_EXE]);
+  document.getElementById('loading').classList.remove('show');
+  Dos(document.getElementById('canvas'),{wdosboxUrl:'https://js-dos.com/6.22/current/wdosbox.js'}).ready(function(fs,main){
+    fs0=fs;
+    Promise.all(FILES.map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d)fs.createFile(f,d); res(); }); }); }))
+    .then(function(){
+      main(['-c','mount c .','-c','c:','-c',GAME_EXE]).then(function(){
         setInterval(function(){
-          var h = heap();
-          if(h && h.length > SCAN_START){
-            document.getElementById('gs').textContent = '실행중';
-            document.getElementById('gs').className   = 'game-status status-on';
+          var h=heap();
+          if(h&&h.length>SCAN_START){
+            document.getElementById('gs').textContent='실행중';
+            document.getElementById('gs').className='game-status status-on';
           }
-        }, 2000);
-        return;
-      }
-      var f = keys.shift();
-      dbGet(f, function(data){
-        if(data){ try{ fs.createFile(f, data); }catch(e){} }
-        writeNext();
+        },2000);
       });
-    }
-    writeNext();
+    });
   });
 }
 
