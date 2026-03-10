@@ -61,22 +61,22 @@
     .btn-primary:hover { opacity: .8; }
     .btn-accent  { background: var(--green); border-color: var(--green); color: #000; }
     .btn-accent:hover { opacity: .8; }
-    .touch-controls { display: none; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
-    @media (pointer: coarse) { .touch-controls { display: flex; justify-content: space-between; align-items: center; } .pc-ctrl { display: none !important; } }
+    .touch-controls { display: none; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; gap: 8px; align-items: center; flex-wrap: wrap; }
+    @media (pointer: coarse) { .touch-controls { display: flex; } .pc-ctrl { display: none !important; } }
     .player-wrapper:fullscreen .touch-controls,
     .player-wrapper:-webkit-full-screen .touch-controls,
     .player-wrapper:-moz-full-screen .touch-controls {
       display: flex !important; position: absolute; bottom: 0; left: 0; right: 0;
-      justify-content: space-between; align-items: center;
-      padding: 12px 20px; background: rgba(0,0,0,0.55);
+      padding: 10px 16px; background: rgba(0,0,0,0.6);
       border: none; border-radius: 0; margin: 0; z-index: 9999;
     }
-    .dpad { display: grid; grid-template-columns: repeat(3,56px); grid-template-rows: repeat(3,56px); gap: 3px; }
-    .act-btns { display: flex; flex-direction: column; gap: 8px; }
-    .touch-btn { width:56px; height:56px; background:#1e1e2e; border:2px solid var(--border2); border-radius:8px; color:var(--text); font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; }
-    .touch-btn:active,.touch-btn.pressed { background:var(--accent); border-color:var(--accent); color:#fff; transform:scale(0.9); }
-    .touch-btn.act { width:72px; height:56px; font-family:var(--font-pixel); font-size:7px; background:#1a1a2e; border-color:var(--accent); color:var(--accent); }
-    .dp-up{grid-column:2;grid-row:1} .dp-l{grid-column:1;grid-row:2} .dp-c{grid-column:2;grid-row:2;background:transparent;border:none;pointer-events:none} .dp-r{grid-column:3;grid-row:2} .dp-d{grid-column:2;grid-row:3}
+    .mouse-btn { font-family:var(--font-pixel); font-size:7px; padding:10px 18px; background:#1e1e2e; border:2px solid var(--border2); border-radius:8px; color:var(--text); cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .mouse-btn .icon { font-size:22px; }
+    .mouse-btn:active,.mouse-btn.pressed { transform:scale(0.92); }
+    .mouse-btn.left-btn  { border-color:#4a9eff; color:#4a9eff; }
+    .mouse-btn.right-btn { border-color:#c44aff; color:#c44aff; }
+    .mouse-btn.left-btn:active,.mouse-btn.left-btn.pressed   { background:#4a9eff; color:#000; }
+    .mouse-btn.right-btn:active,.mouse-btn.right-btn.pressed { background:#c44aff; color:#fff; }
     .pc-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     .ctrl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px; }
     .ctrl-card h3 { font-family: var(--font-pixel); font-size: 7px; color: var(--accent); margin-bottom: 10px; }
@@ -119,7 +119,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.02</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.03</span>
   </div>
 </header>
 
@@ -140,16 +140,14 @@
       </div>
       <canvas id="canvas"></canvas>
       <div class="touch-controls">
-        <div class="dpad">
-          <button class="touch-btn dp-up" data-key="ArrowUp">↑</button>
-          <button class="touch-btn dp-l"  data-key="ArrowLeft">←</button>
-          <div    class="touch-btn dp-c"></div>
-          <button class="touch-btn dp-r"  data-key="ArrowRight">→</button>
-          <button class="touch-btn dp-d"  data-key="ArrowDown">↓</button>
-        </div>
-        <div class="act-btns">
-          <button class="touch-btn act" data-key="Enter">Enter</button>
-          <button class="touch-btn act" data-key="Escape">Esc</button>
+        <button class="mouse-btn left-btn" id="mbtn-left">
+          <span class="icon">🖱️</span>좌클릭
+        </button>
+        <button class="mouse-btn right-btn" id="mbtn-right">
+          <span class="icon">🖱️</span>우클릭
+        </button>
+        <div style="font-size:9px;color:var(--muted);line-height:1.5;">
+          터치 위치로<br>마우스 이동 후 클릭
         </div>
       </div>
     </div>
@@ -163,10 +161,10 @@
     </div>
     <div class="pc-ctrl">
       <div class="ctrl-card">
-        <h3>⌨ 기본 조작</h3>
-        <div class="k-row"><span class="key">↑↓←→</span><span class="k-desc">이동</span></div>
-        <div class="k-row"><span class="key">Enter</span><span class="k-desc">확인</span></div>
-        <div class="k-row"><span class="key">Esc</span><span class="k-desc">취소</span></div>
+        <h3>🖱 마우스 조작</h3>
+        <div class="k-row"><span class="key">좌클릭</span><span class="k-desc">선택 / 확인</span></div>
+        <div class="k-row"><span class="key">우클릭</span><span class="k-desc">취소 / 메뉴</span></div>
+        <div class="k-row"><span class="key">드래그</span><span class="k-desc">이동</span></div>
       </div>
       <div class="ctrl-card">
         <h3>🖥 DOSBox</h3>
@@ -677,13 +675,106 @@ document.getElementById('btn-full').addEventListener('click',function(){
   if(document.fullscreenElement)document.exitFullscreen();
   else w.requestFullscreen&&w.requestFullscreen();
 });
-document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
-  function fire(d){ var ev=new KeyboardEvent(d?'keydown':'keyup',{key:btn.dataset.key,bubbles:true}); document.getElementById('canvas').dispatchEvent(ev); if(d)btn.classList.add('pressed');else btn.classList.remove('pressed'); }
-  btn.addEventListener('touchstart',function(e){e.preventDefault();fire(true);},{passive:false});
-  btn.addEventListener('touchend',function(e){e.preventDefault();fire(false);},{passive:false});
-  btn.addEventListener('mousedown',function(){fire(true);});
-  btn.addEventListener('mouseup',function(){fire(false);});
-});
+// ─── 모바일 마우스 컨트롤 ──────────────────────────────
+// 캔버스 터치 → DOSBox 마우스 이벤트 변환
+(function(){
+  var canvas = document.getElementById('canvas');
+
+  // 터치 좌표 → 캔버스 내 상대 좌표 변환
+  function getTouchPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var t = e.touches[0] || e.changedTouches[0];
+    return {
+      x: (t.clientX - rect.left) / rect.width,
+      y: (t.clientY - rect.top)  / rect.height
+    };
+  }
+
+  // DOSBox에 마우스 이벤트 전달
+  function sendMouse(type, x, y, btn) {
+    var w = canvas.width  || canvas.offsetWidth  || 640;
+    var h = canvas.height || canvas.offsetHeight || 480;
+    var ev = new MouseEvent(type, {
+      bubbles: true, cancelable: true,
+      clientX: canvas.getBoundingClientRect().left + x * canvas.offsetWidth,
+      clientY: canvas.getBoundingClientRect().top  + y * canvas.offsetHeight,
+      button:  btn || 0,
+      buttons: btn === 2 ? 2 : (type === 'mouseup' ? 0 : 1),
+      movementX: 0, movementY: 0
+    });
+    canvas.dispatchEvent(ev);
+  }
+
+  var lastPos = null;
+
+  // 캔버스 터치 → 마우스 이동
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var pos = getTouchPos(e);
+    lastPos = pos;
+    sendMouse('mousemove', pos.x, pos.y, 0);
+    sendMouse('mousedown', pos.x, pos.y, 0);
+  }, {passive: false});
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    var pos = getTouchPos(e);
+    lastPos = pos;
+    sendMouse('mousemove', pos.x, pos.y, 0);
+  }, {passive: false});
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    var pos = lastPos || {x:0.5, y:0.5};
+    sendMouse('mouseup', pos.x, pos.y, 0);
+  }, {passive: false});
+
+  // 좌클릭 버튼
+  var mbtnL = document.getElementById('mbtn-left');
+  if(mbtnL) {
+    mbtnL.addEventListener('touchstart', function(e) {
+      e.preventDefault(); mbtnL.classList.add('pressed');
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mousedown', pos.x, pos.y, 0);
+    }, {passive:false});
+    mbtnL.addEventListener('touchend', function(e) {
+      e.preventDefault(); mbtnL.classList.remove('pressed');
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mouseup', pos.x, pos.y, 0);
+    }, {passive:false});
+    mbtnL.addEventListener('mousedown', function() {
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mousedown', pos.x, pos.y, 0);
+    });
+    mbtnL.addEventListener('mouseup', function() {
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mouseup', pos.x, pos.y, 0);
+    });
+  }
+
+  // 우클릭 버튼
+  var mbtnR = document.getElementById('mbtn-right');
+  if(mbtnR) {
+    mbtnR.addEventListener('touchstart', function(e) {
+      e.preventDefault(); mbtnR.classList.add('pressed');
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mousedown', pos.x, pos.y, 2);
+    }, {passive:false});
+    mbtnR.addEventListener('touchend', function(e) {
+      e.preventDefault(); mbtnR.classList.remove('pressed');
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mouseup', pos.x, pos.y, 2);
+    }, {passive:false});
+    mbtnR.addEventListener('mousedown', function() {
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mousedown', pos.x, pos.y, 2);
+    });
+    mbtnR.addEventListener('mouseup', function() {
+      var pos = lastPos || {x:0.5, y:0.5};
+      sendMouse('mouseup', pos.x, pos.y, 2);
+    });
+  }
+})();
 </script>
 </body>
 </html>
