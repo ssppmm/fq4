@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.08</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.09</span>
   </div>
 </header>
 
@@ -827,18 +827,21 @@ document.getElementById('btn-full').addEventListener('click',function(){
   }, {passive:false});
   mbtnR.addEventListener('mousedown', function() { dispatchMouseBtn('mousedown', 2); });
   mbtnR.addEventListener('mouseup',   function() { dispatchMouseBtn('mouseup',   2); });
-  // ─── 방향키 + 엔터 ──────────────────────────────────
-  document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
-    function fire(down){
-      var ev = new KeyboardEvent(down?'keydown':'keyup', {key:btn.dataset.key, bubbles:true, cancelable:true});
-      canvas.dispatchEvent(ev);
-      if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
-    }
-    btn.addEventListener('touchstart', function(e){e.preventDefault(); fire(true);},  {passive:false});
-    btn.addEventListener('touchend',   function(e){e.preventDefault(); fire(false);}, {passive:false});
-    btn.addEventListener('mousedown',  function(){ fire(true); });
-    btn.addEventListener('mouseup',    function(){ fire(false); });
-  });
+})();
+
+// ─── 방향키 + 엔터 ──────────────────────────────────
+document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
+  var canvas = document.getElementById('canvas');
+  function fire(down){
+    var ev = new KeyboardEvent(down?'keydown':'keyup', {key:btn.dataset.key, bubbles:true, cancelable:true});
+    canvas.dispatchEvent(ev);
+    if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
+  }
+  btn.addEventListener('touchstart', function(e){e.preventDefault(); fire(true);},  {passive:false});
+  btn.addEventListener('touchend',   function(e){e.preventDefault(); fire(false);}, {passive:false});
+  btn.addEventListener('mousedown',  function(){ fire(true); });
+  btn.addEventListener('mouseup',    function(){ fire(false); });
+});
 </script>
 </body>
 </html>
