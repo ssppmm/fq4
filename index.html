@@ -61,22 +61,35 @@
     .btn-primary:hover { opacity: .8; }
     .btn-accent  { background: var(--green); border-color: var(--green); color: #000; }
     .btn-accent:hover { opacity: .8; }
-    .touch-controls { display: none; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .touch-controls { display: none; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; }
     @media (pointer: coarse) { .touch-controls { display: flex; } .pc-ctrl { display: none !important; } }
     .player-wrapper:fullscreen .touch-controls,
     .player-wrapper:-webkit-full-screen .touch-controls,
     .player-wrapper:-moz-full-screen .touch-controls {
       display: flex !important; position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 10px 16px; background: rgba(0,0,0,0.6);
-      border: none; border-radius: 0; margin: 0; z-index: 9999;
+      padding: 10px 16px; background: rgba(0,0,0,0.65);
+      border: none; border-radius: 0; margin: 0; z-index: 9999; justify-content: center;
     }
-    .mouse-btn { font-family:var(--font-pixel); font-size:7px; padding:10px 18px; background:#1e1e2e; border:2px solid var(--border2); border-radius:8px; color:var(--text); cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; gap:4px; }
-    .mouse-btn .icon { font-size:22px; }
-    .mouse-btn:active,.mouse-btn.pressed { transform:scale(0.92); }
+    /* 조이스틱 */
+    .joystick-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+    .joystick-base { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #1e1e3a 60%, #12122a); border: 2px solid var(--border2); }
+    .joystick-base::after { content:''; position:absolute; inset:30%; border-radius:50%; border:1px dashed rgba(160,68,255,0.3); }
+    .joystick-stick { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 38% 35%, #b060ff, #6020cc); border: 2px solid rgba(200,140,255,0.6); box-shadow: 0 2px 10px rgba(160,68,255,0.5); top: 50%; left: 50%; transform: translate(-50%,-50%); transition: box-shadow .1s; touch-action: none; cursor: grab; }
+    .joystick-stick.active { box-shadow: 0 0 18px rgba(160,68,255,0.9); cursor: grabbing; }
+    /* 마우스 버튼 */
+    .mouse-btn { font-family:var(--font-pixel); font-size:7px; padding:12px 16px; background:#1e1e2e; border:2px solid var(--border2); border-radius:10px; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:64px; }
+    .mouse-btn .icon { font-size:22px; line-height:1; }
     .mouse-btn.left-btn  { border-color:#4a9eff; color:#4a9eff; }
     .mouse-btn.right-btn { border-color:#c44aff; color:#c44aff; }
-    .mouse-btn.left-btn:active,.mouse-btn.left-btn.pressed   { background:#4a9eff; color:#000; }
-    .mouse-btn.right-btn:active,.mouse-btn.right-btn.pressed { background:#c44aff; color:#fff; }
+    .mouse-btn.left-btn:active,.mouse-btn.left-btn.pressed   { background:#4a9eff; color:#000; transform:scale(0.93); }
+    .mouse-btn.right-btn:active,.mouse-btn.right-btn.pressed { background:#c44aff; color:#fff; transform:scale(0.93); }
+    /* 방향키 패드 */
+    .dpad { display:grid; grid-template-columns:repeat(3,46px); grid-template-rows:repeat(3,46px); gap:3px; }
+    .touch-btn { width:46px; height:46px; background:#1e1e2e; border:2px solid var(--border2); border-radius:8px; color:var(--text); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; }
+    .touch-btn:active,.touch-btn.pressed { background:var(--green); border-color:var(--green); color:#000; transform:scale(0.9); }
+    .dp-up{grid-column:2;grid-row:1} .dp-l{grid-column:1;grid-row:2}
+    .dp-c{grid-column:2;grid-row:2} .dp-r{grid-column:3;grid-row:2} .dp-d{grid-column:2;grid-row:3}
+    .dp-enter { font-family:var(--font-pixel); font-size:6px; background:#1a1a2e; border-color:var(--green); color:var(--green); }
     .pc-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     .ctrl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px; }
     .ctrl-card h3 { font-family: var(--font-pixel); font-size: 7px; color: var(--accent); margin-bottom: 10px; }
@@ -119,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.03</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.05</span>
   </div>
 </header>
 
@@ -140,14 +153,33 @@
       </div>
       <canvas id="canvas"></canvas>
       <div class="touch-controls">
-        <button class="mouse-btn left-btn" id="mbtn-left">
-          <span class="icon">🖱️</span>좌클릭
-        </button>
-        <button class="mouse-btn right-btn" id="mbtn-right">
-          <span class="icon">🖱️</span>우클릭
-        </button>
-        <div style="font-size:9px;color:var(--muted);line-height:1.5;">
-          터치 위치로<br>마우스 이동 후 클릭
+        <!-- 조이스틱 (마우스 이동) -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="font-size:7px;color:var(--muted);font-family:var(--font-pixel);">마우스</div>
+          <div class="joystick-wrap" id="joystick-wrap">
+            <div class="joystick-base"></div>
+            <div class="joystick-stick" id="joystick-stick"></div>
+          </div>
+        </div>
+        <!-- 마우스 클릭 버튼 -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="mouse-btn left-btn" id="mbtn-left">
+            <span class="icon">🖱️</span>좌클릭
+          </button>
+          <button class="mouse-btn right-btn" id="mbtn-right">
+            <span class="icon">🖱️</span>우클릭
+          </button>
+        </div>
+        <!-- 방향키 + 엔터 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="font-size:7px;color:var(--muted);font-family:var(--font-pixel);">키보드</div>
+          <div class="dpad">
+            <button class="touch-btn dp-up"  data-key="ArrowUp">↑</button>
+            <button class="touch-btn dp-l"   data-key="ArrowLeft">←</button>
+            <button class="touch-btn dp-c dp-enter" data-key="Enter">OK</button>
+            <button class="touch-btn dp-r"   data-key="ArrowRight">→</button>
+            <button class="touch-btn dp-d"   data-key="ArrowDown">↓</button>
+          </div>
         </div>
       </div>
     </div>
@@ -675,106 +707,138 @@ document.getElementById('btn-full').addEventListener('click',function(){
   if(document.fullscreenElement)document.exitFullscreen();
   else w.requestFullscreen&&w.requestFullscreen();
 });
-// ─── 모바일 마우스 컨트롤 ──────────────────────────────
-// 캔버스 터치 → DOSBox 마우스 이벤트 변환
+// ─── 조이스틱 + 마우스 컨트롤 ────────────────────────
 (function(){
-  var canvas = document.getElementById('canvas');
+  var canvas  = document.getElementById('canvas');
+  var wrap    = document.getElementById('joystick-wrap');
+  var stick   = document.getElementById('joystick-stick');
+  var mbtnL   = document.getElementById('mbtn-left');
+  var mbtnR   = document.getElementById('mbtn-right');
 
-  // 터치 좌표 → 캔버스 내 상대 좌표 변환
-  function getTouchPos(e) {
-    var rect = canvas.getBoundingClientRect();
-    var t = e.touches[0] || e.changedTouches[0];
-    return {
-      x: (t.clientX - rect.left) / rect.width,
-      y: (t.clientY - rect.top)  / rect.height
-    };
+  // DOSBox 가상 마우스 위치 (0~1 비율)
+  var mouseX = 0.5, mouseY = 0.5;
+
+  // 조이스틱 상태
+  var jsActive = false, jsVX = 0, jsVY = 0;
+  var RADIUS   = 44;   // 조이스틱 최대 반경(px)
+  var MAX_SPD  = 6;    // 최대 이동 속도(px/frame, 캔버스 기준)
+  var rafId    = null;
+
+  // 조이스틱 stick 위치 업데이트
+  function moveStick(dx, dy) {
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist > RADIUS) { dx = dx/dist*RADIUS; dy = dy/dist*RADIUS; }
+    stick.style.transform = 'translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px))';
+    var ratio = Math.min(dist, RADIUS) / RADIUS;
+    jsVX = (dx / RADIUS) * MAX_SPD;
+    jsVY = (dy / RADIUS) * MAX_SPD;
   }
 
-  // DOSBox에 마우스 이벤트 전달
-  function sendMouse(type, x, y, btn) {
-    var w = canvas.width  || canvas.offsetWidth  || 640;
-    var h = canvas.height || canvas.offsetHeight || 480;
-    var ev = new MouseEvent(type, {
+  function resetStick() {
+    stick.style.transform = 'translate(-50%,-50%)';
+    stick.classList.remove('active');
+    jsVX = 0; jsVY = 0; jsActive = false;
+  }
+
+  // 마우스 위치 DOSBox에 전달
+  function dispatchMouseMove() {
+    var rect = canvas.getBoundingClientRect();
+    var ev = new MouseEvent('mousemove', {
       bubbles: true, cancelable: true,
-      clientX: canvas.getBoundingClientRect().left + x * canvas.offsetWidth,
-      clientY: canvas.getBoundingClientRect().top  + y * canvas.offsetHeight,
-      button:  btn || 0,
-      buttons: btn === 2 ? 2 : (type === 'mouseup' ? 0 : 1),
-      movementX: 0, movementY: 0
+      clientX: rect.left + mouseX * rect.width,
+      clientY: rect.top  + mouseY * rect.height,
+      buttons: 0
     });
     canvas.dispatchEvent(ev);
   }
 
-  var lastPos = null;
+  function dispatchMouseBtn(type, btn) {
+    var rect = canvas.getBoundingClientRect();
+    var ev = new MouseEvent(type, {
+      bubbles: true, cancelable: true,
+      clientX: rect.left + mouseX * rect.width,
+      clientY: rect.top  + mouseY * rect.height,
+      button:  btn, buttons: type==='mouseup' ? 0 : (btn===2 ? 2 : 1)
+    });
+    canvas.dispatchEvent(ev);
+  }
 
-  // 캔버스 터치 → 마우스 이동
-  canvas.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    var pos = getTouchPos(e);
-    lastPos = pos;
-    sendMouse('mousemove', pos.x, pos.y, 0);
-    sendMouse('mousedown', pos.x, pos.y, 0);
-  }, {passive: false});
+  // rAF 루프 — 조이스틱 활성 중 마우스 계속 이동
+  function loop() {
+    if(jsActive && (jsVX !== 0 || jsVY !== 0)) {
+      var rect = canvas.getBoundingClientRect();
+      mouseX = Math.max(0, Math.min(1, mouseX + jsVX / rect.width));
+      mouseY = Math.max(0, Math.min(1, mouseY + jsVY / rect.height));
+      dispatchMouseMove();
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+  rafId = requestAnimationFrame(loop);
 
-  canvas.addEventListener('touchmove', function(e) {
+  // 조이스틱 터치 이벤트
+  var originX, originY;
+  wrap.addEventListener('touchstart', function(e) {
     e.preventDefault();
-    var pos = getTouchPos(e);
-    lastPos = pos;
-    sendMouse('mousemove', pos.x, pos.y, 0);
-  }, {passive: false});
+    jsActive = true;
+    stick.classList.add('active');
+    var r = wrap.getBoundingClientRect();
+    originX = r.left + r.width  / 2;
+    originY = r.top  + r.height / 2;
+    var t = e.touches[0];
+    moveStick(t.clientX - originX, t.clientY - originY);
+  }, {passive:false});
 
-  canvas.addEventListener('touchend', function(e) {
+  wrap.addEventListener('touchmove', function(e) {
     e.preventDefault();
-    var pos = lastPos || {x:0.5, y:0.5};
-    sendMouse('mouseup', pos.x, pos.y, 0);
-  }, {passive: false});
+    var t = e.touches[0];
+    moveStick(t.clientX - originX, t.clientY - originY);
+  }, {passive:false});
+
+  wrap.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    resetStick();
+  }, {passive:false});
+
+  wrap.addEventListener('touchcancel', function(e) {
+    e.preventDefault();
+    resetStick();
+  }, {passive:false});
 
   // 좌클릭 버튼
-  var mbtnL = document.getElementById('mbtn-left');
-  if(mbtnL) {
-    mbtnL.addEventListener('touchstart', function(e) {
-      e.preventDefault(); mbtnL.classList.add('pressed');
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mousedown', pos.x, pos.y, 0);
-    }, {passive:false});
-    mbtnL.addEventListener('touchend', function(e) {
-      e.preventDefault(); mbtnL.classList.remove('pressed');
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mouseup', pos.x, pos.y, 0);
-    }, {passive:false});
-    mbtnL.addEventListener('mousedown', function() {
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mousedown', pos.x, pos.y, 0);
-    });
-    mbtnL.addEventListener('mouseup', function() {
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mouseup', pos.x, pos.y, 0);
-    });
-  }
+  mbtnL.addEventListener('touchstart', function(e) {
+    e.preventDefault(); mbtnL.classList.add('pressed');
+    dispatchMouseBtn('mousedown', 0);
+  }, {passive:false});
+  mbtnL.addEventListener('touchend', function(e) {
+    e.preventDefault(); mbtnL.classList.remove('pressed');
+    dispatchMouseBtn('mouseup', 0);
+  }, {passive:false});
+  mbtnL.addEventListener('mousedown', function() { dispatchMouseBtn('mousedown', 0); });
+  mbtnL.addEventListener('mouseup',   function() { dispatchMouseBtn('mouseup',   0); });
 
   // 우클릭 버튼
-  var mbtnR = document.getElementById('mbtn-right');
-  if(mbtnR) {
-    mbtnR.addEventListener('touchstart', function(e) {
-      e.preventDefault(); mbtnR.classList.add('pressed');
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mousedown', pos.x, pos.y, 2);
-    }, {passive:false});
-    mbtnR.addEventListener('touchend', function(e) {
-      e.preventDefault(); mbtnR.classList.remove('pressed');
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mouseup', pos.x, pos.y, 2);
-    }, {passive:false});
-    mbtnR.addEventListener('mousedown', function() {
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mousedown', pos.x, pos.y, 2);
-    });
-    mbtnR.addEventListener('mouseup', function() {
-      var pos = lastPos || {x:0.5, y:0.5};
-      sendMouse('mouseup', pos.x, pos.y, 2);
-    });
-  }
-})();
+  mbtnR.addEventListener('touchstart', function(e) {
+    e.preventDefault(); mbtnR.classList.add('pressed');
+    dispatchMouseBtn('mousedown', 2);
+  }, {passive:false});
+  mbtnR.addEventListener('touchend', function(e) {
+    e.preventDefault(); mbtnR.classList.remove('pressed');
+    dispatchMouseBtn('mouseup', 2);
+  }, {passive:false});
+  mbtnR.addEventListener('mousedown', function() { dispatchMouseBtn('mousedown', 2); });
+  mbtnR.addEventListener('mouseup',   function() { dispatchMouseBtn('mouseup',   2); });
+  // ─── 방향키 + 엔터 ──────────────────────────────────
+  document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
+    function fire(down){
+      var ev = new KeyboardEvent(down?'keydown':'keyup', {key:btn.dataset.key, bubbles:true, cancelable:true});
+      canvas.dispatchEvent(ev);
+      if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
+    }
+    btn.addEventListener('touchstart', function(e){e.preventDefault(); fire(true);},  {passive:false});
+    btn.addEventListener('touchend',   function(e){e.preventDefault(); fire(false);}, {passive:false});
+    btn.addEventListener('mousedown',  function(){ fire(true); });
+    btn.addEventListener('mouseup',    function(){ fire(false); });
+  });
 </script>
 </body>
 </html>
