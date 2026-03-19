@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.09</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.10</span>
   </div>
 </header>
 
@@ -294,13 +294,15 @@
     <div class="tab-panel card" id="panel-stat">
       <div class="card-hd">
         <span class="card-ttl">⚔ 스탯 편집</span>
-        <span class="badge b-purple" id="stat-badge">오프셋 미확정</span>
+        <span class="badge b-purple" id="stat-badge">오프셋 확정 필요</span>
       </div>
       <div class="card-body" style="padding:10px;">
         <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
           <b style="color:var(--accent);">📌 사용법</b><br>
-          🔍 스캔으로 HP/MP 주소 찾기<br>
-          → 베이스 주소 입력 → 📖 읽기 → 편집 → ✅ 적용
+          ① 게임에서 캐릭터 HP 확인 → 🔍 스캔탭에서 HP값 스캔<br>
+          ② 주소 클릭 → 베이스 주소 입력란에 붙여넣기<br>
+          ③ 📖 읽기 → 편집 → ✅ 적용<br>
+          <span style="color:var(--muted);font-size:8px;">필드: LV·HP·HR·FT·AT·AR·DF·DR·AD·AA·MD·LS</span>
         </div>
         <div class="lbl" style="margin-bottom:4px;">캐릭터 베이스 주소 (hex)</div>
         <div style="display:flex;gap:5px;margin-bottom:10px;">
@@ -314,7 +316,8 @@
           <div style="margin-top:5px;font-size:7px;color:var(--muted);text-align:center;">적용 후 화면전환 시 반영됨</div>
         </div>
         <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
-          ⚠ 오프셋 미확정<br><span style="font-size:8px;">게임 실행 후 스캔으로 베이스 주소 찾기</span>
+          📌 스캔탭 → HP값 검색 → 주소 확인 후 입력<br>
+          <span style="font-size:8px;color:var(--accent);">FQ4WED1 에디터 필드 기반 구조 적용됨</span>
         </div>
       </div>
     </div>
@@ -393,19 +396,25 @@ var FILES = [
 
 // 스탯 오프셋 (게임 실행 후 스캔으로 확정, 아래 주석 예시 참고)
 // off: 베이스 주소로부터의 거리(hex), bits: 8/16/32
+// ★ FQ4WED1 에디터 분석 기반 스탯 구조
+// ※ off(오프셋)는 스캔으로 베이스 주소 찾은 후 확정 필요
+// ※ HP는 2byte(16bit), 나머지는 1byte(8bit), 0~99
 var STAT_FIELDS = [
-  // 확정 후 아래처럼 채워넣으세요:
-  // {id:'sv_curHP', off:0x??, bits:16, label:'현 HP',  min:0, max:9999},
-  // {id:'sv_maxHP', off:0x??, bits:16, label:'MAX HP', min:0, max:9999},
-  // {id:'sv_curMP', off:0x??, bits:16, label:'현 MP',  min:0, max:9999},
-  // {id:'sv_maxMP', off:0x??, bits:16, label:'MAX MP', min:0, max:9999},
-  // {id:'sv_lv',    off:0x??, bits:8,  label:'LV',     min:1, max:99},
-  // {id:'sv_exp',   off:0x??, bits:32, label:'EXP',    min:0, max:999999},
-  // {id:'sv_atk',   off:0x??, bits:8,  label:'ATK',    min:0, max:999},
-  // {id:'sv_def',   off:0x??, bits:8,  label:'DEF',    min:0, max:999},
-  // {id:'sv_spd',   off:0x??, bits:8,  label:'SPD',    min:0, max:999},
-  // {id:'sv_mag',   off:0x??, bits:8,  label:'MAG',    min:0, max:999},
+  {id:'sv_lv',  off:0x00, bits:8,  label:'LV',         min:1,  max:99},
+  {id:'sv_hp',  off:0x01, bits:16, label:'HP',          min:0,  max:65535},
+  {id:'sv_hr',  off:0x03, bits:8,  label:'HR(HP회복)',  min:0,  max:99},
+  {id:'sv_ft',  off:0x04, bits:8,  label:'FT(이동력)',  min:0,  max:99},
+  {id:'sv_at',  off:0x05, bits:8,  label:'AT(공격)',    min:0,  max:99},
+  {id:'sv_ar',  off:0x06, bits:8,  label:'AR(공격범위)',min:0,  max:99},
+  {id:'sv_df',  off:0x07, bits:8,  label:'DF(방어)',    min:0,  max:99},
+  {id:'sv_dr',  off:0x08, bits:8,  label:'DR(방어범위)',min:0,  max:99},
+  {id:'sv_ad',  off:0x09, bits:8,  label:'AD(추가공격)',min:0,  max:99},
+  {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(공격횟수)',min:0,  max:99},
+  {id:'sv_md',  off:0x0B, bits:8,  label:'MD(마법방어)',min:0,  max:99},
+  {id:'sv_ls',  off:0x0C, bits:8,  label:'LS(통솔력)',  min:0,  max:99},
 ];
+// ⚠ 위 off(오프셋)는 임시값입니다. 스캔으로 HP 주소 찾은 뒤
+// 베이스주소 = HP주소, 나머지는 HP주소+상대거리로 확정하세요.
 
 // 아이템 목록 (게임 데이터 분석 후 채우세요)
 var ITEMS = [
