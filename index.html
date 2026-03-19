@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.10</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.12</span>
   </div>
 </header>
 
@@ -189,7 +189,7 @@
       <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
       <button class="btn btn-ul-s"  id="btn-ul-t">⬆ 불러오기</button>
       <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
-      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat" style="display:none" />
+      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat,.0" style="display:none" />
     </div>
     <div class="pc-ctrl">
       <div class="ctrl-card">
@@ -362,8 +362,8 @@
 //  ★ 설정 영역 — 게임에 맞게 수정하세요 ★
 // ══════════════════════════════════════════════════════
 var GAME_EXE  = 'FQ4.BAT';   // 실행 파일명
-var SAVE_FILE = null;         // 세이브 파일명 (확인 후 설정, 예: 'FQ4.SAV')
-var GOLD_MAX  = 9999900;      // 골드 MAX 값
+var SAVE_FILE = 'FQ4GD.0';    // 세이브 파일명
+var GOLD_MAX  = 50000;        // 골드 MAX 값
 var SCAN_START = 0x1000000;
 var SCAN_END   = 0x2200000;
 
