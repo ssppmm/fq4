@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.15</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.16</span>
   </div>
 </header>
 
@@ -210,7 +210,6 @@
   <div class="editor-col">
     <div class="tabs">
       <div class="tab active" data-tab="gold">💰 골드</div>
-      <div class="tab" data-tab="scan">🔍 스캔</div>
       <div class="tab" data-tab="stat">👤 유닛</div>
       <div class="tab" data-tab="item">🎒 아이템</div>
     </div>
@@ -218,17 +217,31 @@
     <!-- 💰 골드 -->
     <div class="tab-panel active card" id="panel-gold">
       <div class="card-hd">
-        <span class="card-ttl">💰 골드 편집</span>
-        <span class="badge b-yellow">대기중</span>
+        <span class="card-ttl">💰 FQ4 Gold Editor</span>
+        <span class="badge b-yellow" id="gold-badge">세이브 파일 필요</span>
       </div>
       <div class="card-body" style="padding:10px;">
-        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
-          <b style="color:var(--accent);">📌 사용법</b><br>
-          ① 게임에서 현재 골드 확인 → 입력<br>
-          ② <b>🔍 스캔+MAX 적용</b> 클릭
+
+        <!-- 세이브 파일 선택 -->
+        <div style="background:var(--surface2);border-radius:3px;padding:7px;margin-bottom:8px;">
+          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Save File Select</div>
+          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
+            <select id="gold-slot-sel" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
+              <option value="0">FQ4GD.0</option>
+              <option value="1">FQ4GD.1</option>
+              <option value="2">FQ4GD.2</option>
+              <option value="3">FQ4GD.3</option>
+            </select>
+            <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadGoldFile()">📂 LOAD</button>
+          </div>
+          <div id="gold-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
         </div>
-        <div class="lbl" style="margin-bottom:6px;">현재 골드 입력</div>
-        <div id="gold-cur-in" style="background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;font-family:var(--font-pixel);font-size:20px;color:var(--yellow);text-align:center;margin-bottom:8px;min-height:44px;letter-spacing:2px;">0</div>
+
+        <!-- 골드 표시 -->
+        <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ GOLD</div>
+        <div id="gold-cur-in" style="background:var(--bg);border:2px solid var(--yellow);border-radius:4px;padding:10px 12px;font-family:var(--font-pixel);font-size:24px;color:var(--yellow);text-align:center;margin-bottom:8px;min-height:48px;letter-spacing:2px;">-</div>
+
+        <!-- 숫자 키패드 -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px;">
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('7')">7</button>
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('8')">8</button>
@@ -243,52 +256,17 @@
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('3')">3</button>
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('0')">0</button>
         </div>
-        <button class="btn btn-primary" style="width:100%;padding:11px;font-size:10px;margin-bottom:6px;" onclick="goldScan()">🔍 스캔 + MAX 적용</button>
-        <div id="gold-log" style="font-size:8px;color:var(--muted);text-align:center;min-height:16px;"></div>
+
+        <!-- MAX / SET / SAVE -->
+        <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:4px;">
+          <button class="btn btn-ghost"   style="padding:9px;font-size:8px;" onclick="goldMax()">MAX</button>
+          <button class="btn btn-accent"  style="padding:9px;font-size:8px;" onclick="goldSet()">✅ SET</button>
+          <button class="btn btn-primary" style="padding:9px;font-size:8px;" onclick="goldSaveFile()">💾 저장</button>
+        </div>
+        <div id="gold-log" style="font-size:8px;color:var(--muted);text-align:center;margin-top:5px;min-height:14px;"></div>
       </div>
     </div>
 
-    <!-- 🔍 스캔 (범용) -->
-    <div class="tab-panel card" id="panel-scan">
-      <div class="card-hd">
-        <span class="card-ttl">🔍 메모리 스캔</span>
-        <span class="badge b-blue">범용</span>
-      </div>
-      <div class="card-body" style="padding:10px;">
-        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
-          <b style="color:var(--accent);">📌 사용법</b><br>
-          ① 게임 값 확인 → 입력 → 🔍 스캔<br>
-          ② 값 변경 후 → 🔄 재스캔으로 좁히기<br>
-          ③ 주소 선택 → 값 입력 → ✏ 쓰기
-        </div>
-        <div style="display:flex;gap:6px;margin-bottom:6px;">
-          <input id="scan-val" type="number" placeholder="현재 값" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;" />
-          <select id="scan-bits" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 6px;font-size:10px;border-radius:3px;outline:none;">
-            <option value="8">8bit</option>
-            <option value="16" selected>16bit</option>
-            <option value="32">32bit</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:5px;margin-bottom:8px;">
-          <button class="btn btn-primary" style="flex:1;padding:8px;" onclick="doScan(false)">🔍 스캔</button>
-          <button class="btn btn-ghost"   style="flex:1;padding:8px;" onclick="doScan(true)">🔄 재스캔</button>
-          <button class="btn btn-ghost"   style="flex:1;padding:8px;color:var(--red);" onclick="clearScan()">✕ 초기화</button>
-        </div>
-        <div style="font-size:8px;color:var(--muted);margin-bottom:4px;">
-          결과: <span id="scan-count" style="color:var(--yellow);">-</span>개
-          <span id="scan-warn" style="color:var(--red);margin-left:6px;font-size:7px;"></span>
-        </div>
-        <div class="scan-results" id="scan-results">
-          <div class="scan-empty">스캔 결과가 여기에 표시됩니다</div>
-        </div>
-        <hr class="divider">
-        <div class="lbl" style="margin-bottom:4px;">선택 주소: <span id="sel-addr" style="color:var(--blue);font-family:monospace;">없음</span></div>
-        <div style="display:flex;gap:5px;">
-          <input id="write-val" type="number" placeholder="쓸 값" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;" />
-          <button class="btn btn-accent" style="padding:8px 12px;" onclick="doWrite()">✏ 쓰기</button>
-        </div>
-      </div>
-    </div>
 
     <!-- 👤 유닛 (FQ4WED1 Unit Editor) -->
     <div class="tab-panel card" id="panel-stat">
@@ -370,29 +348,65 @@
     <!-- 🎒 아이템 -->
     <div class="tab-panel card" id="panel-item">
       <div class="card-hd">
-        <span class="card-ttl">🎒 아이템 편집</span>
-        <span class="badge b-purple" id="item-badge">오프셋 미확정</span>
+        <span class="card-ttl">🎒 FQ4 Item Editor</span>
+        <span class="badge b-green" id="item-badge">세이브 파일 필요</span>
       </div>
       <div class="card-body" style="padding:10px;">
-        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
-          <b style="color:var(--accent);">📌 사용법</b><br>
-          🔍 스캔으로 아이템 주소 확정<br>
-          → 베이스 주소 입력 → 슬롯 선택 → 적용
+
+        <!-- 세이브 파일 선택 -->
+        <div style="background:var(--surface2);border-radius:3px;padding:7px;margin-bottom:8px;">
+          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Save File Select</div>
+          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
+            <select id="item-slot-sel" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
+              <option value="0">FQ4GD.0</option>
+              <option value="1">FQ4GD.1</option>
+              <option value="2">FQ4GD.2</option>
+              <option value="3">FQ4GD.3</option>
+            </select>
+            <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadItemFile()">📂 LOAD</button>
+          </div>
+          <div id="item-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
         </div>
-        <div class="lbl" style="margin-bottom:4px;">아이템 베이스 주소 (hex)</div>
-        <div style="display:flex;gap:5px;margin-bottom:10px;">
-          <input id="item-base-in" type="text" placeholder="예: 0x20b948b" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;outline:none;" />
-          <button class="btn btn-primary" style="padding:8px 10px;font-size:8px;" onclick="itemBaseSet()">📖 읽기</button>
+
+        <!-- 안내 -->
+        <div style="font-size:8px;line-height:1.6;background:var(--surface2);padding:6px;border-radius:3px;margin-bottom:8px;color:var(--muted);">
+          * Select one in item list (left), Then input value (right)<br>
+          * Owned: 0~99
         </div>
+
         <div id="item-fields" style="display:none;">
-          <div class="lbl" style="margin-bottom:4px;">슬롯</div>
-          <select id="item-slot-sel" style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:6px;font-size:9px;margin-bottom:8px;"></select>
-          <div class="lbl" style="margin-bottom:4px;">변경할 아이템</div>
-          <select id="item-new-sel" style="width:100%;background:var(--surface);color:var(--text);border:2px solid var(--green);border-radius:4px;padding:6px;font-size:9px;margin-bottom:8px;"></select>
-          <button class="btn btn-accent" style="width:100%;padding:9px;" onclick="applyItem()">✅ 적용</button>
+          <!-- 아이템 목록 + 소유수 -->
+          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Item List</div>
+          <div id="item-list-grid" style="max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:3px;margin-bottom:8px;"></div>
+
+          <!-- Set 버튼들 -->
+          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Set Selected Item</div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:4px;">
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(0)">Set 00</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(10)">Set 10</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(20)">Set 20</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(40)">Set 40</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(99)">Set 99</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;grid-column:span 2;" onclick="itemSetAllVal(0)">All 00</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(20)">All 20</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(40)">All 40</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(99)">All 99</button>
+            </div>
+          </div>
+
+          <!-- SET / SAVE -->
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:4px;">
+            <button class="btn btn-accent"  style="padding:9px;font-size:8px;" onclick="itemSet()">✅ SET</button>
+            <button class="btn btn-primary" style="padding:9px;font-size:8px;" onclick="itemSaveFile()">💾 저장</button>
+          </div>
+          <div style="margin-top:4px;font-size:7px;color:var(--muted);text-align:center;">SET → 💾저장 → 게임 재시작 필요</div>
         </div>
-        <div id="item-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
-          ⚠ 오프셋 미확정<br><span style="font-size:8px;">게임 실행 후 스캔으로 아이템 주소 찾기</span>
+
+        <div id="item-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:12px 0;">
+          📂 세이브 파일 LOAD 후 아이템 편집 가능
         </div>
       </div>
     </div>
@@ -631,80 +645,66 @@ document.querySelectorAll('.tab').forEach(function(t){
 });
 
 // ─── 골드 ──────────────────────────────────────────────
-function goldPad(k){
-  var el=document.getElementById('gold-cur-in'), cur=el.textContent==='0'?'':el.textContent;
-  if(k==='C'){el.textContent='0';return;}
-  if(k==='⌫'){el.textContent=cur.length<=1?'0':cur.slice(0,-1);return;}
-  var n=cur+k; if(parseInt(n)>GOLD_MAX)return;
-  el.textContent=String(parseInt(n));
-}
-function goldScan(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  var cur=parseInt(document.getElementById('gold-cur-in').textContent)||0;
-  if(!cur){toast('⚠ 현재 골드 입력하세요','err');return;}
-  var r32=scanMem(cur,32,SCAN_START,SCAN_END);
-  var r16=scanMem(cur,16,SCAN_START,SCAN_END);
-  var res=r32.length?r32:r16, bits=r32.length?32:16;
-  document.getElementById('gold-log').textContent=res.length+'개 발견 ('+bits+'bit)';
-  if(!res.length){toast('⚠ 결과 없음','err');return;}
-  goldAddrs=res;
-  var cnt=0;
-  res.forEach(function(a){if(mWrite(a,GOLD_MAX,bits))cnt++;});
-  toast('💰 골드 MAX! ('+cnt+'곳)','ok');
-  document.getElementById('gold-log').textContent='✅ '+GOLD_MAX.toLocaleString()+' 적용 ('+cnt+'곳)';
+// ─── 골드 에디터 (세이브파일 직접 파싱) ───────────────────
+var goldSaveData = null;
+var goldSaveName = null;
+
+function loadGoldFile(){
+  var slot = document.getElementById('gold-slot-sel').value;
+  goldSaveName = 'FQ4GD.'+slot;
+  dbGet(goldSaveName, function(d){
+    if(!d||d.length<100){ toast('⚠ '+goldSaveName+' 없음 — 게임 저장 후 💾 버튼을 누르세요','err'); return; }
+    goldSaveData = new Uint8Array(d);
+    var sig = String.fromCharCode(goldSaveData[0],goldSaveData[1],goldSaveData[2],goldSaveData[3]);
+    if(sig !== 'FQ-4'){ toast('⚠ FQ4 세이브 파일이 아닙니다','err'); return; }
+    var gold = goldSaveData[SAV_GOLD_OFF]|(goldSaveData[SAV_GOLD_OFF+1]<<8)|(goldSaveData[SAV_GOLD_OFF+2]<<16)|(goldSaveData[SAV_GOLD_OFF+3]<<24);
+    document.getElementById('gold-cur-in').textContent = gold.toLocaleString();
+    document.getElementById('gold-file-info').textContent = goldSaveName+' 로드 완료 — 현재 골드: '+gold.toLocaleString();
+    document.getElementById('gold-badge').textContent = goldSaveName+' 로드됨';
+    document.getElementById('gold-badge').className = 'badge b-green';
+    toast('📂 '+goldSaveName+' 골드 로드 완료!','ok');
+  });
 }
 
-// ─── 범용 스캐너 ───────────────────────────────────────
-function doScan(rescan){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  var val=parseInt(document.getElementById('scan-val').value);
-  if(isNaN(val)){toast('⚠ 값을 입력하세요','err');return;}
-  scanBits=parseInt(document.getElementById('scan-bits').value);
-  var res=[];
-  if(rescan&&scanAddrs.length){
-    scanAddrs.forEach(function(a){ if(mRead(a,scanBits)===(val>>>0))res.push(a); });
-  } else {
-    res=scanMem(val,scanBits,SCAN_START,SCAN_END);
-  }
-  scanAddrs=res;
-  document.getElementById('scan-count').textContent=res.length;
-  document.getElementById('scan-warn').textContent=res.length>500?'(너무 많음 — 재스캔으로 좁히세요)':'';
-  renderScan();
-  if(res.length<=500)toast('🔍 '+res.length+'개 발견','ok');
+function goldPad(k){
+  var el = document.getElementById('gold-cur-in');
+  var cur = el.textContent.replace(/,/g,'');
+  if(cur === '-') cur = '';
+  if(k==='C'){ el.textContent='0'; return; }
+  if(k==='⌫'){ el.textContent = cur.length<=1 ? '0' : parseInt(cur.slice(0,-1)).toLocaleString(); return; }
+  var n = cur+k;
+  if(parseInt(n) > GOLD_MAX) return;
+  el.textContent = parseInt(n).toLocaleString();
 }
-function renderScan(){
-  var box=document.getElementById('scan-results');
-  if(!scanAddrs.length){box.innerHTML='<div class="scan-empty">결과 없음</div>';return;}
-  var show=scanAddrs.slice(0,100);
-  box.innerHTML=show.map(function(a){
-    var v=mRead(a,scanBits);
-    return '<div class="scan-item'+(a===selAddr?' sel':'')+'" onclick="selectAddr('+a+')">'
-      +'<span class="scan-addr">0x'+a.toString(16)+'</span>'
-      +'<span class="scan-v">'+v+'</span></div>';
-  }).join('')+(scanAddrs.length>100?'<div class="scan-empty">... 외 '+(scanAddrs.length-100)+'개</div>':'');
+
+function goldMax(){
+  document.getElementById('gold-cur-in').textContent = GOLD_MAX.toLocaleString();
 }
-function selectAddr(a){
-  selAddr=a;
-  document.getElementById('sel-addr').textContent='0x'+a.toString(16);
-  document.getElementById('write-val').value=mRead(a,scanBits);
-  renderScan();
+
+function goldSet(){
+  if(!goldSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  var val = parseInt(document.getElementById('gold-cur-in').textContent.replace(/,/g,''))||0;
+  val = Math.max(0, Math.min(GOLD_MAX, val));
+  goldSaveData[SAV_GOLD_OFF]   = val&0xFF;
+  goldSaveData[SAV_GOLD_OFF+1] = (val>>8)&0xFF;
+  goldSaveData[SAV_GOLD_OFF+2] = (val>>16)&0xFF;
+  goldSaveData[SAV_GOLD_OFF+3] = (val>>24)&0xFF;
+  document.getElementById('gold-log').textContent = '✅ '+val.toLocaleString()+' SET 완료 — 💾 저장 버튼으로 반영하세요';
+  toast('💰 골드 SET 완료!','ok');
 }
-function doWrite(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  if(selAddr===null){toast('⚠ 주소를 선택하세요','err');return;}
-  var v=parseInt(document.getElementById('write-val').value);
-  if(isNaN(v)){toast('⚠ 값을 입력하세요','err');return;}
-  mWrite(selAddr,v,scanBits);
-  toast('✏ 0x'+selAddr.toString(16)+' ← '+v,'ok');
-  renderScan();
+
+function goldSaveFile(){
+  if(!goldSaveData||!goldSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  dbPut(goldSaveName, goldSaveData, function(ok){
+    if(!ok){ toast('⚠ 저장 실패','err'); return; }
+    if(fs0){ try{ fs0.fs.writeFile('/'+goldSaveName, goldSaveData); }catch(e){} }
+    toast('💾 '+goldSaveName+' 저장 완료!','ok');
+    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+  });
 }
-function clearScan(){
-  scanAddrs=[];selAddr=null;
-  document.getElementById('scan-results').innerHTML='<div class="scan-empty">초기화됨</div>';
-  document.getElementById('scan-count').textContent='-';
-  document.getElementById('sel-addr').textContent='없음';
-  document.getElementById('scan-warn').textContent='';
-}
+
+// 구 goldScan 하위호환
+function goldScan(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
 
 // ─── 유닛 에디터 (FQ4WED1 세이브파일 직접 파싱) ─────────────
 // 세이브파일 구조 (분석 결과)
@@ -881,45 +881,108 @@ function statApply(){ unitSet(); }
 function statReset(){ unitReset(); }
 
 // ─── 아이템 ────────────────────────────────────────────
-function itemBaseSet(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  var raw=document.getElementById('item-base-in').value.trim();
-  var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
-  if(isNaN(base)){toast('⚠ 주소 형식 오류','err');return;}
-  itemBaseAddr=base;
-  var slotSel=document.getElementById('item-slot-sel');
-  slotSel.innerHTML='';
-  for(var s=0;s<ITEM_SLOT_COUNT;s++){
-    var v=mRead(base+s,8);
-    var obj=ITEMS.find(function(x){return x.code===v;});
-    var nm=obj?obj.name:(v===0xFF?'없음':'?0x'+('0'+v.toString(16)).slice(-2).toUpperCase());
-    var opt=document.createElement('option');
-    opt.value=s; opt.textContent='슬롯'+(s+1)+' ['+nm+']';
-    slotSel.appendChild(opt);
-  }
-  var newSel=document.getElementById('item-new-sel');
-  newSel.innerHTML='<option value="255">없음 (FF)</option>';
-  ITEMS.forEach(function(item){
-    if(item.code===0xFF)return;
-    var opt=document.createElement('option');
-    opt.value=item.code; opt.textContent=item.name;
-    newSel.appendChild(opt);
+// ─── 아이템 에디터 (세이브파일 직접 파싱) ─────────────────
+// FQ4WED1 Item Editor 방식: 아이템 목록 + 소유수(Owned) 편집
+// ※ 아이템 데이터 오프셋은 확정 필요
+var SAV_ITEM_START = 0x0020;   // 아이템 데이터 시작 오프셋 (추정)
+var SAV_ITEM_COUNT = 50;       // 아이템 종류 수 (추정)
+
+var itemSaveData = null;
+var itemSaveName = null;
+var selectedItemIdx = 0;
+
+// 아이템 목록 (FQ4WED1 분석 기반 — 확정 후 채워넣기)
+var ITEM_LIST = [
+  // {idx:0, name:'검'},
+  // {idx:1, name:'창'},
+  // 아이템 목록 확정 후 채워주세요
+];
+
+function loadItemFile(){
+  var slot = document.getElementById('item-slot-sel').value;
+  itemSaveName = 'FQ4GD.'+slot;
+  dbGet(itemSaveName, function(d){
+    if(!d||d.length<100){ toast('⚠ '+itemSaveName+' 없음 — 게임 저장 후 💾 버튼을 누르세요','err'); return; }
+    itemSaveData = new Uint8Array(d);
+    var sig = String.fromCharCode(itemSaveData[0],itemSaveData[1],itemSaveData[2],itemSaveData[3]);
+    if(sig !== 'FQ-4'){ toast('⚠ FQ4 세이브 파일이 아닙니다','err'); return; }
+    document.getElementById('item-file-info').textContent = itemSaveName+' 로드 완료 ('+itemSaveData.length+'bytes)';
+    document.getElementById('item-badge').textContent = itemSaveName+' 로드됨';
+    document.getElementById('item-badge').className = 'badge b-green';
+    itemRenderList();
+    document.getElementById('item-fields').style.display='block';
+    document.getElementById('item-pending').style.display='none';
+    toast('📂 '+itemSaveName+' 로드 완료!','ok');
   });
-  document.getElementById('item-fields').style.display='block';
-  document.getElementById('item-pending').style.display='none';
-  document.getElementById('item-badge').textContent='읽기 완료';
-  document.getElementById('item-badge').className='badge b-green';
-  toast('📖 아이템 읽기 완료','ok');
 }
-function applyItem(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  if(!itemBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
-  var s=parseInt(document.getElementById('item-slot-sel').value);
-  var code=parseInt(document.getElementById('item-new-sel').value);
-  mWrite(itemBaseAddr+s,code,8);
-  var obj=ITEMS.find(function(x){return x.code===code;});
-  toast('🎒 슬롯'+(s+1)+': '+(obj?obj.name:'없음')+' 적용!','ok');
+
+function itemRenderList(){
+  var grid = document.getElementById('item-list-grid');
+  if(!itemSaveData){ grid.innerHTML=''; return; }
+  if(ITEM_LIST.length === 0){
+    // 아이템 목록 미확정: 오프셋 기반 raw 표시
+    var rows = '';
+    for(var i=0; i<SAV_ITEM_COUNT; i++){
+      var off = SAV_ITEM_START + i;
+      var val = itemSaveData[off];
+      var sel = i===selectedItemIdx;
+      rows += '<div onclick="itemSelect('+i+')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;cursor:pointer;font-size:9px;'
+        +(sel?'background:var(--accent);color:#000;':'border-bottom:1px solid var(--border);')
+        +'"><span>Item '+i+'</span><span id="item-owned-'+i+'" style="font-family:var(--font-pixel);font-size:8px;">'+val+'</span></div>';
+    }
+    grid.innerHTML = rows;
+  } else {
+    var rows = '';
+    ITEM_LIST.forEach(function(item, i){
+      var off = SAV_ITEM_START + i;
+      var val = itemSaveData[off];
+      var sel = i===selectedItemIdx;
+      rows += '<div onclick="itemSelect('+i+')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;cursor:pointer;font-size:9px;'
+        +(sel?'background:var(--accent);color:#000;':'border-bottom:1px solid var(--border);')
+        +'"><span>'+item.name+'</span><span id="item-owned-'+i+'" style="font-family:var(--font-pixel);font-size:8px;">'+val+'</span></div>';
+    });
+    grid.innerHTML = rows;
+  }
 }
+
+function itemSelect(idx){
+  selectedItemIdx = idx;
+  itemRenderList();
+}
+
+function itemSetVal(val){
+  if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  var off = SAV_ITEM_START + selectedItemIdx;
+  itemSaveData[off] = Math.max(0, Math.min(99, val));
+  var el = document.getElementById('item-owned-'+selectedItemIdx);
+  if(el) el.textContent = itemSaveData[off];
+  toast('🎒 Item '+selectedItemIdx+' → '+val,'ok');
+}
+
+function itemSetAllVal(val){
+  if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  var count = ITEM_LIST.length || SAV_ITEM_COUNT;
+  for(var i=0; i<count; i++){
+    itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(99, val));
+  }
+  itemRenderList();
+  toast('🎒 전체 아이템 → '+val,'ok');
+}
+
+function itemSet(){ toast('개별 아이템은 목록 클릭 → Set 버튼으로 설정하세요','nfo'); }
+
+function itemSaveFile(){
+  if(!itemSaveData||!itemSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  dbPut(itemSaveName, itemSaveData, function(ok){
+    if(!ok){ toast('⚠ 저장 실패','err'); return; }
+    if(fs0){ try{ fs0.fs.writeFile('/'+itemSaveName, itemSaveData); }catch(e){} }
+    toast('💾 '+itemSaveName+' 저장 완료!','ok');
+    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+  });
+}
+
+function itemBaseSet(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
+function applyItem(){ itemSet(); }
 
 // ─── 버튼 연결 ─────────────────────────────────────────
 document.getElementById('btn-start').addEventListener('click',startGame);
