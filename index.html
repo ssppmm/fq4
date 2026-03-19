@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.21</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.24</span>
   </div>
 </header>
 
@@ -291,17 +291,19 @@
           <div id="save-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
         </div>
 
-        <!-- No. / GO / PREV / NEXT -->
-        <div style="display:flex;gap:4px;align-items:center;margin-bottom:8px;">
-          <span style="font-family:var(--font-pixel);font-size:7px;color:var(--muted);white-space:nowrap;">No.</span>
-          <input id="unit-no" type="number" value="0" min="0" style="width:72px;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:4px 6px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;text-align:center;" />
-          <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitGo()">GO</button>
-          <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitPrev()">PREV</button>
-          <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitNext()">NEXT</button>
-          <span id="unit-total" style="font-size:8px;color:var(--muted);margin-left:auto;">/ -</span>
+        <!-- 유닛 선택: 드롭다운 + PREV/NEXT -->
+        <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Unit Select</div>
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px;">
+          <button class="btn btn-ghost" style="padding:5px 8px;font-size:10px;" onclick="unitPrev()">◀</button>
+          <select id="unit-sel" onchange="unitSelectChange()" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px 6px;font-size:9px;border-radius:3px;"></select>
+          <button class="btn btn-ghost" style="padding:5px 8px;font-size:10px;" onclick="unitNext()">▶</button>
         </div>
-        <!-- 이름 표시 -->
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:3px;padding:5px 8px;margin-bottom:8px;font-size:11px;color:var(--accent);text-align:center;" id="unit-name-disp">-
+        <!-- 인덱스 직접 입력 -->
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:8px;">
+          <span style="font-family:var(--font-pixel);font-size:7px;color:var(--muted);white-space:nowrap;">idx</span>
+          <input id="unit-no" type="number" value="0" min="0" style="width:60px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:4px 6px;font-family:var(--font-pixel);font-size:8px;border-radius:3px;outline:none;text-align:center;" />
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:7px;" onclick="unitGo()">GO</button>
+          <span id="unit-total" style="font-size:8px;color:var(--muted);margin-left:auto;">/ -</span>
         </div>
 
         <div id="stat-fields" style="display:none;">
@@ -390,13 +392,13 @@
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(10)">Set 10</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(20)">Set 20</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(40)">Set 40</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(99)">Set 99</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(255)">Set 255</button>
             </div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;grid-column:span 2;" onclick="itemSetAllVal(0)">All 00</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(20)">All 20</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(40)">All 40</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(99)">All 99</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(255)">All 255</button>
             </div>
           </div>
 
@@ -720,7 +722,7 @@ var MACROS = {
   archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
   wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
   master:  {sv_lv:20, sv_hp:999,   sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
-  cheater: {sv_lv:99, sv_hp:65000, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
+  cheater: {sv_lv:99, sv_hp:65535, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
 };
 
 var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
@@ -769,11 +771,35 @@ function loadSaveFile(){
       saveName+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
     document.getElementById('stat-badge').textContent = saveName+' 로드됨';
     document.getElementById('stat-badge').className = 'badge b-green';
+    unitBuildSelect();
     unitIdx = 0;
     document.getElementById('unit-no').value = 0;
     unitRender();
     toast('📂 '+saveName+' 로드 완료!','ok');
   });
+}
+
+// 드롭다운 빌드
+function unitBuildSelect(){
+  var sel = document.getElementById('unit-sel');
+  if(!sel) return;
+  sel.innerHTML = '';
+  var total = unitCount || 354;
+  for(var i=0; i<total; i++){
+    var opt = document.createElement('option');
+    opt.value = i;
+    var name = (UNIT_CHAR_NAMES[i] && UNIT_CHAR_NAMES[i] !== '') ? UNIT_CHAR_NAMES[i] : ('Unit #'+i);
+    opt.textContent = i + ': ' + name;
+    sel.appendChild(opt);
+  }
+}
+
+function unitSelectChange(){
+  var sel = document.getElementById('unit-sel');
+  if(!sel) return;
+  unitIdx = parseInt(sel.value)||0;
+  document.getElementById('unit-no').value = unitIdx;
+  unitRender();
 }
 
 // 유닛 렌더링
@@ -782,9 +808,10 @@ function unitRender(){
   var base = SAV_UNIT_START + unitIdx * SAV_UNIT_SIZE;
   var grid = document.getElementById('stat-grid');
   grid.innerHTML = '';
-  // 이름 표시 업데이트
-  var nameEl = document.getElementById('unit-name-disp');
-  if(nameEl) nameEl.textContent = unitGetName(unitIdx);
+  // 드롭다운 동기화
+  var sel = document.getElementById('unit-sel');
+  if(sel) sel.value = unitIdx;
+  document.getElementById('unit-no').value = unitIdx;
   UNIT_FIELDS.forEach(function(f){
     var val = savRead(base+f.off, f.bits);
     var div = document.createElement('div');
@@ -893,8 +920,8 @@ function statReset(){ unitReset(); }
 // ─── 아이템 에디터 (세이브파일 직접 파싱) ─────────────────
 // FQ4WED1 Item Editor 방식: 아이템 목록 + 소유수(Owned) 편집
 // ※ 아이템 데이터 오프셋은 확정 필요
-var SAV_ITEM_START = 0x0020;   // 아이템 데이터 시작 오프셋 (추정)
-var SAV_ITEM_COUNT = 63;       // 아이템 종류 수
+var SAV_ITEM_START = 0x0020;   // 아이템 데이터 시작 오프셋 ✓ 확정
+var SAV_ITEM_COUNT = 69;       // 아이템 종류 수 ✓ 확정
 
 var itemSaveData = null;
 var itemSaveName = null;
@@ -1028,7 +1055,8 @@ function itemSelect(idx){
 function itemSetVal(val){
   if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var off = SAV_ITEM_START + selectedItemIdx;
-  itemSaveData[off] = Math.max(0, Math.min(99, val));
+  itemSaveData[off] = Math.max(0, Math.min(255, val));
+  itemSaveData[0x001D] = 0x80;  // 아이템 유효 플래그
   var el = document.getElementById('item-owned-'+selectedItemIdx);
   if(el) el.textContent = itemSaveData[off];
   toast('🎒 Item '+selectedItemIdx+' → '+val,'ok');
@@ -1038,8 +1066,9 @@ function itemSetAllVal(val){
   if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var count = ITEM_LIST.length || SAV_ITEM_COUNT;
   for(var i=0; i<count; i++){
-    itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(99, val));
+    itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(255, val));
   }
+  itemSaveData[0x001D] = 0x80;  // 아이템 유효 플래그
   itemRenderList();
   toast('🎒 전체 아이템 → '+val,'ok');
 }
@@ -1048,6 +1077,8 @@ function itemSet(){ toast('개별 아이템은 목록 클릭 → Set 버튼으�
 
 function itemSaveFile(){
   if(!itemSaveData||!itemSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  // 아이템 유효 플래그 설정 (0x001D = 0x80, FQ4WED1 분석 결과)
+  itemSaveData[0x001D] = 0x80;
   dbPut(itemSaveName, itemSaveData, function(ok){
     if(!ok){ toast('⚠ 저장 실패','err'); return; }
     if(fs0){ try{ fs0.fs.writeFile('/'+itemSaveName, itemSaveData); }catch(e){} }
