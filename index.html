@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.14</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.15</span>
   </div>
 </header>
 
@@ -294,15 +294,23 @@
     <div class="tab-panel card" id="panel-stat">
       <div class="card-hd">
         <span class="card-ttl">👤 FQ4 Unit Editor</span>
-        <span class="badge b-purple" id="stat-badge">베이스 주소 필요</span>
+        <span class="badge b-purple" id="stat-badge">세이브 파일 필요</span>
       </div>
       <div class="card-body" style="padding:10px;">
 
-        <!-- 안내 -->
-        <div style="font-size:8px;line-height:1.7;background:var(--surface2);padding:7px;border-radius:3px;margin-bottom:8px;color:var(--muted);">
-          * 스캔탭에서 HP값 검색 → 주소 입력 → READ<br>
-          * Input 0-99 (common), HP can input 65535 (2Byte)<br>
-          * auto-fix input values when use verify function
+        <!-- 세이브 파일 선택 -->
+        <div style="background:var(--surface2);border-radius:3px;padding:7px;margin-bottom:8px;">
+          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Save File Select</div>
+          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
+            <select id="save-slot-sel" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
+              <option value="0">FQ4GD.0</option>
+              <option value="1">FQ4GD.1</option>
+              <option value="2">FQ4GD.2</option>
+              <option value="3">FQ4GD.3</option>
+            </select>
+            <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadSaveFile()">📂 LOAD</button>
+          </div>
+          <div id="save-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
         </div>
 
         <!-- No. / GO / PREV / NEXT -->
@@ -312,33 +320,7 @@
           <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitGo()">GO</button>
           <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitPrev()">PREV</button>
           <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitNext()">NEXT</button>
-        </div>
-
-        <!-- 베이스 주소 입력 -->
-        <div style="display:flex;gap:4px;margin-bottom:8px;">
-          <div style="flex:1;">
-            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Base Address (hex)</div>
-            <input id="stat-base-in" type="text" placeholder="예: 0x20b9480" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:5px 8px;font-family:monospace;font-size:10px;border-radius:3px;outline:none;" />
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;justify-content:flex-end;">
-            <button class="btn btn-primary" style="padding:5px 8px;font-size:7px;" onclick="statBaseSet()">READ</button>
-          </div>
-        </div>
-
-        <!-- Name / Class / Base 표시 -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
-          <div>
-            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Name</div>
-            <div id="unit-name" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:9px;color:var(--text);min-height:24px;">-</div>
-          </div>
-          <div>
-            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Class</div>
-            <div id="unit-class" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:9px;color:var(--text);min-height:24px;">-</div>
-          </div>
-          <div>
-            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Base</div>
-            <div id="unit-base" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:8px;color:var(--blue);font-family:monospace;min-height:24px;">-</div>
-          </div>
+          <span id="unit-total" style="font-size:8px;color:var(--muted);margin-left:auto;">/ -</span>
         </div>
 
         <div id="stat-fields" style="display:none;">
@@ -350,22 +332,14 @@
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
             <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL (Element)</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
-                <input type="checkbox" id="el-w" onchange="elChange()"> W(Water)
-              </label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
-                <input type="checkbox" id="el-a" onchange="elChange()"> A(Air)
-              </label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
-                <input type="checkbox" id="el-e" onchange="elChange()"> E(Earth)
-              </label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
-                <input type="checkbox" id="el-f" onchange="elChange()"> F(Fire)
-              </label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-w"> W(Water)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-a"> A(Air)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-e"> E(Earth)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-f"> F(Fire)</label>
             </div>
           </div>
 
-          <!-- MACRO 버튼 -->
+          <!-- MACRO -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
             <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ MACRO</div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
@@ -378,16 +352,17 @@
             </div>
           </div>
 
-          <!-- SET / RESET -->
-          <div style="display:flex;gap:5px;">
-            <button class="btn btn-accent" style="flex:2;padding:9px;font-size:9px;" onclick="statApply()">✅ SET</button>
-            <button class="btn btn-ghost"  style="flex:1;padding:9px;font-size:9px;" onclick="statReset()">RESET</button>
+          <!-- SET / RESET / SAVE -->
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;">
+            <button class="btn btn-accent" style="padding:9px;font-size:8px;" onclick="unitSet()">✅ SET</button>
+            <button class="btn btn-ghost"  style="padding:9px;font-size:8px;" onclick="unitReset()">RESET</button>
+            <button class="btn btn-primary" style="padding:9px;font-size:8px;" onclick="unitSaveFile()">💾 저장</button>
           </div>
-          <div style="margin-top:4px;font-size:7px;color:var(--muted);text-align:center;">적용 후 화면전환 시 반영됨</div>
+          <div style="margin-top:4px;font-size:7px;color:var(--muted);text-align:center;">SET → 💾저장 → 게임 재시작 필요</div>
         </div>
 
         <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:12px 0;">
-          📌 스캔탭 → HP값 검색 → Base Address 입력 후 READ
+          📂 세이브 파일 LOAD 후 유닛 편집 가능
         </div>
       </div>
     </div>
@@ -731,116 +706,179 @@ function clearScan(){
   document.getElementById('scan-warn').textContent='';
 }
 
-// ─── 유닛 에디터 (FQ4WED1 Unit Editor) ───────────────────
-// MACRO 프리셋 (FQ4WED1 기반, 오프셋 확정 후 값 수정)
+// ─── 유닛 에디터 (FQ4WED1 세이브파일 직접 파싱) ─────────────
+// 세이브파일 구조 (분석 결과)
+var SAV_SIG        = 'FQ-4';     // 0x00: 시그니처
+var SAV_GOLD_OFF   = 0x10;       // 0x10: 골드 (32bit) - 추정
+var SAV_UNIT_CNT   = 0x0773;     // 0x0773: 유닛 수 (16bit)
+var SAV_UNIT_START = 0x0775;     // 0x0775: 유닛 데이터 시작
+var SAV_UNIT_SIZE  = 85;         // 85 bytes/유닛
+
+// 유닛 필드 오프셋 (Unit 내 상대 위치)
+// ※ 아래 오프셋은 분석 추정값 - 게임과 비교 후 확정 필요
+var UNIT_FIELDS = [
+  {id:'sv_lv', off:0x00, bits:8,  label:'LV',          min:1,  max:99},
+  {id:'sv_hp', off:0x01, bits:16, label:'HP',           min:0,  max:65535},
+  {id:'sv_hr', off:0x03, bits:8,  label:'HR(HP회복)',   min:0,  max:99},
+  {id:'sv_ft', off:0x04, bits:8,  label:'FT(이동력)',   min:0,  max:99},
+  {id:'sv_at', off:0x05, bits:8,  label:'AT(공격)',     min:0,  max:99},
+  {id:'sv_ar', off:0x06, bits:8,  label:'AR(공격범위)', min:0,  max:99},
+  {id:'sv_df', off:0x07, bits:8,  label:'DF(방어)',     min:0,  max:99},
+  {id:'sv_dr', off:0x08, bits:8,  label:'DR(방어범위)', min:0,  max:99},
+  {id:'sv_ad', off:0x09, bits:8,  label:'AD(추가공격)', min:0,  max:99},
+  {id:'sv_aa', off:0x0A, bits:8,  label:'AA(공격횟수)', min:0,  max:99},
+  {id:'sv_md', off:0x0B, bits:8,  label:'MD(마법방어)', min:0,  max:99},
+  {id:'sv_ls', off:0x0C, bits:8,  label:'LS(통솔력)',   min:0,  max:99},
+];
+
 var MACROS = {
-  normal:  {sv_lv:1,  sv_hp:100, sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0, sv_aa:1, sv_md:5,  sv_ls:10},
-  knight:  {sv_lv:10, sv_hp:500, sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:30},
-  archer:  {sv_lv:10, sv_hp:300, sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
-  wizard:  {sv_lv:10, sv_hp:200, sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
-  master:  {sv_lv:20, sv_hp:999, sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
-  cheater: {sv_lv:99, sv_hp:65535,sv_hr:99,sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
+  normal:  {sv_lv:1,  sv_hp:100,   sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0, sv_aa:1, sv_md:5,  sv_ls:10},
+  knight:  {sv_lv:10, sv_hp:500,   sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:30},
+  archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
+  wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
+  master:  {sv_lv:20, sv_hp:999,   sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
+  cheater: {sv_lv:99, sv_hp:65535, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
 };
 
-function statBaseSet(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  var raw=document.getElementById('stat-base-in').value.trim();
-  var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
-  if(isNaN(base)){toast('⚠ 주소 형식 오류 (예: 0x20b9480)','err');return;}
-  if(!STAT_FIELDS.length){toast('⚠ STAT_FIELDS 미설정','err');return;}
-  statBaseAddr=base;
-  unitRender(base);
+var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
+var saveName = null;   // 세이브 파일명
+var unitIdx  = 0;
+var unitCount = 0;
+
+// 세이브 파일에서 값 읽기
+function savRead(off, bits){
+  if(!saveData) return 0;
+  if(bits===8)  return saveData[off];
+  if(bits===16) return saveData[off]|(saveData[off+1]<<8);
+  return (saveData[off]|(saveData[off+1]<<8)|(saveData[off+2]<<16)|(saveData[off+3]<<24))>>>0;
+}
+// 세이브 파일에 값 쓰기
+function savWrite(off, val, bits){
+  if(!saveData) return;
+  val = val>>>0;
+  if(bits>=8)  saveData[off]   = val&0xFF;
+  if(bits>=16) saveData[off+1] = (val>>8)&0xFF;
+  if(bits>=32){ saveData[off+2]=(val>>16)&0xFF; saveData[off+3]=(val>>24)&0xFF; }
 }
 
-function unitRender(base){
-  var grid=document.getElementById('stat-grid');
-  grid.innerHTML='';
-  STAT_FIELDS.forEach(function(f){
-    var val=mRead(base+f.off,f.bits);
-    var div=document.createElement('div');
-    div.innerHTML='<div class="lbl" style="font-size:7px;margin-bottom:2px;">'+f.label+'</div>'
+// DB에서 세이브파일 로드
+function loadSaveFile(){
+  var slot = document.getElementById('save-slot-sel').value;
+  saveName = 'FQ4GD.'+slot;
+  dbGet(saveName, function(d){
+    if(!d||d.length<100){
+      toast('⚠ '+saveName+' 없음 — 게임 저장 후 💾 저장 버튼을 누르세요','err');
+      return;
+    }
+    saveData = new Uint8Array(d);
+    // 시그니처 확인
+    var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
+    if(sig !== SAV_SIG){
+      toast('⚠ FQ4 세이브 파일이 아닙니다 (sig:'+sig+')','err');
+      return;
+    }
+    unitCount = savRead(SAV_UNIT_CNT, 16);
+    document.getElementById('unit-total').textContent = '/ '+unitCount;
+    document.getElementById('save-file-info').textContent =
+      saveName+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
+    document.getElementById('stat-badge').textContent = saveName+' 로드됨';
+    document.getElementById('stat-badge').className = 'badge b-green';
+    unitIdx = 0;
+    document.getElementById('unit-no').value = 0;
+    unitRender();
+    toast('📂 '+saveName+' 로드 완료!','ok');
+  });
+}
+
+// 유닛 렌더링
+function unitRender(){
+  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  var base = SAV_UNIT_START + unitIdx * SAV_UNIT_SIZE;
+  var grid = document.getElementById('stat-grid');
+  grid.innerHTML = '';
+  UNIT_FIELDS.forEach(function(f){
+    var val = savRead(base+f.off, f.bits);
+    var div = document.createElement('div');
+    div.innerHTML = '<div class="lbl" style="font-size:7px;margin-bottom:2px;">'+f.label+'</div>'
       +'<div id="'+f.id+'" class="stat-disp" data-off="'+f.off+'" data-bits="'+f.bits
       +'" data-min="'+(f.min||0)+'" data-max="'+(f.max||9999)+'" onclick="statEdit(this)">'+val+'</div>';
     grid.appendChild(div);
   });
-  // Name/Class/Base 표시 (오프셋 확정 전까지 주소만 표시)
-  document.getElementById('unit-name').textContent = '?';
-  document.getElementById('unit-class').textContent = '?';
-  document.getElementById('unit-base').textContent = '0x'+base.toString(16);
-  document.getElementById('unit-no').value = unitIdx;
-  document.getElementById('stat-fields').style.display='block';
-  document.getElementById('stat-pending').style.display='none';
-  document.getElementById('stat-badge').textContent='읽기 완료';
-  document.getElementById('stat-badge').className='badge b-green';
-  toast('📖 READ 완료 (base:0x'+base.toString(16)+')','ok');
+  document.getElementById('stat-fields').style.display = 'block';
+  document.getElementById('stat-pending').style.display = 'none';
 }
-
-// UNIT STEP (캐릭터 1명당 데이터 크기 — 확정 후 수정)
-var UNIT_STEP = 0x10;  // TODO: 스캔으로 확정 필요
-var unitIdx = 0;
 
 function unitGo(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  if(!statBaseAddr){toast('⚠ 먼저 READ 하세요','err');return;}
-  var n=parseInt(document.getElementById('unit-no').value)||0;
-  unitIdx=n;
-  var base=statBaseAddr + unitIdx*UNIT_STEP;
-  unitRender(base);
+  var n = parseInt(document.getElementById('unit-no').value)||0;
+  if(n<0) n=0;
+  if(unitCount>0 && n>=unitCount) n=unitCount-1;
+  unitIdx = n;
+  document.getElementById('unit-no').value = unitIdx;
+  unitRender();
 }
 function unitNext(){
+  if(unitCount>0 && unitIdx>=unitCount-1){ toast('⚠ 마지막 유닛입니다','nfo'); return; }
   document.getElementById('unit-no').value = ++unitIdx;
-  unitGo();
+  unitRender();
 }
 function unitPrev(){
-  if(unitIdx>0) unitIdx--;
-  document.getElementById('unit-no').value = unitIdx;
-  unitGo();
+  if(unitIdx<=0){ toast('⚠ 첫 번째 유닛입니다','nfo'); return; }
+  document.getElementById('unit-no').value = --unitIdx;
+  unitRender();
 }
 
 function statEdit(el){
-  var cur=parseInt(el.textContent)||0;
-  var mn=parseInt(el.dataset.min)||0, mx=parseInt(el.dataset.max)||9999;
-  var nv=prompt(el.id+' 입력 ('+mn+'~'+mx+')',cur);
-  if(nv===null)return;
-  nv=Math.max(mn,Math.min(mx,parseInt(nv)||0));
-  el.textContent=nv;
+  var cur = parseInt(el.textContent)||0;
+  var mn = parseInt(el.dataset.min)||0, mx = parseInt(el.dataset.max)||9999;
+  var nv = prompt(el.querySelector ? el.id : (el.id)+' 입력 ('+mn+'~'+mx+')', cur);
+  if(nv===null) return;
+  nv = Math.max(mn, Math.min(mx, parseInt(nv)||0));
+  el.textContent = nv;
 }
 
 function applyMacro(type){
-  var m=MACROS[type]; if(!m)return;
-  STAT_FIELDS.forEach(function(f){
-    var el=document.getElementById(f.id); if(!el)return;
-    if(m[f.id]!==undefined) el.textContent=m[f.id];
+  var m = MACROS[type]; if(!m) return;
+  UNIT_FIELDS.forEach(function(f){
+    var el = document.getElementById(f.id); if(!el) return;
+    if(m[f.id]!==undefined) el.textContent = m[f.id];
   });
   toast('🎮 Macro: '+type,'ok');
 }
 
-function elChange(){
-  // EL 체크박스 → 나중에 오프셋 확정 후 연결
-  var w=document.getElementById('el-w').checked;
-  var a=document.getElementById('el-a').checked;
-  var e=document.getElementById('el-e').checked;
-  var f=document.getElementById('el-f').checked;
-  toast('EL: '+(w?'W':'')+(a?'A':'')+(e?'E':'')+(f?'F':'') || 'none','nfo');
-}
-
-function statApply(){
-  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
-  if(!statBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
-  var base = statBaseAddr + unitIdx*UNIT_STEP;
-  STAT_FIELDS.forEach(function(f){
-    var el=document.getElementById(f.id); if(!el)return;
-    mWrite(base+f.off,parseInt(el.textContent)||0,f.bits);
+// SET: UI 값을 saveData에 기록
+function unitSet(){
+  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  var base = SAV_UNIT_START + unitIdx * SAV_UNIT_SIZE;
+  UNIT_FIELDS.forEach(function(f){
+    var el = document.getElementById(f.id); if(!el) return;
+    savWrite(base+f.off, parseInt(el.textContent)||0, f.bits);
   });
-  toast('✅ SET 완료!','ok');
+  toast('✅ SET 완료 — 💾 저장 버튼으로 파일에 반영하세요','ok');
 }
 
-function statReset(){
-  if(!statBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
-  var base = statBaseAddr + unitIdx*UNIT_STEP;
-  unitRender(base);
-  toast('🔄 RESET — 메모리에서 다시 읽음','ok');
+// RESET: saveData에서 다시 읽기
+function unitReset(){
+  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  unitRender();
+  toast('🔄 RESET 완료','ok');
 }
+
+// 💾 세이브파일 저장 (DB + 게임 중이면 DOSBox에도)
+function unitSaveFile(){
+  if(!saveData||!saveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  dbPut(saveName, saveData, function(ok){
+    if(!ok){ toast('⚠ DB 저장 실패','err'); return; }
+    // DOSBox에도 반영
+    if(fs0){ try{ fs0.fs.writeFile('/'+saveName, saveData); }catch(e){} }
+    toast('💾 '+saveName+' 저장 완료!','ok');
+    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+  });
+}
+
+// 하위호환: statBaseSet (스캔탭 연동용, 현재 미사용)
+function statBaseSet(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
+function statApply(){ unitSet(); }
+function statReset(){ unitReset(); }
 
 // ─── 아이템 ────────────────────────────────────────────
 function itemBaseSet(){
