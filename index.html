@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.16</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.18</span>
   </div>
 </header>
 
@@ -712,23 +712,22 @@ var SAV_SIG        = 'FQ-4';     // 0x00: 시그니처
 var SAV_GOLD_OFF   = 0x10;       // 0x10: 골드 (32bit) - 추정
 var SAV_UNIT_CNT   = 0x0773;     // 0x0773: 유닛 수 (16bit)
 var SAV_UNIT_START = 0x0775;     // 0x0775: 유닛 데이터 시작
-var SAV_UNIT_SIZE  = 85;         // 85 bytes/유닛
+var SAV_UNIT_SIZE  = 63;         // 63 bytes/유닛 (확정)
 
 // 유닛 필드 오프셋 (Unit 내 상대 위치)
 // ※ 아래 오프셋은 분석 추정값 - 게임과 비교 후 확정 필요
+// ★ 실제 세이브파일 분석으로 확정된 오프셋
+// 검증: 아레스(유닛139) LV=1 HR=11 HP=259 AT=36 AR=36 DF=32 DR=35 ✓
 var UNIT_FIELDS = [
   {id:'sv_lv', off:0x00, bits:8,  label:'LV',          min:1,  max:99},
-  {id:'sv_hp', off:0x01, bits:16, label:'HP',           min:0,  max:65535},
-  {id:'sv_hr', off:0x03, bits:8,  label:'HR(HP회복)',   min:0,  max:99},
-  {id:'sv_ft', off:0x04, bits:8,  label:'FT(이동력)',   min:0,  max:99},
-  {id:'sv_at', off:0x05, bits:8,  label:'AT(공격)',     min:0,  max:99},
-  {id:'sv_ar', off:0x06, bits:8,  label:'AR(공격범위)', min:0,  max:99},
-  {id:'sv_df', off:0x07, bits:8,  label:'DF(방어)',     min:0,  max:99},
-  {id:'sv_dr', off:0x08, bits:8,  label:'DR(방어범위)', min:0,  max:99},
-  {id:'sv_ad', off:0x09, bits:8,  label:'AD(추가공격)', min:0,  max:99},
-  {id:'sv_aa', off:0x0A, bits:8,  label:'AA(공격횟수)', min:0,  max:99},
-  {id:'sv_md', off:0x0B, bits:8,  label:'MD(마법방어)', min:0,  max:99},
-  {id:'sv_ls', off:0x0C, bits:8,  label:'LS(통솔력)',   min:0,  max:99},
+  {id:'sv_hr', off:0x01, bits:8,  label:'HR(HP회복)',   min:0,  max:99},
+  {id:'sv_hp', off:0x02, bits:16, label:'HP',           min:0,  max:65535},
+  {id:'sv_at', off:0x04, bits:8,  label:'AT(공격)',     min:0,  max:99},
+  {id:'sv_ar', off:0x05, bits:8,  label:'AR(공격범위)', min:0,  max:99},
+  {id:'sv_df', off:0x06, bits:8,  label:'DF(방어)',     min:0,  max:99},
+  {id:'sv_dr', off:0x07, bits:8,  label:'DR(방어범위)', min:0,  max:99},
+  // +0x08: EL 비트플래그 (별도 체크박스로 처리)
+  // AD AA MD: 추가 분석 필요
 ];
 
 var MACROS = {
@@ -804,6 +803,13 @@ function unitRender(){
       +'" data-min="'+(f.min||0)+'" data-max="'+(f.max||9999)+'" onclick="statEdit(this)">'+val+'</div>';
     grid.appendChild(div);
   });
+  // EL 체크박스 연동 (+0x08)
+  var elVal = savRead(base+0x08, 8);
+  document.getElementById('el-f').checked = !!(elVal & 0x40);
+  document.getElementById('el-e').checked = !!(elVal & 0x10);
+  document.getElementById('el-a').checked = !!(elVal & 0x04);
+  document.getElementById('el-w').checked = !!(elVal & 0x01);
+
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
 }
@@ -853,6 +859,14 @@ function unitSet(){
     var el = document.getElementById(f.id); if(!el) return;
     savWrite(base+f.off, parseInt(el.textContent)||0, f.bits);
   });
+  // EL 체크박스 쓰기
+  var elVal = 0;
+  if(document.getElementById('el-f').checked) elVal |= 0x40;
+  if(document.getElementById('el-e').checked) elVal |= 0x10;
+  if(document.getElementById('el-a').checked) elVal |= 0x04;
+  if(document.getElementById('el-w').checked) elVal |= 0x01;
+  savWrite(base+0x08, elVal, 8);
+
   toast('✅ SET 완료 — 💾 저장 버튼으로 파일에 반영하세요','ok');
 }
 
@@ -885,17 +899,77 @@ function statReset(){ unitReset(); }
 // FQ4WED1 Item Editor 방식: 아이템 목록 + 소유수(Owned) 편집
 // ※ 아이템 데이터 오프셋은 확정 필요
 var SAV_ITEM_START = 0x0020;   // 아이템 데이터 시작 오프셋 (추정)
-var SAV_ITEM_COUNT = 50;       // 아이템 종류 수 (추정)
+var SAV_ITEM_COUNT = 63;       // 아이템 종류 수
 
 var itemSaveData = null;
 var itemSaveName = null;
 var selectedItemIdx = 0;
 
-// 아이템 목록 (FQ4WED1 분석 기반 — 확정 후 채워넣기)
+// 아이템 목록 (FQ4WED1 Item Editor 기반)
 var ITEM_LIST = [
-  // {idx:0, name:'검'},
-  // {idx:1, name:'창'},
-  // 아이템 목록 확정 후 채워주세요
+  {idx:0,  name:'숫스드'},
+  {idx:1,  name:'롱스드'},
+  {idx:2,  name:'아이스스드'},
+  {idx:3,  name:'히트스드'},
+  {idx:4,  name:'크레이모어'},
+  {idx:5,  name:'싱글창'},
+  {idx:6,  name:'독검'},
+  {idx:7,  name:'제인검'},
+  {idx:8,  name:'암살단검'},
+  {idx:9,  name:'제비검'},
+  {idx:10, name:'볼검'},
+  {idx:11, name:'엑스칼리버'},
+  {idx:12, name:'하르벨트'},
+  {idx:13, name:'파트리샨'},
+  {idx:14, name:'롤의창'},
+  {idx:15, name:'싱글창'},
+  {idx:16, name:'도끼'},
+  {idx:17, name:'파괴도끼'},
+  {idx:18, name:'프레랄'},
+  {idx:19, name:'모놀스닉'},
+  {idx:20, name:'마법지팡이'},
+  {idx:21, name:'가보턴'},
+  {idx:22, name:'집념의활'},
+  {idx:23, name:'제인갑'},
+  {idx:24, name:'프레트갑옷'},
+  {idx:25, name:'스케일갑옷'},
+  {idx:26, name:'토바토'},
+  {idx:27, name:'금갑옷'},
+  {idx:28, name:'은갑옷'},
+  {idx:29, name:'사자갑옷'},
+  {idx:30, name:'바람갑옷'},
+  {idx:31, name:'오우마스크'},
+  {idx:32, name:'메두사사모머리'},
+  {idx:33, name:'녹대의갑'},
+  {idx:34, name:'범의반지'},
+  {idx:35, name:'사자반지'},
+  {idx:36, name:'전사반지'},
+  {idx:37, name:'적십자'},
+  {idx:38, name:'볼부적'},
+  {idx:39, name:'양부적'},
+  {idx:40, name:'바람화살'},
+  {idx:41, name:'볼부적'},
+  {idx:42, name:'카라표로토름'},
+  {idx:43, name:'출항필리'},
+  {idx:44, name:'마요절리'},
+  {idx:45, name:'전사파피'},
+  {idx:46, name:'흉의화석'},
+  {idx:47, name:'바람화각'},
+  {idx:48, name:'발스타키드'},
+  {idx:49, name:'빛돌'},
+  {idx:50, name:'꿀꿀돌'},
+  {idx:51, name:'번개돌'},
+  {idx:52, name:'꿀꿀결성'},
+  {idx:53, name:'암흑돌'},
+  {idx:54, name:'파괴의돌'},
+  {idx:55, name:'안약'},
+  {idx:56, name:'박카스그'},
+  {idx:57, name:'인삼엑기스'},
+  {idx:58, name:'체력회복제'},
+  {idx:59, name:'인삼회복제'},
+  {idx:60, name:'해독약'},
+  {idx:61, name:'석화해제약'},
+  {idx:62, name:'부활약'},
 ];
 
 function loadItemFile(){
