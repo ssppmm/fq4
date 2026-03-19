@@ -211,7 +211,7 @@
     <div class="tabs">
       <div class="tab active" data-tab="gold">💰 골드</div>
       <div class="tab" data-tab="scan">🔍 스캔</div>
-      <div class="tab" data-tab="stat">⚔ 스탯</div>
+      <div class="tab" data-tab="stat">👤 유닛</div>
       <div class="tab" data-tab="item">🎒 아이템</div>
     </div>
 
@@ -290,34 +290,104 @@
       </div>
     </div>
 
-    <!-- ⚔ 스탯 -->
+    <!-- 👤 유닛 (FQ4WED1 Unit Editor) -->
     <div class="tab-panel card" id="panel-stat">
       <div class="card-hd">
-        <span class="card-ttl">⚔ 스탯 편집</span>
-        <span class="badge b-purple" id="stat-badge">오프셋 확정 필요</span>
+        <span class="card-ttl">👤 FQ4 Unit Editor</span>
+        <span class="badge b-purple" id="stat-badge">베이스 주소 필요</span>
       </div>
       <div class="card-body" style="padding:10px;">
-        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
-          <b style="color:var(--accent);">📌 사용법</b><br>
-          ① 게임에서 캐릭터 HP 확인 → 🔍 스캔탭에서 HP값 스캔<br>
-          ② 주소 클릭 → 베이스 주소 입력란에 붙여넣기<br>
-          ③ 📖 읽기 → 편집 → ✅ 적용<br>
-          <span style="color:var(--muted);font-size:8px;">필드: LV·HP·HR·FT·AT·AR·DF·DR·AD·AA·MD·LS</span>
+
+        <!-- 안내 -->
+        <div style="font-size:8px;line-height:1.7;background:var(--surface2);padding:7px;border-radius:3px;margin-bottom:8px;color:var(--muted);">
+          * 스캔탭에서 HP값 검색 → 주소 입력 → READ<br>
+          * Input 0-99 (common), HP can input 65535 (2Byte)<br>
+          * auto-fix input values when use verify function
         </div>
-        <div class="lbl" style="margin-bottom:4px;">캐릭터 베이스 주소 (hex)</div>
-        <div style="display:flex;gap:5px;margin-bottom:10px;">
-          <input id="stat-base-in" type="text" placeholder="예: 0x20b9480" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;outline:none;" />
-          <button class="btn btn-primary" style="padding:8px 10px;font-size:8px;" onclick="statBaseSet()">📖 읽기</button>
+
+        <!-- No. / GO / PREV / NEXT -->
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:8px;">
+          <span style="font-family:var(--font-pixel);font-size:7px;color:var(--muted);white-space:nowrap;">No.</span>
+          <input id="unit-no" type="number" value="0" min="0" style="width:48px;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:4px 6px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;text-align:center;" />
+          <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitGo()">GO</button>
+          <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitPrev()">PREV</button>
+          <button class="btn btn-ghost" style="padding:5px 8px;font-size:7px;" onclick="unitNext()">NEXT</button>
         </div>
+
+        <!-- 베이스 주소 입력 -->
+        <div style="display:flex;gap:4px;margin-bottom:8px;">
+          <div style="flex:1;">
+            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Base Address (hex)</div>
+            <input id="stat-base-in" type="text" placeholder="예: 0x20b9480" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:5px 8px;font-family:monospace;font-size:10px;border-radius:3px;outline:none;" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;justify-content:flex-end;">
+            <button class="btn btn-primary" style="padding:5px 8px;font-size:7px;" onclick="statBaseSet()">READ</button>
+          </div>
+        </div>
+
+        <!-- Name / Class / Base 표시 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Name</div>
+            <div id="unit-name" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:9px;color:var(--text);min-height:24px;">-</div>
+          </div>
+          <div>
+            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Class</div>
+            <div id="unit-class" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:9px;color:var(--text);min-height:24px;">-</div>
+          </div>
+          <div>
+            <div style="font-size:7px;color:var(--muted);margin-bottom:2px;">Base</div>
+            <div id="unit-base" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:8px;color:var(--blue);font-family:monospace;min-height:24px;">-</div>
+          </div>
+        </div>
+
         <div id="stat-fields" style="display:none;">
-          <div style="font-size:7px;color:var(--accent);margin-bottom:6px;font-family:var(--font-pixel);">▶ 스탯 (클릭하여 수정)</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;" id="stat-grid"></div>
-          <button class="btn btn-accent" style="width:100%;padding:9px;" onclick="statApply()">✅ 전체 적용</button>
-          <div style="margin-top:5px;font-size:7px;color:var(--muted);text-align:center;">적용 후 화면전환 시 반영됨</div>
+          <!-- 스탯 그리드 -->
+          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;" id="stat-grid"></div>
+
+          <!-- EL 체크박스 -->
+          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL (Element)</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
+                <input type="checkbox" id="el-w" onchange="elChange()"> W(Water)
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
+                <input type="checkbox" id="el-a" onchange="elChange()"> A(Air)
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
+                <input type="checkbox" id="el-e" onchange="elChange()"> E(Earth)
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;">
+                <input type="checkbox" id="el-f" onchange="elChange()"> F(Fire)
+              </label>
+            </div>
+          </div>
+
+          <!-- MACRO 버튼 -->
+          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ MACRO</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('normal')">Normal</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('knight')">Knight</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('archer')">Archer</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('wizard')">Wizard</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('master')">Master</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;color:var(--red);border-color:var(--red);" onclick="applyMacro('cheater')">Cheater</button>
+            </div>
+          </div>
+
+          <!-- SET / RESET -->
+          <div style="display:flex;gap:5px;">
+            <button class="btn btn-accent" style="flex:2;padding:9px;font-size:9px;" onclick="statApply()">✅ SET</button>
+            <button class="btn btn-ghost"  style="flex:1;padding:9px;font-size:9px;" onclick="statReset()">RESET</button>
+          </div>
+          <div style="margin-top:4px;font-size:7px;color:var(--muted);text-align:center;">적용 후 화면전환 시 반영됨</div>
         </div>
-        <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
-          📌 스캔탭 → HP값 검색 → 주소 확인 후 입력<br>
-          <span style="font-size:8px;color:var(--accent);">FQ4WED1 에디터 필드 기반 구조 적용됨</span>
+
+        <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:12px 0;">
+          📌 스캔탭 → HP값 검색 → Base Address 입력 후 READ
         </div>
       </div>
     </div>
@@ -661,14 +731,28 @@ function clearScan(){
   document.getElementById('scan-warn').textContent='';
 }
 
-// ─── 스탯 ──────────────────────────────────────────────
+// ─── 유닛 에디터 (FQ4WED1 Unit Editor) ───────────────────
+// MACRO 프리셋 (FQ4WED1 기반, 오프셋 확정 후 값 수정)
+var MACROS = {
+  normal:  {sv_lv:1,  sv_hp:100, sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0, sv_aa:1, sv_md:5,  sv_ls:10},
+  knight:  {sv_lv:10, sv_hp:500, sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:30},
+  archer:  {sv_lv:10, sv_hp:300, sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
+  wizard:  {sv_lv:10, sv_hp:200, sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
+  master:  {sv_lv:20, sv_hp:999, sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
+  cheater: {sv_lv:99, sv_hp:65535,sv_hr:99,sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
+};
+
 function statBaseSet(){
   var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
   var raw=document.getElementById('stat-base-in').value.trim();
   var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
   if(isNaN(base)){toast('⚠ 주소 형식 오류 (예: 0x20b9480)','err');return;}
-  if(!STAT_FIELDS.length){toast('⚠ STAT_FIELDS 미설정 — 오프셋 확정 후 코드 수정','err');return;}
+  if(!STAT_FIELDS.length){toast('⚠ STAT_FIELDS 미설정','err');return;}
   statBaseAddr=base;
+  unitRender(base);
+}
+
+function unitRender(base){
   var grid=document.getElementById('stat-grid');
   grid.innerHTML='';
   STAT_FIELDS.forEach(function(f){
@@ -679,12 +763,40 @@ function statBaseSet(){
       +'" data-min="'+(f.min||0)+'" data-max="'+(f.max||9999)+'" onclick="statEdit(this)">'+val+'</div>';
     grid.appendChild(div);
   });
+  // Name/Class/Base 표시 (오프셋 확정 전까지 주소만 표시)
+  document.getElementById('unit-name').textContent = '?';
+  document.getElementById('unit-class').textContent = '?';
+  document.getElementById('unit-base').textContent = '0x'+base.toString(16);
+  document.getElementById('unit-no').value = unitIdx;
   document.getElementById('stat-fields').style.display='block';
   document.getElementById('stat-pending').style.display='none';
   document.getElementById('stat-badge').textContent='읽기 완료';
   document.getElementById('stat-badge').className='badge b-green';
-  toast('📖 스탯 읽기 완료 (base:0x'+base.toString(16)+')','ok');
+  toast('📖 READ 완료 (base:0x'+base.toString(16)+')','ok');
 }
+
+// UNIT STEP (캐릭터 1명당 데이터 크기 — 확정 후 수정)
+var UNIT_STEP = 0x10;  // TODO: 스캔으로 확정 필요
+var unitIdx = 0;
+
+function unitGo(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(!statBaseAddr){toast('⚠ 먼저 READ 하세요','err');return;}
+  var n=parseInt(document.getElementById('unit-no').value)||0;
+  unitIdx=n;
+  var base=statBaseAddr + unitIdx*UNIT_STEP;
+  unitRender(base);
+}
+function unitNext(){
+  document.getElementById('unit-no').value = ++unitIdx;
+  unitGo();
+}
+function unitPrev(){
+  if(unitIdx>0) unitIdx--;
+  document.getElementById('unit-no').value = unitIdx;
+  unitGo();
+}
+
 function statEdit(el){
   var cur=parseInt(el.textContent)||0;
   var mn=parseInt(el.dataset.min)||0, mx=parseInt(el.dataset.max)||9999;
@@ -693,14 +805,41 @@ function statEdit(el){
   nv=Math.max(mn,Math.min(mx,parseInt(nv)||0));
   el.textContent=nv;
 }
+
+function applyMacro(type){
+  var m=MACROS[type]; if(!m)return;
+  STAT_FIELDS.forEach(function(f){
+    var el=document.getElementById(f.id); if(!el)return;
+    if(m[f.id]!==undefined) el.textContent=m[f.id];
+  });
+  toast('🎮 Macro: '+type,'ok');
+}
+
+function elChange(){
+  // EL 체크박스 → 나중에 오프셋 확정 후 연결
+  var w=document.getElementById('el-w').checked;
+  var a=document.getElementById('el-a').checked;
+  var e=document.getElementById('el-e').checked;
+  var f=document.getElementById('el-f').checked;
+  toast('EL: '+(w?'W':'')+(a?'A':'')+(e?'E':'')+(f?'F':'') || 'none','nfo');
+}
+
 function statApply(){
   var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
   if(!statBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
+  var base = statBaseAddr + unitIdx*UNIT_STEP;
   STAT_FIELDS.forEach(function(f){
     var el=document.getElementById(f.id); if(!el)return;
-    mWrite(statBaseAddr+f.off,parseInt(el.textContent)||0,f.bits);
+    mWrite(base+f.off,parseInt(el.textContent)||0,f.bits);
   });
-  toast('✅ 스탯 적용!','ok');
+  toast('✅ SET 완료!','ok');
+}
+
+function statReset(){
+  if(!statBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
+  var base = statBaseAddr + unitIdx*UNIT_STEP;
+  unitRender(base);
+  toast('🔄 RESET — 메모리에서 다시 읽음','ok');
 }
 
 // ─── 아이템 ────────────────────────────────────────────
