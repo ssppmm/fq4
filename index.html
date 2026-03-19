@@ -132,7 +132,7 @@
   <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
   <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.24</span>
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.25</span>
   </div>
 </header>
 
@@ -428,7 +428,7 @@
 var GAME_EXE  = 'FQ4.BAT';   // 실행 파일명
 var SAVE_FILES = ['FQ4GD.0','FQ4GD.1','FQ4GD.2','FQ4GD.3'];  // 세이브 파일 4개
 var SAVE_FILE = SAVE_FILES[0];  // 하위호환용
-var GOLD_MAX  = 50000;        // 골드 MAX 값
+var GOLD_MAX  = 9999900;      // 골드 MAX 값
 var SCAN_START = 0x800000;
 var SCAN_END   = 0x3000000;
 
@@ -610,8 +610,15 @@ function doUpload(file){
   if(!file) return;
   var r=new FileReader();
   r.onload=function(e){
-    var d=new Uint8Array(e.target.result), fn=SAVE_FILE||file.name;
-    dbPut(fn,d,function(){ if(fs0){ try{fs0.fs.writeFile('/'+fn,d);}catch(e){} } toast('⬆ 불러오기 완료 — 게임 재시작 필요','ok'); });
+    var d=new Uint8Array(e.target.result);
+    // 파일명에서 세이브 파일 판별 (FQ4GD.0~3)
+    var fn = file.name.toUpperCase();
+    var isSave = SAVE_FILES.some(function(sf){ return sf.toUpperCase()===fn; });
+    var saveFn = isSave ? file.name.toUpperCase() : (SAVE_FILES[0]);
+    dbPut(saveFn, d, function(){
+      if(fs0){ try{ fs0.fs.writeFile('/'+saveFn, d); }catch(e){} }
+      toast('⬆ '+saveFn+' 불러오기 완료 — 게임 재시작 필요','ok');
+    });
   };
   r.readAsArrayBuffer(file);
 }
@@ -695,7 +702,7 @@ function goldScan(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을
 // ─── 유닛 에디터 (FQ4WED1 세이브파일 직접 파싱) ─────────────
 // 세이브파일 구조 (분석 결과)
 var SAV_SIG        = 'FQ-4';     // 0x00: 시그니처
-var SAV_GOLD_OFF   = 0x10;       // 0x10: 골드 (32bit) - 추정
+var SAV_GOLD_OFF   = 0x04;       // 0x04: 골드 (32bit) ✓ 확정
 var SAV_UNIT_CNT   = 0x0773;     // 0x0773: 유닛 수 (16bit)
 var SAV_UNIT_START = 0x0775;     // 0x0775: 유닛 데이터 시작
 var SAV_UNIT_SIZE  = 63;         // 63 bytes/유닛 (확정)
