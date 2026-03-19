@@ -56,6 +56,8 @@
     .btn-ul-s    { background: transparent; border-color: var(--green); color: var(--green); }
     .btn-ul-s:hover  { background: var(--green); color: #000; }
     .btn-ghost   { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-del     { background: transparent; border-color: var(--red); color: var(--red); }
+    .btn-del:hover { background: var(--red); color: #fff; }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn-primary:hover { opacity: .8; }
@@ -129,11 +131,8 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4</div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v27</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
-  <div class="header-links">
-    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.25</span>
-  </div>
 </header>
 
 <main>
@@ -186,6 +185,7 @@
     <div class="game-toolbar">
       <button class="btn btn-start" id="btn-start">▶ 시작</button>
       <button class="btn btn-save"  id="btn-save">💾 저장</button>
+      <button class="btn btn-ghost" id="btn-del" style="color:var(--red);border-color:var(--red);">🗑 삭제</button>
       <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
       <button class="btn btn-ul-s"  id="btn-ul-t">⬆ 불러오기</button>
       <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
@@ -428,7 +428,7 @@
 var GAME_EXE  = 'FQ4.BAT';   // 실행 파일명
 var SAVE_FILES = ['FQ4GD.0','FQ4GD.1','FQ4GD.2','FQ4GD.3'];  // 세이브 파일 4개
 var SAVE_FILE = SAVE_FILES[0];  // 하위호환용
-var GOLD_MAX  = 9999900;      // 골드 MAX 값
+var GOLD_MAX  = 655350;       // 골드 MAX (16bit×10, 저장최대=65535)
 var SCAN_START = 0x800000;
 var SCAN_END   = 0x3000000;
 
@@ -505,6 +505,43 @@ function scanMem(v,b,s,e){
 // ─── IndexedDB ─────────────────────────────────────────
 var DB_NAME='fq4-saves';
 function dbOpen(cb){ var r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');}; r.onsuccess=function(e){cb(e.target.result);}; r.onerror=function(){cb(null);}; }
+
+// 유효한 세이브 파일 목록을 드롭다운에 채우기
+function populateSaveSel(selId, callback){
+  var sel = document.getElementById(selId);
+  if(!sel) return;
+  var original = sel.value;
+  sel.innerHTML = '<option value="" disabled>-- 로딩 중... --</option>';
+  var checked = 0;
+  var valid = [];
+  SAVE_FILES.forEach(function(sf){
+    dbGet(sf, function(d){
+      if(d && d.length > 100){
+        // FQ-4 시그니처 확인
+        var sig = String.fromCharCode(d[0],d[1],d[2],d[3]);
+        if(sig === 'FQ-4') valid.push(sf);
+      }
+      checked++;
+      if(checked === SAVE_FILES.length){
+        sel.innerHTML = '';
+        if(valid.length === 0){
+          sel.innerHTML = '<option value="" disabled>세이브 없음 (💾 저장 먼저)</option>';
+        } else {
+          valid.forEach(function(sf){
+            var opt = document.createElement('option');
+            opt.value = sf.slice(-1); // '0'~'3'
+            opt.textContent = sf;
+            sel.appendChild(opt);
+          });
+          // 이전 선택값 복원 또는 첫번째 선택
+          var restore = valid.find(function(sf){ return sf.slice(-1)===original; });
+          sel.value = restore ? original : valid[0].slice(-1);
+        }
+        if(callback) callback(valid);
+      }
+    });
+  });
+}
 function dbGet(k,cb){ dbOpen(function(db){ if(!db)return cb(null); var r=db.transaction('files','readonly').objectStore('files').get(k); r.onsuccess=function(e){cb(e.target.result||null);}; r.onerror=function(){cb(null);}; }); }
 function dbPut(k,v,cb){ dbOpen(function(db){ if(!db)return cb&&cb(false); var tx=db.transaction('files','readwrite'); tx.objectStore('files').put(v,k); tx.oncomplete=function(){cb&&cb(true);}; tx.onerror=function(){cb&&cb(false);}; }); }
 
@@ -633,8 +670,17 @@ document.querySelectorAll('.tab').forEach(function(t){
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
     document.querySelectorAll('.tab-panel').forEach(function(x){x.classList.remove('active');});
     this.classList.add('active');
-    document.getElementById('panel-'+this.dataset.tab).classList.add('active');
+    var tab = this.dataset.tab;
+    document.getElementById('panel-'+tab).classList.add('active');
+    // 탭 전환 시 유효 세이브 목록 갱신
+    if(tab==='gold')  populateSaveSel('gold-slot-sel');
+    if(tab==='stat')  populateSaveSel('save-slot-sel');
+    if(tab==='item')  populateSaveSel('item-slot-sel');
   });
+});
+// 초기 로드 시 골드 탭 드롭다운 갱신
+document.addEventListener('DOMContentLoaded', function(){
+  populateSaveSel('gold-slot-sel');
 });
 
 // ─── 골드 ──────────────────────────────────────────────
@@ -643,16 +689,19 @@ var goldSaveData = null;
 var goldSaveName = null;
 
 function loadGoldFile(){
-  var slot = document.getElementById('gold-slot-sel').value;
-  goldSaveName = 'FQ4GD.'+slot;
+  var slotVal = document.getElementById('gold-slot-sel').value;
+  var slot = (slotVal===''||slotVal===null) ? '0' : slotVal;
+  goldSaveName = slot.startsWith('FQ4GD') ? slot : 'FQ4GD.'+slot;
   dbGet(goldSaveName, function(d){
-    if(!d||d.length<100){ toast('⚠ '+goldSaveName+' 없음 — 게임 저장 후 💾 버튼을 누르세요','err'); return; }
+    if(!d||d.length===0){ toast('⚠ '+goldSaveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
+    if(!d||d.length<100){ toast('⚠ '+goldSaveName+' 크기 오류','err'); return; }
     goldSaveData = new Uint8Array(d);
     var sig = String.fromCharCode(goldSaveData[0],goldSaveData[1],goldSaveData[2],goldSaveData[3]);
     if(sig !== 'FQ-4'){ toast('⚠ FQ4 세이브 파일이 아닙니다','err'); return; }
-    var gold = goldSaveData[SAV_GOLD_OFF]|(goldSaveData[SAV_GOLD_OFF+1]<<8)|(goldSaveData[SAV_GOLD_OFF+2]<<16)|(goldSaveData[SAV_GOLD_OFF+3]<<24);
+    var goldRaw = goldSaveData[SAV_GOLD_OFF]|(goldSaveData[SAV_GOLD_OFF+1]<<8);
+    var gold = goldRaw * 10;
     document.getElementById('gold-cur-in').textContent = gold.toLocaleString();
-    document.getElementById('gold-file-info').textContent = goldSaveName+' 로드 완료 — 현재 골드: '+gold.toLocaleString();
+    document.getElementById('gold-file-info').textContent = goldSaveName+' 로드 완료 — 현재 골드: '+gold.toLocaleString()+'G';
     document.getElementById('gold-badge').textContent = goldSaveName+' 로드됨';
     document.getElementById('gold-badge').className = 'badge b-green';
     toast('📂 '+goldSaveName+' 골드 로드 완료!','ok');
@@ -678,11 +727,10 @@ function goldSet(){
   if(!goldSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var val = parseInt(document.getElementById('gold-cur-in').textContent.replace(/,/g,''))||0;
   val = Math.max(0, Math.min(GOLD_MAX, val));
-  goldSaveData[SAV_GOLD_OFF]   = val&0xFF;
-  goldSaveData[SAV_GOLD_OFF+1] = (val>>8)&0xFF;
-  goldSaveData[SAV_GOLD_OFF+2] = (val>>16)&0xFF;
-  goldSaveData[SAV_GOLD_OFF+3] = (val>>24)&0xFF;
-  document.getElementById('gold-log').textContent = '✅ '+val.toLocaleString()+' SET 완료 — 💾 저장 버튼으로 반영하세요';
+  var goldRaw = Math.floor(val / 10);
+  goldSaveData[SAV_GOLD_OFF]   = goldRaw & 0xFF;
+  goldSaveData[SAV_GOLD_OFF+1] = (goldRaw >> 8) & 0xFF;
+  document.getElementById('gold-log').textContent = '✅ '+val.toLocaleString()+'G SET 완료 (저장값='+goldRaw+') — 💾 저장 버튼으로 반영하세요';
   toast('💰 골드 SET 완료!','ok');
 }
 
@@ -702,7 +750,7 @@ function goldScan(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을
 // ─── 유닛 에디터 (FQ4WED1 세이브파일 직접 파싱) ─────────────
 // 세이브파일 구조 (분석 결과)
 var SAV_SIG        = 'FQ-4';     // 0x00: 시그니처
-var SAV_GOLD_OFF   = 0x04;       // 0x04: 골드 (32bit) ✓ 확정
+var SAV_GOLD_OFF   = 0x047E;     // 0x047E: 골드 (16bit, 10G단위) ✓ 확정
 var SAV_UNIT_CNT   = 0x0773;     // 0x0773: 유닛 수 (16bit)
 var SAV_UNIT_START = 0x0775;     // 0x0775: 유닛 데이터 시작
 var SAV_UNIT_SIZE  = 63;         // 63 bytes/유닛 (확정)
@@ -758,13 +806,12 @@ function savWrite(off, val, bits){
 
 // DB에서 세이브파일 로드
 function loadSaveFile(){
-  var slot = document.getElementById('save-slot-sel').value;
-  saveName = 'FQ4GD.'+slot;
+  var slotVal = document.getElementById('save-slot-sel').value;
+  var slot = (slotVal===''||slotVal===null) ? '0' : slotVal;
+  saveName = slot.startsWith('FQ4GD') ? slot : 'FQ4GD.'+slot;
   dbGet(saveName, function(d){
-    if(!d||d.length<100){
-      toast('⚠ '+saveName+' 없음 — 게임 저장 후 💾 저장 버튼을 누르세요','err');
-      return;
-    }
+    if(!d||d.length===0){ toast('⚠ '+saveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
+    if(!d||d.length<100){ toast('⚠ '+saveName+' 크기 오류','err'); return; }
     saveData = new Uint8Array(d);
     // 시그니처 확인
     var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
@@ -1008,10 +1055,12 @@ var ITEM_LIST = [
 ];
 
 function loadItemFile(){
-  var slot = document.getElementById('item-slot-sel').value;
-  itemSaveName = 'FQ4GD.'+slot;
+  var slotVal = document.getElementById('item-slot-sel').value;
+  var slot = (slotVal===''||slotVal===null) ? '0' : slotVal;
+  itemSaveName = slot.startsWith('FQ4GD') ? slot : 'FQ4GD.'+slot;
   dbGet(itemSaveName, function(d){
-    if(!d||d.length<100){ toast('⚠ '+itemSaveName+' 없음 — 게임 저장 후 💾 버튼을 누르세요','err'); return; }
+    if(!d||d.length===0){ toast('⚠ '+itemSaveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
+    if(!d||d.length<100){ toast('⚠ '+itemSaveName+' 크기 오류','err'); return; }
     itemSaveData = new Uint8Array(d);
     var sig = String.fromCharCode(itemSaveData[0],itemSaveData[1],itemSaveData[2],itemSaveData[3]);
     if(sig !== 'FQ-4'){ toast('⚠ FQ4 세이브 파일이 아닙니다','err'); return; }
@@ -1098,9 +1147,24 @@ function itemBaseSet(){ toast('세이브파일 방식 사용 중 — LOAD 버튼
 function applyItem(){ itemSet(); }
 
 // ─── 버튼 연결 ─────────────────────────────────────────
+function doDelete(){
+  if(!confirm('IndexedDB 세이브 데이터를 모두 삭제할까요?\n(PC에 다운로드된 파일은 유지됩니다)')) return;
+  dbOpen(function(db){
+    if(!db){ toast('⚠ DB 오류','err'); return; }
+    var tx = db.transaction('files','readwrite');
+    var store = tx.objectStore('files');
+    SAVE_FILES.forEach(function(sf){ try{ store.delete(sf); }catch(e){} });
+    tx.oncomplete = function(){
+      toast('🗑 세이브 데이터 삭제 완료','ok');
+      document.getElementById('save-notice').textContent = '';
+    };
+  });
+}
+
 document.getElementById('btn-start').addEventListener('click',startGame);
 document.getElementById('btn-play').addEventListener('click',startGame);
 document.getElementById('btn-save').addEventListener('click',doSave);
+document.getElementById('btn-del').addEventListener('click',doDelete);
 document.getElementById('btn-dl').addEventListener('click',doDownload);
 document.getElementById('btn-ul-t').addEventListener('click',function(){document.getElementById('btn-ul').click();});
 document.getElementById('btn-ul').addEventListener('change',function(e){doUpload(e.target.files[0]);});
