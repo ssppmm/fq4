@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v29</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v30</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1113,7 +1113,6 @@ function itemSetVal(val){
   if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var off = SAV_ITEM_START + selectedItemIdx;
   itemSaveData[off] = Math.max(0, Math.min(255, val));
-  itemSaveData[0x001D] = 0x80;  // 아이템 유효 플래그
   var el = document.getElementById('item-owned-'+selectedItemIdx);
   if(el) el.textContent = itemSaveData[off];
   toast('🎒 Item '+selectedItemIdx+' → '+val,'ok');
@@ -1125,7 +1124,6 @@ function itemSetAllVal(val){
   for(var i=0; i<count; i++){
     itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(255, val));
   }
-  itemSaveData[0x001D] = 0x80;  // 아이템 유효 플래그
   itemRenderList();
   toast('🎒 전체 아이템 → '+val,'ok');
 }
@@ -1134,8 +1132,6 @@ function itemSet(){ toast('개별 아이템은 목록 클릭 → Set 버튼으�
 
 function itemSaveFile(){
   if(!itemSaveData||!itemSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  // 아이템 유효 플래그 설정 (0x001D = 0x80, FQ4WED1 분석 결과)
-  itemSaveData[0x001D] = 0x80;
   dbPut(itemSaveName, itemSaveData, function(ok){
     if(!ok){ toast('⚠ 저장 실패','err'); return; }
     if(fs0){ try{ fs0.fs.writeFile('/'+itemSaveName, itemSaveData); }catch(e){} }
