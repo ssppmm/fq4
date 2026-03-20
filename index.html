@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v35</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v38</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -307,6 +307,24 @@
         </div>
 
         <div id="stat-fields" style="display:none;">
+
+          <!-- 초상화 영역 (FQ4WED1 스타일) -->
+          <div id="unit-portrait-wrap" style="margin-bottom:10px;">
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <!-- 초상화 박스 -->
+              <div id="unit-portrait" style="width:72px;height:72px;flex-shrink:0;background:var(--surface2);border:2px solid var(--border2);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+                <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 8px),repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 8px);"></div>
+                <div id="unit-portrait-icon" style="font-size:32px;line-height:1;position:relative;z-index:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.9));">👤</div>
+              </div>
+              <!-- 캐릭터 정보 -->
+              <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;">
+                <div id="unit-portrait-name" style="font-family:var(--font-pixel);font-size:9px;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="unit-portrait-job" style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="unit-portrait-lv" style="font-family:var(--font-pixel);font-size:7px;color:var(--green);"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- 스탯 그리드 -->
           <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;" id="stat-grid"></div>
@@ -860,11 +878,28 @@ function unitBuildSelect(){
   if(!sel) return;
   sel.innerHTML = '';
   var total = unitCount || 354;
+
+  // ext+0x02 = 이름idx 필드로 슬롯↔이름 매핑 테이블 구성
+  // FQ4WED1에서 저장한 슬롯만 ext+0x02에 이름idx가 기록됨
+  var nameIdxToSlot = {};  // 이름idx → 슬롯번호
+  for(var slot=0; slot<total; slot++){
+    var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
+    if(extBase + 3 >= saveData.length) break;
+    var nameIdx = saveData[extBase+0x02];
+    // ext+0x02 = ext+0x03 이고 0이 아니면 유효한 이름idx
+    if(nameIdx > 0 && nameIdx === saveData[extBase+0x03]){
+      nameIdxToSlot[nameIdx] = slot;
+    }
+  }
+
+  // 이름배열 순서로 드롭다운 구성 (슬롯번호 매핑)
   for(var i=0; i<total; i++){
+    var charName = (UNIT_CHAR_NAMES[i] && UNIT_CHAR_NAMES[i] !== '') ? UNIT_CHAR_NAMES[i] : '';
+    if(!charName) continue;
+    var slot = (nameIdxToSlot[i] !== undefined) ? nameIdxToSlot[i] : i;
     var opt = document.createElement('option');
-    opt.value = i;
-    var name = (UNIT_CHAR_NAMES[i] && UNIT_CHAR_NAMES[i] !== '') ? UNIT_CHAR_NAMES[i] : ('Unit #'+i);
-    opt.textContent = i + ': ' + name;
+    opt.value = slot;
+    opt.textContent = i + ': ' + charName + (nameIdxToSlot[i] !== undefined ? '' : ' (미확인)');
     sel.appendChild(opt);
   }
 }
@@ -917,10 +952,10 @@ function unitRender(){
 
   // EL 체크박스 (+0x08)
   var elVal = saveData[base+0x1A]||0;
-  document.getElementById('el-f').checked = !!(elVal & 0x40);
-  document.getElementById('el-e').checked = !!(elVal & 0x10);
-  document.getElementById('el-a').checked = !!(elVal & 0x04);
-  document.getElementById('el-w').checked = !!(elVal & 0x01);
+  document.getElementById("el-f").checked = !!(elVal & 0x80);
+  document.getElementById("el-e").checked = !!(elVal & 0x40);
+  document.getElementById("el-a").checked = !!(elVal & 0x20);
+  document.getElementById("el-w").checked = !!(elVal & 0x10);
 
   // 아이템 드롭다운 (추가테이블 +0x16)
   var itemCode = extBase+0x16 < saveData.length ? saveData[extBase+0x16] : 255;
@@ -939,7 +974,60 @@ function unitRender(){
 
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
+
+  // 초상화 업데이트
+  unitUpdatePortrait();
 }
+
+// 직업 기반 이모지 매핑
+var JOB_ICONS = {
+  '왕': '👑', '기사': '⚔️', '마법': '🔮', '궁사': '🏹', '궁수': '🏹',
+  '활': '🏹', '전사': '🗡️', '사제': '✝️', '도둑': '🗝️', '닌자': '🥷',
+  '프리': '⚡', '용사': '🛡️', '공주': '👸', '왕자': '🤴', '상인': '💰',
+  '마녀': '🧙', '천사': '😇', '악마': '😈', '드레곤': '🐉', '요정': '🧚',
+  '바이킹': '⚓', '해골': '💀', '좀비': '🧟', '박쥐': '🦇', '거북': '🐢',
+  '버섯': '🍄', '달팽': '🐌', '슬라임': '🟢', '석상': '🗿', '바위': '🪨',
+};
+function getJobIcon(jobName) {
+  if(!jobName) return '👤';
+  for(var key in JOB_ICONS) {
+    if(jobName.indexOf(key) >= 0) return JOB_ICONS[key];
+  }
+  return '👤';
+}
+
+function unitUpdatePortrait() {
+  // 현재 선택된 캐릭터의 이름idx 찾기
+  var sel = document.getElementById('unit-sel');
+  var selectedOpt = sel ? sel.options[sel.selectedIndex] : null;
+  var nameText = selectedOpt ? selectedOpt.textContent : '';
+  // "25: 아레스" 형태에서 이름idx 추출
+  var match = nameText.match(/^(\d+):\s*(.+?)(\s*\(미확인\))?$/);
+  var nameIdx  = match ? parseInt(match[1]) : -1;
+  var charName = match ? match[2].trim() : nameText;
+
+  // 직업명
+  var jobName = (UNIT_JOB_NAMES && UNIT_JOB_NAMES[nameIdx]) ? UNIT_JOB_NAMES[nameIdx] : '';
+
+  // LV 읽기
+  var lv = saveData ? savRead(unitIdx * SAV_UNIT_SIZE + SAV_UNIT_START + 0x12, 8) : 0;
+
+  // 포트레이트 아이콘: 직업명 기반
+  var icon = getJobIcon(jobName || charName);
+
+  document.getElementById('unit-portrait-icon').textContent = icon;
+  document.getElementById('unit-portrait-name').textContent = charName || ('Unit #' + unitIdx);
+  document.getElementById('unit-portrait-job').textContent  = jobName || '';
+  document.getElementById('unit-portrait-lv').textContent   = lv ? 'LV.' + lv : '';
+
+  // 직업에 따라 초상화 테두리 색상 변경
+  var portrait = document.getElementById('unit-portrait');
+  var borderColor = 'var(--border2)';
+  if(jobName.indexOf('왕') >= 0)   borderColor = 'var(--yellow)';
+  else if(jobName.indexOf('마법') >= 0 || jobName.indexOf('마녀') >= 0) borderColor = 'var(--purple)';
+  else if(jobName.indexOf('기사') >= 0 || jobName.indexOf('전사') >= 0) borderColor = 'var(--blue)';
+  else if(jobName.indexOf('활') >= 0 || jobName.indexOf('궁') >= 0)  borderColor = 'var(--green)';
+  portrait.style.borderColor = borderColor;
 
 function statEditExt(el){
   var cur = parseInt(el.textContent)||0;
@@ -1009,10 +1097,10 @@ function unitSet(){
 
   // EL 체크박스 쓰기
   var elVal = 0;
-  if(document.getElementById('el-f').checked) elVal |= 0x40;
-  if(document.getElementById('el-e').checked) elVal |= 0x10;
-  if(document.getElementById('el-a').checked) elVal |= 0x04;
-  if(document.getElementById('el-w').checked) elVal |= 0x01;
+  if(document.getElementById("el-f").checked) elVal |= 0x80;
+  if(document.getElementById("el-e").checked) elVal |= 0x40;
+  if(document.getElementById("el-a").checked) elVal |= 0x20;
+  if(document.getElementById("el-w").checked) elVal |= 0x10;
   savWrite(base+0x1A, elVal, 8);
 
   // 추가 테이블 쓰기 (AD MD 리더십)
