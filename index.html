@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v27</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v28</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -551,11 +551,12 @@ function startGame(){
   gameStarted=true;
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('loading').classList.add('show');
+  var baseUrl=window.location.href.replace(/\/[^\/]*$/,'/');
   var toLoad=FILES.slice(), loaded=0;
   function next(){
     if(!toLoad.length){ initDos(); return; }
     var f=toLoad.shift();
-    fetch(f).then(function(r){ if(!r.ok) throw new Error(f+' 없음'); return r.arrayBuffer(); })
+    fetch(baseUrl+f).then(function(r){ if(!r.ok) throw new Error(f+' 없음'); return r.arrayBuffer(); })
     .then(function(buf){
       loaded++;
       var p=Math.round(loaded/FILES.length*100);
