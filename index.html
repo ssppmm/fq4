@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v34</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v35</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1116,6 +1116,140 @@ function unitSaveFile(){
 function statBaseSet(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
 function statApply(){ unitSet(); }
 function statReset(){ unitReset(); }
+
+// ─── IndexedDB 헬퍼 ────────────────────────────────────
+var DB_NAME = 'FQ4SaveDB', DB_VER = 1, DB_STORE = 'files';
+var _db = null;
+function dbOpen(cb){
+  if(_db){ cb(_db); return; }
+  var req = indexedDB.open(DB_NAME, DB_VER);
+  req.onupgradeneeded = function(e){ e.target.result.createObjectStore(DB_STORE); };
+  req.onsuccess = function(e){ _db = e.target.result; cb(_db); };
+  req.onerror   = function(){ cb(null); };
+}
+function dbPut(name, data, cb){
+  dbOpen(function(db){
+    if(!db){ cb(false); return; }
+    var tx = db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).put(data, name);
+    tx.oncomplete = function(){ cb(true); };
+    tx.onerror    = function(){ cb(false); };
+  });
+}
+function dbGet(name, cb){
+  dbOpen(function(db){
+    if(!db){ cb(null); return; }
+    var tx  = db.transaction(DB_STORE,'readonly');
+    var req = tx.objectStore(DB_STORE).get(name);
+    req.onsuccess = function(){ cb(req.result || null); };
+    req.onerror   = function(){ cb(null); };
+  });
+}
+
+// ─── DOSBox / js-dos 인스턴스 ─────────────────────────
+var fs0 = null;
+
+function startGame(){
+  var splash  = document.getElementById('splash');
+  var loading = document.getElementById('loading');
+  var prog    = document.getElementById('prog');
+  var progLbl = document.getElementById('prog-label');
+  var gs      = document.getElementById('gs');
+
+  splash.classList.add('hidden');
+  loading.classList.add('show');
+  gs.textContent = '로딩 중…';
+  gs.className   = 'game-status status-load';
+
+  var total = FILES.length, loaded = 0;
+  function onProgress(){
+    loaded++;
+    var pct = Math.round(loaded/total*100);
+    prog.style.width = pct+'%';
+    progLbl.textContent = loaded+' / '+total;
+  }
+
+  Dos(document.getElementById('canvas'), {
+    wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
+  }).ready(function(fs, main){
+    fs0 = {fs: fs, main: main};
+    var fetches = FILES.map(function(f){
+      return fetch(f).then(function(r){
+        if(!r.ok) throw new Error(f+' 404');
+        return r.arrayBuffer();
+      }).then(function(buf){
+        fs.createFile('/'+f, new Uint8Array(buf));
+        onProgress();
+      }).catch(function(){ onProgress(); });
+    });
+
+    // IndexedDB 세이브 복원
+    var restores = SAVE_FILES.map(function(sf){
+      return new Promise(function(resolve){
+        dbGet(sf, function(d){
+          if(d && d.length){ try{ fs.createFile('/'+sf, new Uint8Array(d)); }catch(e){} }
+          resolve();
+        });
+      });
+    });
+
+    Promise.all(fetches.concat(restores)).then(function(){
+      loading.classList.remove('show');
+      gs.textContent = '실행 중';
+      gs.className   = 'game-status status-on';
+      main(['-c','mount c /','c:\\'+GAME_EXE]);
+    });
+  });
+}
+
+// ─── 세이브 / 다운로드 / 업로드 ────────────────────────
+function doSave(){
+  if(!fs0){ toast('⚠ 게임을 먼저 시작하세요','err'); return; }
+  var done = 0;
+  SAVE_FILES.forEach(function(sf){
+    try{
+      var data = fs0.fs.readFile('/'+sf);
+      if(data && data.length){
+        dbPut(sf, data, function(ok){
+          if(ok){ done++; if(done===1) toast('💾 세이브 저장 완료 ('+SAVE_FILES.length+'개 시도)','ok'); }
+        });
+      }
+    }catch(e){}
+  });
+  document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+}
+
+function doDownload(){
+  if(!fs0){ toast('⚠ 게임을 먼저 시작하세요','err'); return; }
+  SAVE_FILES.forEach(function(sf){
+    try{
+      var data = fs0.fs.readFile('/'+sf);
+      if(data && data.length){
+        var blob = new Blob([data]);
+        var a    = document.createElement('a');
+        a.href   = URL.createObjectURL(blob);
+        a.download = sf;
+        a.click();
+      }
+    }catch(e){}
+  });
+}
+
+function doUpload(file){
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var data = new Uint8Array(e.target.result);
+    var name = file.name.toUpperCase();
+    dbPut(name, data, function(ok){
+      if(!ok){ toast('⚠ 업로드 DB 저장 실패','err'); return; }
+      if(fs0){ try{ fs0.fs.writeFile('/'+name, data); }catch(err){} }
+      toast('⬆ '+name+' 업로드 완료!','ok');
+      document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
 
 // ─── 버튼 연결 ─────────────────────────────────────────
 function doDelete(){
