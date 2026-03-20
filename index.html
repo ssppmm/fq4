@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v41</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v42</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -879,27 +879,27 @@ function unitBuildSelect(){
   sel.innerHTML = '';
   var total = unitCount || 354;
 
-  // ext+0x02 = 이름idx 필드로 슬롯↔이름 매핑 테이블 구성
-  var nameIdxToSlot = {};
+  // FQ4WED1 번호 = 슬롯+1 (1-based)
+  // 슬롯 순서대로 표시, 유효한 슬롯(LV 1~254)만 표시
+  // 이름은 ext+0x02로 UNIT_CHAR_NAMES 매핑 시도, 없으면 "슬롯N"으로 표시
   for(var slot=0; slot<total; slot++){
+    var base    = SAV_UNIT_START    + slot * SAV_UNIT_SIZE;
     var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
-    if(extBase + 3 >= saveData.length) break;
-    var nameIdx = saveData[extBase+0x02];
-    if(nameIdx > 0 && nameIdx === saveData[extBase+0x03]){
-      nameIdxToSlot[nameIdx] = slot;
-    }
-  }
+    if(base + SAV_UNIT_SIZE > saveData.length) break;
 
-  // 이름배열 순서(0,1,2...) 그대로 드롭다운 구성
-  // opt.value = 실제 슬롯번호, textContent = "이름idx: 이름"
-  for(var i=0; i<UNIT_CHAR_NAMES.length; i++){
-    var charName = UNIT_CHAR_NAMES[i];
-    if(!charName || charName === '') continue;
-    var slot = (nameIdxToSlot[i] !== undefined) ? nameIdxToSlot[i] : -1;
+    var lv = saveData[base + 0x12];
+    // 빈 슬롯(LV=0 or LV=255) 제외
+    if(lv === 0 || lv === 255) continue;
+
+    // 이름 찾기: ext+0x02
+    var nameIdx = (extBase+3 < saveData.length) ? saveData[extBase+0x02] : 0;
+    var charName = (nameIdx > 0 && UNIT_CHAR_NAMES[nameIdx]) ? UNIT_CHAR_NAMES[nameIdx] : '';
+
     var opt = document.createElement('option');
-    opt.value = (slot >= 0) ? slot : i;       // 슬롯 미확인 시 임시로 이름idx 사용
-    opt.dataset.nameidx = i;                   // 이름idx 별도 보관
-    opt.textContent = i + ': ' + charName;
+    opt.value = slot;
+    opt.dataset.nameidx = nameIdx;
+    var fqNo = slot + 1;  // FQ4WED1 번호 (1-based)
+    opt.textContent = fqNo + ': ' + (charName || ('슬롯'+slot));
     sel.appendChild(opt);
   }
 }
@@ -908,9 +908,7 @@ function unitSelectChange(){
   var sel = document.getElementById('unit-sel');
   if(!sel) return;
   unitIdx = parseInt(sel.value)||0;
-  // unit-no에는 이름idx 표시 (슬롯번호 아님)
-  var nameIdx = sel.options[sel.selectedIndex] ? parseInt(sel.options[sel.selectedIndex].dataset.nameidx)||0 : unitIdx;
-  document.getElementById('unit-no').value = nameIdx;
+  document.getElementById('unit-no').value = unitIdx + 1; // FQ4WED1 번호(1-based)
   unitRender();
 }
 
@@ -923,10 +921,7 @@ function unitRender(){
   grid.innerHTML = '';
   var sel = document.getElementById('unit-sel');
   if(sel) sel.value = unitIdx;
-  // unit-no에는 이름idx 표시
-  var curOpt = sel ? sel.options[sel.selectedIndex] : null;
-  var dispNameIdx = curOpt ? (parseInt(curOpt.dataset.nameidx)||unitIdx) : unitIdx;
-  document.getElementById('unit-no').value = dispNameIdx;
+  document.getElementById('unit-no').value = unitIdx + 1; // FQ4WED1 번호(1-based)
 
   // 기본 필드 (LV HR HP AT AR DF DR)
   UNIT_FIELDS.forEach(function(f){
@@ -1049,14 +1044,17 @@ function unitGetName(idx){
 }
 
 function unitGo(){
-  // unit-no에 입력한 값은 이름idx → 드롭다운에서 해당 option 찾기
-  var nameIdx = parseInt(document.getElementById('unit-no').value)||0;
+  // unit-no 입력값은 FQ4WED1 번호(1-based) → 슬롯 = 번호-1
+  var fqNo = parseInt(document.getElementById('unit-no').value)||1;
+  var slot = fqNo - 1;
+  if(slot < 0) slot = 0;
+  // 드롭다운에서 해당 슬롯 option 찾아 선택
   var sel = document.getElementById('unit-sel');
   if(sel){
-    for(var i=0;i<sel.options.length;i++){
-      if(parseInt(sel.options[i].dataset.nameidx) === nameIdx){
+    for(var i=0; i<sel.options.length; i++){
+      if(parseInt(sel.options[i].value) === slot){
         sel.selectedIndex = i;
-        unitIdx = parseInt(sel.options[i].value)||0;
+        unitIdx = slot;
         unitRender();
         return;
       }
