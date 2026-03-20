@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v28</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v29</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -975,7 +975,7 @@ function statReset(){ unitReset(); }
 // ─── 아이템 에디터 (세이브파일 직접 파싱) ─────────────────
 // FQ4WED1 Item Editor 방식: 아이템 목록 + 소유수(Owned) 편집
 // ※ 아이템 데이터 오프셋은 확정 필요
-var SAV_ITEM_START = 0x0020;   // 아이템 데이터 시작 오프셋 ✓ 확정
+var SAV_ITEM_START = 0x0381;   // 아이템 데이터 시작 오프셋 ✓ 확정 (세이브파일 분석)
 var SAV_ITEM_COUNT = 69;       // 아이템 종류 수 ✓ 확정
 
 var itemSaveData = null;
