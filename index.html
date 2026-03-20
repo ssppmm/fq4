@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v48</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v55</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -967,6 +967,16 @@ function unitSelectChange(){
   unitRender();
 }
 
+// 유닛 장착 아이템: base+0x0F가 실제 필드 (세이브코드 = FQ4WED1표시idx + 1)
+function unitItemSaveToDisp(saveCode){
+  if(saveCode === 255 || saveCode === 0) return 255;
+  return saveCode - 1;  // 세이브코드 - 1 = 표시idx
+}
+function unitItemDispToSave(dispIdx){
+  if(dispIdx === 255) return 255;
+  return dispIdx + 1;   // 표시idx + 1 = 세이브코드
+}
+
 // 유닛 렌더링
 function unitRender(){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
@@ -1013,18 +1023,19 @@ function unitRender(){
   document.getElementById("el-w").checked = !!(elVal & 0x10);
 
   // 아이템 드롭다운 (추가테이블 +0x16)
-  var itemCode = extBase+0x16 < saveData.length ? saveData[extBase+0x16] : 255;
+  var itemCode = saveData[base+0x0F] || 255;
+  var itemDispIdx = unitItemSaveToDisp(itemCode);
   var itemSel = document.getElementById('unit-item-sel');
   if(itemSel){
     itemSel.innerHTML = '<option value=\"255\">없음</option>';
-    ITEM_LIST.forEach(function(item){
+    UNIT_ITEM_LIST.forEach(function(item){
       var opt = document.createElement('option');
       opt.value = item.idx;
       opt.textContent = item.name;
-      if(item.idx === itemCode) opt.selected = true;
+      if(item.idx === itemDispIdx) opt.selected = true;
       itemSel.appendChild(opt);
     });
-    if(itemCode === 255) itemSel.value = 255;
+    if(itemDispIdx === 255) itemSel.value = 255;
   }
 
   document.getElementById('stat-fields').style.display = 'block';
@@ -1128,7 +1139,7 @@ function unitSet(){
     });
     // 아이템 드롭다운 쓰기 (+0x16)
     var itemSel = document.getElementById('unit-item-sel');
-    if(itemSel) saveData[extBase+0x16] = parseInt(itemSel.value)||255;
+    if(itemSel) saveData[base+0x0F] = unitItemDispToSave(parseInt(itemSel.value)||255);
   }
 
   toast('✅ SET 완료 — 💾 저장 버튼으로 파일에 반영하세요','ok');
@@ -1243,6 +1254,151 @@ var ITEM_LIST = [
   {idx:69, name:'해독약'},
   {idx:70, name:'석화해제약'},
   {idx:71, name:'부활약'},
+];
+
+// 유닛 장착 아이템 목록 (인덱스 체계가 아이템 탭과 다름 - 용검/동결검/번개검 없음)
+var UNIT_ITEM_LIST = [
+  {idx:0,  name:'숏소드'},
+  {idx:1,  name:'롱소드'},
+  {idx:2,  name:'아이스소드'},
+  {idx:3,  name:'히트소드'},
+  {idx:4,  name:'크레이모아'},
+  {idx:5,  name:'절명검'},
+  {idx:6,  name:'축검'},
+  {idx:7,  name:'제인검'},
+  {idx:8,  name:'암살단검'},
+  {idx:9,  name:'제비검'},
+  {idx:10, name:'용검'},
+  {idx:11, name:'동결검'},
+  {idx:12, name:'번개검'},
+  {idx:13, name:'분쇄검'},
+  {idx:14, name:'불검'},
+  {idx:15, name:'엑스칼리버'},
+  {idx:16, name:'하르벨트'},
+  {idx:17, name:'파르티산'},
+  {idx:18, name:'롱의창'},
+  {idx:19, name:'신의창'},
+  {idx:20, name:'도끼'},
+  {idx:21, name:'파괴도끼'},
+  {idx:22, name:'프레일'},
+  {idx:23, name:'모닝스타'},
+  {idx:24, name:'마법지팡이'},
+  {idx:25, name:'가브틴'},
+  {idx:26, name:'마법의활'},
+  {idx:27, name:'극도의활'},
+  {idx:28, name:'집념의활'},
+  {idx:29, name:'체인갑옷'},
+  {idx:30, name:'프레트값옷'},
+  {idx:31, name:'스케일갑옷'},
+  {idx:32, name:'토바토'},
+  {idx:33, name:'은갑옷'},
+  {idx:34, name:'금갑옷'},
+  {idx:35, name:'동갑옷'},
+  {idx:36, name:'사자갑옷'},
+  {idx:37, name:'바람의베일'},
+  {idx:38, name:'웃음마스크'},
+  {idx:39, name:'메듀사의머리'},
+  {idx:40, name:'늑대반지'},
+  {idx:41, name:'범의반지'},
+  {idx:42, name:'사자반지'},
+  {idx:43, name:'천사반지'},
+  {idx:44, name:'적십자'},
+  {idx:45, name:'불부적'},
+  {idx:46, name:'땅부적'},
+  {idx:47, name:'바람부적'},
+  {idx:48, name:'물부적'},
+  {idx:49, name:'나팔'},
+  {idx:50, name:'카라흐호름'},
+  {idx:51, name:'흡혈피리'},
+  {idx:52, name:'요정피리'},
+  {idx:53, name:'천사피리'},
+  {idx:54, name:'흙의호각'},
+  {idx:55, name:'물의호각'},
+  {idx:56, name:'바람호각'},
+  {idx:57, name:'발스타키드'},
+  {idx:58, name:'빛돌'},
+  {idx:59, name:'불꽃돌'},
+  {idx:60, name:'번개돌'},
+  {idx:61, name:'얼음결정'},
+  {idx:62, name:'암흑돌'},
+  {idx:63, name:'파괴의돌'},
+  {idx:64, name:'안약'},
+  {idx:65, name:'박카스의술'},
+  {idx:66, name:'인삼엑기스'},
+  {idx:67, name:'체력회복제'},
+  {idx:68, name:'피로회복제'},
+  {idx:69, name:'해독약'},
+  {idx:70, name:'석화해제약'},
+  {idx:71, name:'부활약'},
+];
+  {idx:1,  name:'롱소드'},
+  {idx:2,  name:'아이스소드'},
+  {idx:3,  name:'히트소드'},
+  {idx:4,  name:'크레이모아'},
+  {idx:5,  name:'절명검'},
+  {idx:6,  name:'축검'},
+  {idx:7,  name:'제인검'},
+  {idx:8,  name:'암살단검'},
+  {idx:9,  name:'제비검'},
+  {idx:10, name:'분쇄검'},
+  {idx:11, name:'불검'},
+  {idx:12, name:'엑스칼리버'},
+  {idx:13, name:'하르벨트'},
+  {idx:14, name:'파르티산'},
+  {idx:15, name:'롱의창'},
+  {idx:16, name:'신의창'},
+  {idx:17, name:'도끼'},
+  {idx:18, name:'파괴도끼'},
+  {idx:19, name:'프레일'},
+  {idx:20, name:'모닝스타'},
+  {idx:21, name:'마법지팡이'},
+  {idx:22, name:'가브틴'},
+  {idx:23, name:'마법의활'},
+  {idx:24, name:'극도의활'},
+  {idx:25, name:'집념의활'},
+  {idx:26, name:'체인갑옷'},
+  {idx:27, name:'프레트값옷'},
+  {idx:28, name:'스케일갑옷'},
+  {idx:29, name:'토바토'},
+  {idx:30, name:'은갑옷'},
+  {idx:31, name:'금갑옷'},
+  {idx:32, name:'동갑옷'},
+  {idx:33, name:'사자갑옷'},
+  {idx:34, name:'바람의베일'},
+  {idx:35, name:'웃음마스크'},
+  {idx:36, name:'메듀사의머리'},
+  {idx:37, name:'늑대반지'},
+  {idx:38, name:'범의반지'},
+  {idx:39, name:'사자반지'},
+  {idx:40, name:'천사반지'},
+  {idx:41, name:'적십자'},
+  {idx:42, name:'불부적'},
+  {idx:43, name:'땅부적'},
+  {idx:44, name:'바람부적'},
+  {idx:45, name:'물부적'},
+  {idx:46, name:'나팔'},
+  {idx:47, name:'카라흐호름'},
+  {idx:48, name:'흡혈피리'},
+  {idx:49, name:'요정피리'},
+  {idx:50, name:'천사피리'},
+  {idx:51, name:'흙의호각'},
+  {idx:52, name:'물의호각'},
+  {idx:53, name:'바람호각'},
+  {idx:54, name:'발스타키드'},
+  {idx:55, name:'빛돌'},
+  {idx:56, name:'불꽃돌'},
+  {idx:57, name:'번개돌'},
+  {idx:58, name:'얼음결정'},
+  {idx:59, name:'암흑돌'},
+  {idx:60, name:'파괴의돌'},
+  {idx:61, name:'안약'},
+  {idx:62, name:'박카스의술'},
+  {idx:63, name:'인삼엑기스'},
+  {idx:64, name:'체력회복제'},
+  {idx:65, name:'피로회복제'},
+  {idx:66, name:'해독약'},
+  {idx:67, name:'석화해제약'},
+  {idx:68, name:'부활약'},
 ];
 
 function loadItemFile(){
