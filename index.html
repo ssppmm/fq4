@@ -311,6 +311,14 @@
           <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;" id="stat-grid"></div>
 
+          <!-- 아이템 -->
+          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ ITEM</div>
+            <select id="unit-item-sel" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
+              <option value="255">없음</option>
+            </select>
+          </div>
+
           <!-- EL 체크박스 -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
             <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL (Element)</div>
@@ -754,23 +762,35 @@ function goldScan(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을
 var SAV_SIG        = 'FQ-4';     // 0x00: 시그니처
 var SAV_GOLD_OFF   = 0x047E;     // 0x047E: 골드 (16bit, 10G단위) ✓ 확정
 var SAV_UNIT_CNT   = 0x0773;     // 0x0773: 유닛 수 (16bit)
-var SAV_UNIT_START = 0x0775;     // 0x0775: 유닛 데이터 시작
-var SAV_UNIT_SIZE  = 63;         // 63 bytes/유닛 (확정)
+var SAV_UNIT_START = 0x0767;     // 0x0767: 유닛 데이터 시작 ✓ 확정 (세이브파일 직접분석)
+var SAV_UNIT_SIZE  = 63;         // 63 bytes/유닛 ✓확정
 
-// 유닛 필드 오프셋 (Unit 내 상대 위치)
-// ※ 아래 오프셋은 분석 추정값 - 게임과 비교 후 확정 필요
-// ★ 실제 세이브파일 분석으로 확정된 오프셋
-// 검증: 아레스(유닛139) LV=1 HR=11 HP=259 AT=36 AR=36 DF=32 DR=35 ✓
+// 추가 능력치 테이블 (AD, MD, 리더십, 아이템)
+var SAV_UNIT_EXT_START = 0x3F2E; // 추가 테이블 시작 ✓확정
+var SAV_UNIT_EXT_SIZE  = 32;     // 유닛당 32바이트 ✓확정
+
+// 기본 유닛 필드 ✓ 확정 (4개 세이브파일 교차검증)
+// 아레스(idx=139): 피로도=+0x00, AA=+0x06, LV=+0x0E, HR=+0x0F
+//                  HP=+0x10(16bit), AT=+0x12, AR=+0x13, DF=+0x14, DR=+0x15, EL=+0x16
 var UNIT_FIELDS = [
-  {id:'sv_lv', off:0x00, bits:8,  label:'LV',          min:1,  max:99},
-  {id:'sv_hr', off:0x01, bits:8,  label:'HR(HP회복)',   min:0,  max:99},
-  {id:'sv_hp', off:0x02, bits:16, label:'HP',           min:0,  max:65535},
-  {id:'sv_at', off:0x04, bits:8,  label:'AT(공격)',     min:0,  max:99},
-  {id:'sv_ar', off:0x05, bits:8,  label:'AR(공격범위)', min:0,  max:99},
-  {id:'sv_df', off:0x06, bits:8,  label:'DF(방어)',     min:0,  max:99},
-  {id:'sv_dr', off:0x07, bits:8,  label:'DR(방어범위)', min:0,  max:99},
-  // +0x08: EL 비트플래그 (별도 체크박스로 처리)
-  // AD AA MD: 추가 분석 필요
+  {id:'sv_ft', off:0x00, bits:8,  label:'피로도', min:0,  max:99},
+  {id:'sv_aa', off:0x06, bits:8,  label:'AA',     min:0,  max:99},
+  {id:'sv_lv', off:0x0E, bits:8,  label:'LV',     min:1,  max:99},
+  {id:'sv_hr', off:0x0F, bits:8,  label:'HR',     min:0,  max:99},
+  {id:'sv_hp', off:0x10, bits:16, label:'HP',     min:0,  max:65535},
+  {id:'sv_at', off:0x12, bits:8,  label:'AT',     min:0,  max:99},
+  {id:'sv_ar', off:0x13, bits:8,  label:'AR',     min:0,  max:99},
+  {id:'sv_df', off:0x14, bits:8,  label:'DF',     min:0,  max:99},
+  {id:'sv_dr', off:0x15, bits:8,  label:'DR',     min:0,  max:99},
+  // +0x16: EL 비트플래그 (별도 체크박스로 처리)
+];
+
+// 추가 테이블 필드 (32바이트 구조체 내) ✓확정
+var UNIT_EXT_FIELDS = [
+  {id:'sv_ad', off:0x00, bits:8, label:'AD',    min:0, max:99},
+  {id:'sv_md', off:0x01, bits:8, label:'MD',    min:0, max:99},
+  {id:'sv_ls', off:0x11, bits:8, label:'리더십', min:0, max:99},
+  // +0x16: 아이템 코드 (별도 드롭다운으로 처리)
 ];
 
 var MACROS = {
@@ -779,7 +799,7 @@ var MACROS = {
   archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
   wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
   master:  {sv_lv:20, sv_hp:999,   sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
-  cheater: {sv_lv:99, sv_hp:60000, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
+  cheater: {sv_lv:99, sv_hp:65535, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
 };
 
 var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
@@ -861,30 +881,73 @@ function unitSelectChange(){
 // 유닛 렌더링
 function unitRender(){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base = SAV_UNIT_START + unitIdx * SAV_UNIT_SIZE;
+  var base    = SAV_UNIT_START     + unitIdx * SAV_UNIT_SIZE;
+  var extBase = SAV_UNIT_EXT_START + unitIdx * SAV_UNIT_EXT_SIZE;
   var grid = document.getElementById('stat-grid');
   grid.innerHTML = '';
-  // 드롭다운 동기화
   var sel = document.getElementById('unit-sel');
   if(sel) sel.value = unitIdx;
   document.getElementById('unit-no').value = unitIdx;
+
+  // 기본 필드 (LV HR HP AT AR DF DR)
   UNIT_FIELDS.forEach(function(f){
     var val = savRead(base+f.off, f.bits);
     var div = document.createElement('div');
-    div.innerHTML = '<div class="lbl" style="font-size:7px;margin-bottom:2px;">'+f.label+'</div>'
-      +'<div id="'+f.id+'" class="stat-disp" data-off="'+f.off+'" data-bits="'+f.bits
-      +'" data-min="'+(f.min||0)+'" data-max="'+(f.max||9999)+'" onclick="statEdit(this)">'+val+'</div>';
+    div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
+      +'<div id=\"'+f.id+'\" class=\"stat-disp\" data-off=\"'+f.off+'\" data-bits=\"'+f.bits
+      +'\" data-min=\"'+(f.min||0)+'\" data-max=\"'+(f.max||9999)+'\" onclick=\"statEdit(this)\">'+val+'</div>';
     grid.appendChild(div);
   });
-  // EL 체크박스 연동 (+0x08)
-  var elVal = savRead(base+0x08, 8);
+
+  // 추가 테이블 필드 (AD MD 리더십)
+  UNIT_EXT_FIELDS.forEach(function(f){
+    var val = extBase+f.off < saveData.length ? saveData[extBase+f.off] : 0;
+    var div = document.createElement('div');
+    div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
+      +'<div id=\"'+f.id+'\" class=\"stat-disp\" style=\"border-color:var(--blue);\" data-ext=\"1\" data-off=\"'+f.off
+      +'\" data-min=\"'+(f.min||0)+'\" data-max=\"'+(f.max||99)+'\" onclick=\"statEditExt(this)\">'+val+'</div>';
+    grid.appendChild(div);
+  });
+
+  // AA 읽기전용 (기본테이블 +0x0F)
+  var aaVal = saveData[base+0x0F]||0;
+  var divAA = document.createElement('div');
+  divAA.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">AA <span style=\"color:var(--muted);font-size:6px;\">(RO)</span></div>'
+    +'<div class=\"stat-disp\" style=\"opacity:0.5;cursor:default;\">'+aaVal+'</div>';
+  grid.appendChild(divAA);
+
+  // EL 체크박스 (+0x08)
+  var elVal = saveData[base+0x16]||0;
   document.getElementById('el-f').checked = !!(elVal & 0x40);
   document.getElementById('el-e').checked = !!(elVal & 0x10);
   document.getElementById('el-a').checked = !!(elVal & 0x04);
   document.getElementById('el-w').checked = !!(elVal & 0x01);
 
+  // 아이템 드롭다운 (추가테이블 +0x16)
+  var itemCode = extBase+0x16 < saveData.length ? saveData[extBase+0x16] : 255;
+  var itemSel = document.getElementById('unit-item-sel');
+  if(itemSel){
+    itemSel.innerHTML = '<option value=\"255\">없음</option>';
+    ITEM_LIST.forEach(function(item){
+      var opt = document.createElement('option');
+      opt.value = item.idx;
+      opt.textContent = item.name;
+      if(item.idx === itemCode) opt.selected = true;
+      itemSel.appendChild(opt);
+    });
+    if(itemCode === 255) itemSel.value = 255;
+  }
+
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
+}
+
+function statEditExt(el){
+  var cur = parseInt(el.textContent)||0;
+  var mn = parseInt(el.dataset.min)||0, mx = parseInt(el.dataset.max)||99;
+  var nv = prompt(el.id+' 입력 ('+mn+'~'+mx+')', cur);
+  if(nv===null) return;
+  el.textContent = Math.max(mn, Math.min(mx, parseInt(nv)||0));
 }
 
 function unitGetName(idx){
@@ -926,24 +989,43 @@ function applyMacro(type){
     var el = document.getElementById(f.id); if(!el) return;
     if(m[f.id]!==undefined) el.textContent = m[f.id];
   });
+  UNIT_EXT_FIELDS.forEach(function(f){
+    var el = document.getElementById(f.id); if(!el) return;
+    if(m[f.id]!==undefined) el.textContent = m[f.id];
+  });
   toast('🎮 Macro: '+type,'ok');
 }
 
 // SET: UI 값을 saveData에 기록
 function unitSet(){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base = SAV_UNIT_START + unitIdx * SAV_UNIT_SIZE;
+  var base    = SAV_UNIT_START     + unitIdx * SAV_UNIT_SIZE;
+  var extBase = SAV_UNIT_EXT_START + unitIdx * SAV_UNIT_EXT_SIZE;
+
+  // 기본 필드 쓰기
   UNIT_FIELDS.forEach(function(f){
     var el = document.getElementById(f.id); if(!el) return;
     savWrite(base+f.off, parseInt(el.textContent)||0, f.bits);
   });
+
   // EL 체크박스 쓰기
   var elVal = 0;
   if(document.getElementById('el-f').checked) elVal |= 0x40;
   if(document.getElementById('el-e').checked) elVal |= 0x10;
   if(document.getElementById('el-a').checked) elVal |= 0x04;
   if(document.getElementById('el-w').checked) elVal |= 0x01;
-  savWrite(base+0x08, elVal, 8);
+  savWrite(base+0x16, elVal, 8);
+
+  // 추가 테이블 쓰기 (AD MD 리더십)
+  if(extBase + SAV_UNIT_EXT_SIZE <= saveData.length){
+    UNIT_EXT_FIELDS.forEach(function(f){
+      var el = document.getElementById(f.id); if(!el) return;
+      saveData[extBase+f.off] = Math.max(f.min||0, Math.min(f.max||99, parseInt(el.textContent)||0));
+    });
+    // 아이템 드롭다운 쓰기 (+0x16)
+    var itemSel = document.getElementById('unit-item-sel');
+    if(itemSel) saveData[extBase+0x16] = parseInt(itemSel.value)||255;
+  }
 
   toast('✅ SET 완료 — 💾 저장 버튼으로 파일에 반영하세요','ok');
 }
