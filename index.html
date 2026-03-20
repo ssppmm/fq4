@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v47</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v48</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -916,21 +916,27 @@ function unitBuildSelect(){
     if(lv === 0 || lv === 255) continue;
 
     var ni = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
+    var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
+    var at = saveData[base+0x16];
+    // 유효 슬롯: LV 1~99, HP < 10000, AT < 100
+    var isValid = (lv >= 1 && lv <= 99 && hp < 10000 && at < 100);
 
     if(ni > 0){
-      // 같은 이름idx 중 처음 발견된 슬롯만 사용
       if(!(ni in nameIdxToSlot)){
-        nameIdxToSlot[ni] = slot;
+        nameIdxToSlot[ni] = {slot:slot, valid:isValid};
+      } else if(!nameIdxToSlot[ni].valid && isValid){
+        // 더 유효한 슬롯으로 교체
+        nameIdxToSlot[ni] = {slot:slot, valid:isValid};
       }
     } else {
-      noNameSlots.push(slot);
+      if(isValid) noNameSlots.push(slot);
     }
   }
 
   // 이름 있는 슬롯: UNIT_CHAR_NAMES 순서로 정렬
   var named = Object.keys(nameIdxToSlot).map(Number).sort(function(a,b){return a-b;});
   named.forEach(function(ni){
-    var slot = nameIdxToSlot[ni];
+    var slot = nameIdxToSlot[ni].slot;
     var base = SAV_UNIT_START + slot * SAV_UNIT_SIZE;
     var lv   = saveData[base + 0x12];
     var name = (UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni]) ? UNIT_CHAR_NAMES[ni] : ('idx'+ni);
