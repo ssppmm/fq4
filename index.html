@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v46</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v47</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -901,27 +901,56 @@ function unitBuildSelect(){
   var sel = document.getElementById('unit-sel');
   if(!sel) return;
   sel.innerHTML = '';
-  var total = Math.min(unitCount || 354, UNIT_FQ_NAMES.length);
+  var total = unitCount || 354;
 
-  // FQ4WED1 번호 = 슬롯+1 (0-based 슬롯)
-  // UNIT_FQ_NAMES[slot] = 해당 슬롯의 캐릭터 이름
-  // 유효 슬롯(LV 1~254)만 표시
-  var seen = {};
+  // ext+0x02에서 이름idx 읽기
+  // 같은 이름idx가 여러 슬롯에 있으면 LV 1~99 중 가장 작은 슬롯 우선
+  var nameIdxToSlot = {};  // 이름idx → 최적 슬롯
+  var noNameSlots   = [];  // ext+0x02=0인 유효 슬롯
+
   for(var slot=0; slot<total; slot++){
-    var base = SAV_UNIT_START + slot * SAV_UNIT_SIZE;
+    var base    = SAV_UNIT_START     + slot * SAV_UNIT_SIZE;
+    var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
     if(base + SAV_UNIT_SIZE > saveData.length) break;
     var lv = saveData[base + 0x12];
     if(lv === 0 || lv === 255) continue;
 
-    var fqNo = slot + 1;
-    var name = UNIT_FQ_NAMES[slot] || ('슬롯'+slot);
+    var ni = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
 
-    var opt = document.createElement('option');
-    opt.value = slot;
-    opt.dataset.nameidx = slot;
-    opt.textContent = fqNo + ': ' + name + ' (LV.' + lv + ')';
-    sel.appendChild(opt);
+    if(ni > 0){
+      // 같은 이름idx 중 처음 발견된 슬롯만 사용
+      if(!(ni in nameIdxToSlot)){
+        nameIdxToSlot[ni] = slot;
+      }
+    } else {
+      noNameSlots.push(slot);
+    }
   }
+
+  // 이름 있는 슬롯: UNIT_CHAR_NAMES 순서로 정렬
+  var named = Object.keys(nameIdxToSlot).map(Number).sort(function(a,b){return a-b;});
+  named.forEach(function(ni){
+    var slot = nameIdxToSlot[ni];
+    var base = SAV_UNIT_START + slot * SAV_UNIT_SIZE;
+    var lv   = saveData[base + 0x12];
+    var name = (UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni]) ? UNIT_CHAR_NAMES[ni] : ('idx'+ni);
+    var opt  = document.createElement('option');
+    opt.value = slot;
+    opt.dataset.nameidx = ni;
+    opt.textContent = ni + ': ' + name + ' (LV.' + lv + ')';
+    sel.appendChild(opt);
+  });
+
+  // 이름 없는 슬롯: 슬롯 번호로 표시
+  noNameSlots.forEach(function(slot){
+    var base = SAV_UNIT_START + slot * SAV_UNIT_SIZE;
+    var lv   = saveData[base + 0x12];
+    var opt  = document.createElement('option');
+    opt.value = slot;
+    opt.dataset.nameidx = 0;
+    opt.textContent = '슬롯' + (slot+1) + ' (LV.' + lv + ')';
+    sel.appendChild(opt);
+  });
 }
 
 function unitSelectChange(){
