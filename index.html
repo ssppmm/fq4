@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v33</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v34</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -438,7 +438,8 @@ var FILES = [
   'EVMOVE.COM','GRBUF.COM','HITOBUF.COM',
   'FQ4.SYS','FQ4.KCT','FQ4.MSG','FQ4.CHR',
   'FQ4MES','FQ4OMH.BIN','FQ4OMP.BIN',
-  'FQ4P.CHR','FQ4P2.CHR','FQ4GD.0','FQ4GD.1','FQ4GD.2','FQ4GD.3',
+  'FQ4P.CHR','FQ4P2.CHR',
+  // FQ4GD.0~3 는 세이브 파일이므로 FILES에서 제외 — initDos에서 DB로 복원
   'ALMAP','BGMBANK1','BGMBANK2','CHRBANK','MAPBANK','FQFBANK','TMP',
   'BIGFONT.CHR','CLASS.CHR','FONT.CHR','MAGIC.CHR',
   'FQ4G16.B_','FQ4G16.E_','FQ4G16.G_','FQ4G16.R_',
@@ -778,7 +779,7 @@ var MACROS = {
   archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
   wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
   master:  {sv_lv:20, sv_hp:999,   sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
-  cheater: {sv_lv:99, sv_hp:65535, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
+  cheater: {sv_lv:99, sv_hp:60000, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
 };
 
 var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
