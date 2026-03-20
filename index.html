@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v35</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v36</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -756,7 +756,7 @@ function unitSaveFile(){
   if(!saveData||!saveName){toast('⚠ 세이브 파일을 먼저 LOAD하세요','err');return;}
   dbPut(saveName,saveData,function(ok){
     if(!ok){toast('⚠ DB 저장 실패','err');return;}
-    if(fs0){try{fs0.fs.writeFile('/'+saveName,saveData);}catch(e){}}
+    if(fs0){try{fs0.fs.writeFile(saveName,saveData);}catch(e){}}
     toast('💾 '+saveName+' 저장 완료!','ok');
     document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
   });
@@ -811,7 +811,7 @@ function goldSaveFile(){
   if(!goldSaveData||!goldSaveName){toast('⚠ 세이브 파일을 먼저 LOAD하세요','err');return;}
   dbPut(goldSaveName,goldSaveData,function(ok){
     if(!ok){toast('⚠ 저장 실패','err');return;}
-    if(fs0){try{fs0.fs.writeFile('/'+goldSaveName,goldSaveData);}catch(e){}}
+    if(fs0){try{fs0.fs.writeFile(goldSaveName,goldSaveData);}catch(e){}}
     toast('💾 '+goldSaveName+' 저장 완료!','ok');
     document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
   });
@@ -900,7 +900,7 @@ function itemSaveFile(){
   if(!itemSaveData||!itemSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   dbPut(itemSaveName, itemSaveData, function(ok){
     if(!ok){ toast('⚠ 저장 실패','err'); return; }
-    if(fs0){ try{ fs0.fs.writeFile('/'+itemSaveName, itemSaveData); }catch(e){} }
+    if(fs0){ try{ fs0.fs.writeFile(itemSaveName, itemSaveData); }catch(e){} }
     toast('💾 '+itemSaveName+' 저장 완료!','ok');
     document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
   });
@@ -1108,7 +1108,7 @@ function unitSaveFile(){
   if(!saveData||!saveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   dbPut(saveName, saveData, function(ok){
     if(!ok){ toast('⚠ DB 저장 실패','err'); return; }
-    if(fs0){ try{ fs0.fs.writeFile('/'+saveName, saveData); }catch(e){} }
+    if(fs0){ try{ fs0.fs.writeFile(saveName, saveData); }catch(e){} }
     toast('💾 '+saveName+' 저장 완료!','ok');
     document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
   });
@@ -1161,33 +1161,55 @@ function startGame(){
   gs.textContent = '로딩 중…';
   gs.className   = 'game-status status-load';
 
+  // 현재 페이지 기준 절대 base URL 계산 (GitHub Pages 서브디렉토리 대응)
+  var baseUrl = window.location.href.replace(/\/[^\/]*$/, '/');
+
   var total = FILES.length, loaded = 0;
   function onProgress(){
     loaded++;
-    var pct = Math.round(loaded/total*100);
-    prog.style.width = pct+'%';
-    progLbl.textContent = loaded+' / '+total;
+    var pct = Math.round(loaded / total * 100);
+    prog.style.width = pct + '%';
+    progLbl.textContent = loaded + ' / ' + total;
   }
 
   Dos(document.getElementById('canvas'), {
     wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
+    cycles: 'auto',
+    onerror: function(msg){
+      console.error('[jsdos error]', msg);
+      gs.textContent = '오류';
+      gs.className = 'game-status status-off';
+      toast('⚠ DOSBox 오류: ' + msg, 'err');
+    }
   }).ready(function(fs, main){
     fs0 = {fs: fs, main: main};
+
+    // 게임 파일 fetch → js-dos 가상 FS에 기록
     var fetches = FILES.map(function(f){
-      return fetch(f).then(function(r){
-        if(!r.ok) throw new Error(f+' 404');
-        return r.arrayBuffer();
-      }).then(function(buf){
-        fs.createFile('/'+f, new Uint8Array(buf));
-        onProgress();
-      }).catch(function(){ onProgress(); });
+      return fetch(baseUrl + f)
+        .then(function(r){
+          if(!r.ok){ onProgress(); return null; }
+          return r.arrayBuffer();
+        })
+        .then(function(buf){
+          if(buf){
+            try{ fs.createFile(f, new Uint8Array(buf)); }catch(e){}
+          }
+          onProgress();
+        })
+        .catch(function(e){
+          console.warn('[fetch fail]', f, e);
+          onProgress();
+        });
     });
 
     // IndexedDB 세이브 복원
     var restores = SAVE_FILES.map(function(sf){
       return new Promise(function(resolve){
         dbGet(sf, function(d){
-          if(d && d.length){ try{ fs.createFile('/'+sf, new Uint8Array(d)); }catch(e){} }
+          if(d && d.length){
+            try{ fs.createFile(sf, new Uint8Array(d)); }catch(e){}
+          }
           resolve();
         });
       });
@@ -1197,7 +1219,14 @@ function startGame(){
       loading.classList.remove('show');
       gs.textContent = '실행 중';
       gs.className   = 'game-status status-on';
-      main(['-c','mount c /','c:\\'+GAME_EXE]);
+      // dosbox.conf 생성: C 드라이브 마운트 후 실행
+      fs.createFile('dosbox.conf',
+        '[autoexec]\r\n' +
+        'mount c .\r\n' +
+        'c:\r\n' +
+        GAME_EXE + '\r\n'
+      );
+      main(['-conf', 'dosbox.conf']);
     });
   });
 }
@@ -1205,34 +1234,37 @@ function startGame(){
 // ─── 세이브 / 다운로드 / 업로드 ────────────────────────
 function doSave(){
   if(!fs0){ toast('⚠ 게임을 먼저 시작하세요','err'); return; }
-  var done = 0;
+  var saved = 0;
   SAVE_FILES.forEach(function(sf){
     try{
-      var data = fs0.fs.readFile('/'+sf);
+      var data = fs0.fs.readFile(sf);
       if(data && data.length){
         dbPut(sf, data, function(ok){
-          if(ok){ done++; if(done===1) toast('💾 세이브 저장 완료 ('+SAVE_FILES.length+'개 시도)','ok'); }
+          if(ok){ saved++; toast('💾 세이브 저장 완료 ('+saved+'개)','ok'); }
         });
       }
-    }catch(e){}
+    }catch(e){ console.warn('[doSave]', sf, e); }
   });
   document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
 }
 
 function doDownload(){
   if(!fs0){ toast('⚠ 게임을 먼저 시작하세요','err'); return; }
+  var found = 0;
   SAVE_FILES.forEach(function(sf){
     try{
-      var data = fs0.fs.readFile('/'+sf);
+      var data = fs0.fs.readFile(sf);
       if(data && data.length){
+        found++;
         var blob = new Blob([data]);
         var a    = document.createElement('a');
         a.href   = URL.createObjectURL(blob);
         a.download = sf;
         a.click();
       }
-    }catch(e){}
+    }catch(e){ console.warn('[doDownload]', sf, e); }
   });
+  if(!found) toast('⚠ 다운로드할 세이브 없음 — 먼저 게임 내 저장 후 💾 버튼을 누르세요','err');
 }
 
 function doUpload(file){
@@ -1243,7 +1275,7 @@ function doUpload(file){
     var name = file.name.toUpperCase();
     dbPut(name, data, function(ok){
       if(!ok){ toast('⚠ 업로드 DB 저장 실패','err'); return; }
-      if(fs0){ try{ fs0.fs.writeFile('/'+name, data); }catch(err){} }
+      if(fs0){ try{ fs0.fs.writeFile(name, data); }catch(err){} }
       toast('⬆ '+name+' 업로드 완료!','ok');
       document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
     });
