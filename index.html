@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v42</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v43</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -307,23 +307,6 @@
         </div>
 
         <div id="stat-fields" style="display:none;">
-
-          <!-- 초상화 영역 (FQ4WED1 스타일) -->
-          <div id="unit-portrait-wrap" style="margin-bottom:10px;">
-            <div style="display:flex;gap:8px;align-items:stretch;">
-              <!-- 초상화 박스 -->
-              <div id="unit-portrait" style="width:72px;height:72px;flex-shrink:0;background:var(--surface2);border:2px solid var(--border2);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-                <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 8px),repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 8px);"></div>
-                <div id="unit-portrait-icon" style="font-size:32px;line-height:1;position:relative;z-index:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.9));">👤</div>
-              </div>
-              <!-- 캐릭터 정보 -->
-              <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;">
-                <div id="unit-portrait-name" style="font-family:var(--font-pixel);font-size:9px;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                <div id="unit-portrait-job" style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                <div id="unit-portrait-lv" style="font-family:var(--font-pixel);font-size:7px;color:var(--green);"></div>
-              </div>
-            </div>
-          </div>
 
           <!-- 스탯 그리드 -->
           <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
@@ -974,60 +957,6 @@ function unitRender(){
 
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
-
-  // 초상화 업데이트
-  unitUpdatePortrait();
-}
-
-// 직업 기반 이모지 매핑
-var JOB_ICONS = {
-  '왕': '👑', '기사': '⚔️', '마법': '🔮', '궁사': '🏹', '궁수': '🏹',
-  '활': '🏹', '전사': '🗡️', '사제': '✝️', '도둑': '🗝️', '닌자': '🥷',
-  '프리': '⚡', '용사': '🛡️', '공주': '👸', '왕자': '🤴', '상인': '💰',
-  '마녀': '🧙', '천사': '😇', '악마': '😈', '드레곤': '🐉', '요정': '🧚',
-  '바이킹': '⚓', '해골': '💀', '좀비': '🧟', '박쥐': '🦇', '거북': '🐢',
-  '버섯': '🍄', '달팽': '🐌', '슬라임': '🟢', '석상': '🗿', '바위': '🪨',
-};
-function getJobIcon(jobName) {
-  if(!jobName) return '👤';
-  for(var key in JOB_ICONS) {
-    if(jobName.indexOf(key) >= 0) return JOB_ICONS[key];
-  }
-  return '👤';
-}
-
-function unitUpdatePortrait() {
-  // 현재 선택된 캐릭터의 이름idx 찾기
-  var sel = document.getElementById('unit-sel');
-  var selectedOpt = sel ? sel.options[sel.selectedIndex] : null;
-  var nameText = selectedOpt ? selectedOpt.textContent : '';
-  // "25: 아레스" 형태에서 이름idx 추출
-  var match = nameText.match(/^(\d+):\s*(.+)$/);
-  var nameIdx  = match ? parseInt(match[1]) : -1;
-  var charName = match ? match[2].trim() : nameText;
-
-  // 직업명
-  var jobName = (UNIT_JOB_NAMES && UNIT_JOB_NAMES[nameIdx]) ? UNIT_JOB_NAMES[nameIdx] : '';
-
-  // LV 읽기
-  var lv = saveData ? savRead(unitIdx * SAV_UNIT_SIZE + SAV_UNIT_START + 0x12, 8) : 0;
-
-  // 포트레이트 아이콘: 직업명 기반
-  var icon = getJobIcon(jobName || charName);
-
-  document.getElementById('unit-portrait-icon').textContent = icon;
-  document.getElementById('unit-portrait-name').textContent = charName || ('Unit #' + unitIdx);
-  document.getElementById('unit-portrait-job').textContent  = jobName || '';
-  document.getElementById('unit-portrait-lv').textContent   = lv ? 'LV.' + lv : '';
-
-  // 직업에 따라 초상화 테두리 색상 변경
-  var portrait = document.getElementById('unit-portrait');
-  var borderColor = 'var(--border2)';
-  if(jobName.indexOf('왕') >= 0)   borderColor = 'var(--yellow)';
-  else if(jobName.indexOf('마법') >= 0 || jobName.indexOf('마녀') >= 0) borderColor = 'var(--purple)';
-  else if(jobName.indexOf('기사') >= 0 || jobName.indexOf('전사') >= 0) borderColor = 'var(--blue)';
-  else if(jobName.indexOf('활') >= 0 || jobName.indexOf('궁') >= 0)  borderColor = 'var(--green)';
-  portrait.style.borderColor = borderColor;
 }
 
 function statEditExt(el){
