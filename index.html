@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v34</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v35</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -759,38 +759,37 @@ function goldScan(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을
 
 // ─── 유닛 에디터 (FQ4WED1 세이브파일 직접 파싱) ─────────────
 // 세이브파일 구조 (분석 결과)
-var SAV_SIG        = 'FQ-4';     // 0x00: 시그니처
-var SAV_GOLD_OFF   = 0x047E;     // 0x047E: 골드 (16bit, 10G단위) ✓ 확정
-var SAV_UNIT_CNT   = 0x0773;     // 0x0773: 유닛 수 (16bit)
-var SAV_UNIT_START = 0x0767;     // 0x0767: 유닛 데이터 시작 ✓ 확정 (세이브파일 직접분석)
-var SAV_UNIT_SIZE  = 63;         // 63 bytes/유닛 ✓확정
+var SAV_SIG        = 'FQ-4';
+var SAV_GOLD_OFF   = 0x047E;     // 골드 (16bit, 10G단위) ✓
+var SAV_UNIT_CNT   = 0x0773;     // 유닛 수 (16bit)
+var SAV_UNIT_START = 0x0763;     // ✓ 확정 (세이브파일 교차검증)
+var SAV_UNIT_SIZE  = 63;         // ✓ 확정
 
-// 추가 능력치 테이블 (AD, MD, 리더십, 아이템)
-var SAV_UNIT_EXT_START = 0x3F2E; // 추가 테이블 시작 ✓확정
-var SAV_UNIT_EXT_SIZE  = 32;     // 유닛당 32바이트 ✓확정
+// 추가 능력치 테이블 (AD, MD, 아이템)
+var SAV_UNIT_EXT_START = 0x3F2E; // ✓ 확정
+var SAV_UNIT_EXT_SIZE  = 32;     // ✓ 확정
 
-// 기본 유닛 필드 ✓ 확정 (4개 세이브파일 교차검증)
-// 아레스(idx=139): 피로도=+0x00, AA=+0x06, LV=+0x0E, HR=+0x0F
-//                  HP=+0x10(16bit), AT=+0x12, AR=+0x13, DF=+0x14, DR=+0x15, EL=+0x16
+// 기본 유닛 필드 ✓ 전체 교차검증 완료
+// 아레스(idx=139): LV=1,HP=2,HR=3,리더십=4,피로도=5,AT=6,AR=7,DF=8,DR=9,AD=10,AA=11,MD=12
 var UNIT_FIELDS = [
-  {id:'sv_ft', off:0x00, bits:8,  label:'피로도', min:0,  max:99},
-  {id:'sv_aa', off:0x06, bits:8,  label:'AA',     min:0,  max:99},
-  {id:'sv_lv', off:0x0E, bits:8,  label:'LV',     min:1,  max:99},
-  {id:'sv_hr', off:0x0F, bits:8,  label:'HR',     min:0,  max:99},
-  {id:'sv_hp', off:0x10, bits:16, label:'HP',     min:0,  max:65535},
-  {id:'sv_at', off:0x12, bits:8,  label:'AT',     min:0,  max:99},
-  {id:'sv_ar', off:0x13, bits:8,  label:'AR',     min:0,  max:99},
-  {id:'sv_df', off:0x14, bits:8,  label:'DF',     min:0,  max:99},
-  {id:'sv_dr', off:0x15, bits:8,  label:'DR',     min:0,  max:99},
-  // +0x16: EL 비트플래그 (별도 체크박스로 처리)
+  {id:'sv_ls', off:0x01, bits:8,  label:'리더십', min:0,  max:99},
+  {id:'sv_ft', off:0x04, bits:8,  label:'피로도', min:0,  max:99},
+  {id:'sv_aa', off:0x0A, bits:8,  label:'AA',     min:0,  max:99},
+  {id:'sv_lv', off:0x12, bits:8,  label:'LV',     min:1,  max:99},
+  {id:'sv_hr', off:0x13, bits:8,  label:'HR',     min:0,  max:99},
+  {id:'sv_hp', off:0x14, bits:16, label:'HP',     min:0,  max:65535},
+  {id:'sv_at', off:0x16, bits:8,  label:'AT',     min:0,  max:99},
+  {id:'sv_ar', off:0x17, bits:8,  label:'AR',     min:0,  max:99},
+  {id:'sv_df', off:0x18, bits:8,  label:'DF',     min:0,  max:99},
+  {id:'sv_dr', off:0x19, bits:8,  label:'DR',     min:0,  max:99},
+  // +0x1A: EL 비트플래그 (별도 체크박스)
 ];
 
-// 추가 테이블 필드 (32바이트 구조체 내) ✓확정
+// 추가 테이블 필드 ✓ 확정
 var UNIT_EXT_FIELDS = [
-  {id:'sv_ad', off:0x00, bits:8, label:'AD',    min:0, max:99},
-  {id:'sv_md', off:0x01, bits:8, label:'MD',    min:0, max:99},
-  {id:'sv_ls', off:0x11, bits:8, label:'리더십', min:0, max:99},
-  // +0x16: 아이템 코드 (별도 드롭다운으로 처리)
+  {id:'sv_ad', off:0x00, bits:8, label:'AD', min:0, max:99},
+  {id:'sv_md', off:0x01, bits:8, label:'MD', min:0, max:99},
+  // +0x16: 아이템 코드 (별도 드롭다운)
 ];
 
 var MACROS = {
@@ -917,7 +916,7 @@ function unitRender(){
   grid.appendChild(divAA);
 
   // EL 체크박스 (+0x08)
-  var elVal = saveData[base+0x16]||0;
+  var elVal = saveData[base+0x1A]||0;
   document.getElementById('el-f').checked = !!(elVal & 0x40);
   document.getElementById('el-e').checked = !!(elVal & 0x10);
   document.getElementById('el-a').checked = !!(elVal & 0x04);
@@ -1014,7 +1013,7 @@ function unitSet(){
   if(document.getElementById('el-e').checked) elVal |= 0x10;
   if(document.getElementById('el-a').checked) elVal |= 0x04;
   if(document.getElementById('el-w').checked) elVal |= 0x01;
-  savWrite(base+0x16, elVal, 8);
+  savWrite(base+0x1A, elVal, 8);
 
   // 추가 테이블 쓰기 (AD MD 리더십)
   if(extBase + SAV_UNIT_EXT_SIZE <= saveData.length){
