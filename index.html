@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v38</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v39</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1028,6 +1028,7 @@ function unitUpdatePortrait() {
   else if(jobName.indexOf('기사') >= 0 || jobName.indexOf('전사') >= 0) borderColor = 'var(--blue)';
   else if(jobName.indexOf('활') >= 0 || jobName.indexOf('궁') >= 0)  borderColor = 'var(--green)';
   portrait.style.borderColor = borderColor;
+}
 
 function statEditExt(el){
   var cur = parseInt(el.textContent)||0;
