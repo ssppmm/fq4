@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v101</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v102</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1033,11 +1033,12 @@ var CLASS_CODES = {
 };
 
 // 상태코드 (+0x07) - 확정
-// +0x07 상태코드 — 세이브파일 직접 분석 확정
-// 0x00=일반병사(투구없음), 0x10=대장(투구★), 0x12=전직가능(0x10|0x02추정), 0x15=사망
+// +0x07 상태코드 — 세이브파일 직접 분석
+// 투구★ 캐릭은 +0x07=0x10 공통, 그러나 투구 표시는 +0x01 값과 연관 가능성 있음(추가확인필요)
+// 0x00=일반, 0x10=대장계열, 0x12=전직가능, 0x15=사망
 var STATE_CODES = {
-  0x00:'일반(투구없음)',
-  0x10:'대장(투구★)',
+  0x00:'일반',
+  0x10:'대장계열(투구?)',
   0x12:'전직가능',
   0x15:'사망',
 };
@@ -1257,11 +1258,13 @@ function unitSelectChange(){
 
 // 유닛 장착 아이템: FQ_UNIT base+0x0F (세이브코드 = 표시idx+1)
 function unitItemSaveToDisp(saveCode){
-  if(saveCode === 255 || saveCode === 0) return 255;
+  // 없음: 0x00(확정) 또는 0xFF → disp 255
+  if(saveCode === 0 || saveCode === 255) return 255;
   return saveCode - 1;
 }
 function unitItemDispToSave(dispIdx){
-  if(dispIdx === 255) return 255;
+  // 없음 선택 시 → 0x00 저장 (세이브파일 확인: 라모크/케인스 모두 0x00)
+  if(dispIdx === 255) return 0x00;
   return dispIdx + 1;
 }
 
