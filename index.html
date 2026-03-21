@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v120</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v122</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -591,7 +591,34 @@ function initDos(){
   Dos(document.getElementById('canvas'),{wdosboxUrl:'https://js-dos.com/6.22/current/wdosbox.js'}).ready(function(fs,main){
     fs0=fs;
 
-    Promise.all(FILES.concat(SAVE_FILES).map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d){ try{fs.createFile(f,d);}catch(e){} } res(); }); }); }))
+    // 세이브 파일: DB에 있으면 그걸 쓰고, 없으면 서버에서 기본 세이브 파일 fetch
+    var baseUrl=window.location.href.replace(/\/[^\/]*$/,'/');
+    var saveReady = SAVE_FILES.map(function(sf){
+      return new Promise(function(res){
+        dbGet(sf, function(d){
+          if(d && d.length > 0){
+            // DB에 있음 → 그대로 사용
+            try{ fs.createFile(sf, d); }catch(e){}
+            res();
+          } else {
+            // DB에 없음 → 서버에서 기본 세이브 파일 fetch 시도
+            fetch(baseUrl+sf).then(function(r){
+              if(!r.ok) throw new Error('no default save');
+              return r.arrayBuffer();
+            }).then(function(buf){
+              var data = new Uint8Array(buf);
+              dbPut(sf, data); // DB에도 저장
+              try{ fs.createFile(sf, data); }catch(e){}
+              res();
+            }).catch(function(){
+              res(); // 없으면 그냥 넘어감
+            });
+          }
+        });
+      });
+    });
+
+    Promise.all(FILES.map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d){ try{fs.createFile(f,d);}catch(e){} } res(); }); }); }).concat(saveReady))
     .then(function(){
       main(['-c', GAME_EXE]).then(function(){
         setInterval(function(){
@@ -1962,6 +1989,7 @@ document.getElementById('btn-full').addEventListener('click',function(){
 document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
   var canvas = document.getElementById('canvas');
   function fire(down){
+    canvas.focus();
     var ev = new KeyboardEvent(down?'keydown':'keyup', {key:btn.dataset.key, bubbles:true, cancelable:true});
     canvas.dispatchEvent(ev);
     if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
@@ -1975,9 +2003,11 @@ document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
 // ─── ESC 버튼 ────────────────────────────────────────
 (function(){
   var canvas = document.getElementById('canvas');
+  canvas.tabIndex = 0; // 포커스 받을 수 있도록
   var btn = document.getElementById('btn-esc');
   if(!btn) return;
   function fireEsc(down){
+    canvas.focus();
     var ev = new KeyboardEvent(down?'keydown':'keyup', {key:'Escape', code:'Escape', keyCode:27, bubbles:true, cancelable:true});
     canvas.dispatchEvent(ev);
     if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
@@ -1997,12 +2027,12 @@ document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
 
   function setCtrl(on){
     ctrlOn = on;
+    canvas.focus();
     if(on){
       btn.classList.add('pressed');
       btn.style.background = 'var(--green)';
       btn.style.color = '#000';
       btn.style.borderColor = 'var(--green)';
-      // keydown 유지 — 일부 DOSBox 키 이벤트는 ctrlKey 플래그로 동작
       var ev = new KeyboardEvent('keydown', {key:'Control', code:'ControlLeft', ctrlKey:true, bubbles:true, cancelable:true});
       canvas.dispatchEvent(ev);
     } else {
