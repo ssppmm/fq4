@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v105</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v106</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -362,7 +362,7 @@
               <button class="btn btn-accent" style="padding:7px;font-size:8px;" onclick="applyHelmet(true)">👑 투구 ON</button>
               <button class="btn btn-del"   style="padding:7px;font-size:8px;" onclick="applyHelmet(false)">✖ 투구 OFF</button>
             </div>
-            <div style="font-size:7px;color:var(--muted);margin-top:4px;">ON: [08]=08 [09]=05 / OFF: [08]=09 [09]=00</div>
+            <div style="font-size:7px;color:var(--muted);margin-top:4px;">ON: [07]=10 [08]=08 [09]=05 / OFF: [07]=00 [08]=09 [09]=00</div>
           </div>
 
           <!-- SET / RESET / SAVE -->
@@ -1535,21 +1535,25 @@ function applyMacro(type){
   toast('🎮 Macro: '+type,'ok');
 }
 
-// 투구 ON/OFF — +0x08=0x08, +0x09=0x05 쌍이 투구 조건 (커뮤니티 원본 데이터 확정)
+// 투구 ON/OFF — [07]=0x10 AND [08]=0x08 AND [09]=0x05 (커뮤니티+세이브파일 분석)
 function applyHelmet(on){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var base = fqBase(unitIdx);
   if(on){
+    saveData[base+0x07] = 0x10;
     saveData[base+0x08] = 0x08;
     saveData[base+0x09] = 0x05;
   } else {
+    saveData[base+0x07] = 0x00;
     saveData[base+0x08] = 0x09;
     saveData[base+0x09] = 0x00;
   }
   // UI 갱신
+  var stEl = document.getElementById('sv_st');
+  if(stEl) stEl.value = on ? 0x10 : 0x00;
   var hmEl = document.getElementById('sv_hm');
   if(hmEl) hmEl.textContent = on ? 8 : 9;
-  toast(on ? '👑 투구 ON ([08]=08 [09]=05) — 💾 저장하세요' : '✖ 투구 OFF ([08]=09 [09]=00) — 💾 저장하세요', on ? 'ok' : 'nfo');
+  toast(on ? '👑 투구 ON ([07]=10 [08]=08 [09]=05) — 💾 저장하세요' : '✖ 투구 OFF ([07]=00 [08]=09 [09]=00) — 💾 저장하세요', on ? 'ok' : 'nfo');
 }
 
 // SET: UI 값을 saveData에 기록 (FQ4WED1 32바이트 배열)
