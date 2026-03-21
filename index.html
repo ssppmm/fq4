@@ -56,8 +56,6 @@
     .btn-ul-s    { background: transparent; border-color: var(--green); color: var(--green); }
     .btn-ul-s:hover  { background: var(--green); color: #000; }
     .btn-ghost   { background: transparent; border-color: var(--border); color: var(--muted); }
-    .btn-del     { background: transparent; border-color: var(--red); color: var(--red); }
-    .btn-del:hover { background: var(--red); color: #fff; }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn-primary:hover { opacity: .8; }
@@ -131,8 +129,11 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v66_orig</span></div>
+  <div class="logo">👑 FQ4</div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
+  <div class="header-links">
+    <span style="color:var(--yellow);font-size:10px;font-weight:bold;">v2026.03.10.09</span>
+  </div>
 </header>
 
 <main>
@@ -185,11 +186,10 @@
     <div class="game-toolbar">
       <button class="btn btn-start" id="btn-start">▶ 시작</button>
       <button class="btn btn-save"  id="btn-save">💾 저장</button>
-      <button class="btn btn-ghost" id="btn-del" style="color:var(--red);border-color:var(--red);">🗑 삭제</button>
       <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
       <button class="btn btn-ul-s"  id="btn-ul-t">⬆ 불러오기</button>
       <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
-      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat,.0,.1,.2,.3" style="display:none" />
+      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat" style="display:none" />
     </div>
     <div class="pc-ctrl">
       <div class="ctrl-card">
@@ -210,38 +210,25 @@
   <div class="editor-col">
     <div class="tabs">
       <div class="tab active" data-tab="gold">💰 골드</div>
-      <div class="tab" data-tab="stat">👤 유닛</div>
+      <div class="tab" data-tab="scan">🔍 스캔</div>
+      <div class="tab" data-tab="stat">⚔ 스탯</div>
       <div class="tab" data-tab="item">🎒 아이템</div>
     </div>
 
     <!-- 💰 골드 -->
     <div class="tab-panel active card" id="panel-gold">
       <div class="card-hd">
-        <span class="card-ttl">💰 FQ4 Gold Editor</span>
-        <span class="badge b-yellow" id="gold-badge">세이브 파일 필요</span>
+        <span class="card-ttl">💰 골드 편집</span>
+        <span class="badge b-yellow">대기중</span>
       </div>
       <div class="card-body" style="padding:10px;">
-
-        <!-- 세이브 파일 선택 -->
-        <div style="background:var(--surface2);border-radius:3px;padding:7px;margin-bottom:8px;">
-          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Save File Select</div>
-          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
-            <select id="gold-slot-sel" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
-              <option value="0">FQ4GD.0</option>
-              <option value="1">FQ4GD.1</option>
-              <option value="2">FQ4GD.2</option>
-              <option value="3">FQ4GD.3</option>
-            </select>
-            <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadGoldFile()">📂 LOAD</button>
-          </div>
-          <div id="gold-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          ① 게임에서 현재 골드 확인 → 입력<br>
+          ② <b>🔍 스캔+MAX 적용</b> 클릭
         </div>
-
-        <!-- 골드 표시 -->
-        <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ GOLD</div>
-        <div id="gold-cur-in" style="background:var(--bg);border:2px solid var(--yellow);border-radius:4px;padding:10px 12px;font-family:var(--font-pixel);font-size:24px;color:var(--yellow);text-align:center;margin-bottom:8px;min-height:48px;letter-spacing:2px;">-</div>
-
-        <!-- 숫자 키패드 -->
+        <div class="lbl" style="margin-bottom:6px;">현재 골드 입력</div>
+        <div id="gold-cur-in" style="background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;font-family:var(--font-pixel);font-size:20px;color:var(--yellow);text-align:center;margin-bottom:8px;min-height:44px;letter-spacing:2px;">0</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px;">
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('7')">7</button>
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('8')">8</button>
@@ -256,105 +243,78 @@
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('3')">3</button>
           <button class="btn btn-ghost" style="padding:10px;font-size:13px;" onclick="goldPad('0')">0</button>
         </div>
-
-        <!-- MAX / SET / SAVE -->
-        <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:4px;">
-          <button class="btn btn-ghost"   style="padding:9px;font-size:8px;" onclick="goldMax()">MAX</button>
-          <button class="btn btn-accent"  style="padding:9px;font-size:8px;" onclick="goldSet()">✅ SET</button>
-          <button class="btn btn-primary" style="padding:9px;font-size:8px;" onclick="goldSaveFile()">💾 저장</button>
-        </div>
-        <div id="gold-log" style="font-size:8px;color:var(--muted);text-align:center;margin-top:5px;min-height:14px;"></div>
+        <button class="btn btn-primary" style="width:100%;padding:11px;font-size:10px;margin-bottom:6px;" onclick="goldScan()">🔍 스캔 + MAX 적용</button>
+        <div id="gold-log" style="font-size:8px;color:var(--muted);text-align:center;min-height:16px;"></div>
       </div>
     </div>
 
-
-    <!-- 👤 유닛 (FQ4WED1 Unit Editor) -->
-    <div class="tab-panel card" id="panel-stat">
+    <!-- 🔍 스캔 (범용) -->
+    <div class="tab-panel card" id="panel-scan">
       <div class="card-hd">
-        <span class="card-ttl">👤 FQ4 Unit Editor</span>
-        <span class="badge b-purple" id="stat-badge">세이브 파일 필요</span>
+        <span class="card-ttl">🔍 메모리 스캔</span>
+        <span class="badge b-blue">범용</span>
       </div>
       <div class="card-body" style="padding:10px;">
-
-        <!-- 세이브 파일 선택 -->
-        <div style="background:var(--surface2);border-radius:3px;padding:7px;margin-bottom:8px;">
-          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Save File Select</div>
-          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
-            <select id="save-slot-sel" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
-              <option value="0">FQ4GD.0</option>
-              <option value="1">FQ4GD.1</option>
-              <option value="2">FQ4GD.2</option>
-              <option value="3">FQ4GD.3</option>
-            </select>
-            <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadSaveFile()">📂 LOAD</button>
-          </div>
-          <div id="save-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          ① 게임 값 확인 → 입력 → 🔍 스캔<br>
+          ② 값 변경 후 → 🔄 재스캔으로 좁히기<br>
+          ③ 주소 선택 → 값 입력 → ✏ 쓰기
         </div>
-
-        <!-- 유닛 선택: 드롭다운 + PREV/NEXT -->
-        <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Unit Select</div>
-        <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px;">
-          <button class="btn btn-ghost" style="padding:5px 8px;font-size:10px;" onclick="unitPrev()">◀</button>
-          <select id="unit-sel" onchange="unitSelectChange()" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px 6px;font-size:9px;border-radius:3px;"></select>
-          <button class="btn btn-ghost" style="padding:5px 8px;font-size:10px;" onclick="unitNext()">▶</button>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input id="scan-val" type="number" placeholder="현재 값" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;" />
+          <select id="scan-bits" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 6px;font-size:10px;border-radius:3px;outline:none;">
+            <option value="8">8bit</option>
+            <option value="16" selected>16bit</option>
+            <option value="32">32bit</option>
+          </select>
         </div>
-        <!-- 인덱스 직접 입력 -->
-        <div style="display:flex;gap:4px;align-items:center;margin-bottom:8px;">
-          <span style="font-family:var(--font-pixel);font-size:7px;color:var(--muted);white-space:nowrap;">idx</span>
-          <input id="unit-no" type="number" value="0" min="0" style="width:60px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:4px 6px;font-family:var(--font-pixel);font-size:8px;border-radius:3px;outline:none;text-align:center;" />
-          <button class="btn btn-ghost" style="padding:4px 8px;font-size:7px;" onclick="unitGo()">GO</button>
-          <span id="unit-total" style="font-size:8px;color:var(--muted);margin-left:auto;">/ -</span>
+        <div style="display:flex;gap:5px;margin-bottom:8px;">
+          <button class="btn btn-primary" style="flex:1;padding:8px;" onclick="doScan(false)">🔍 스캔</button>
+          <button class="btn btn-ghost"   style="flex:1;padding:8px;" onclick="doScan(true)">🔄 재스캔</button>
+          <button class="btn btn-ghost"   style="flex:1;padding:8px;color:var(--red);" onclick="clearScan()">✕ 초기화</button>
         </div>
+        <div style="font-size:8px;color:var(--muted);margin-bottom:4px;">
+          결과: <span id="scan-count" style="color:var(--yellow);">-</span>개
+          <span id="scan-warn" style="color:var(--red);margin-left:6px;font-size:7px;"></span>
+        </div>
+        <div class="scan-results" id="scan-results">
+          <div class="scan-empty">스캔 결과가 여기에 표시됩니다</div>
+        </div>
+        <hr class="divider">
+        <div class="lbl" style="margin-bottom:4px;">선택 주소: <span id="sel-addr" style="color:var(--blue);font-family:monospace;">없음</span></div>
+        <div style="display:flex;gap:5px;">
+          <input id="write-val" type="number" placeholder="쓸 값" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--font-pixel);font-size:9px;border-radius:3px;outline:none;" />
+          <button class="btn btn-accent" style="padding:8px 12px;" onclick="doWrite()">✏ 쓰기</button>
+        </div>
+      </div>
+    </div>
 
+    <!-- ⚔ 스탯 -->
+    <div class="tab-panel card" id="panel-stat">
+      <div class="card-hd">
+        <span class="card-ttl">⚔ 스탯 편집</span>
+        <span class="badge b-purple" id="stat-badge">오프셋 미확정</span>
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          🔍 스캔으로 HP/MP 주소 찾기<br>
+          → 베이스 주소 입력 → 📖 읽기 → 편집 → ✅ 적용
+        </div>
+        <div class="lbl" style="margin-bottom:4px;">캐릭터 베이스 주소 (hex)</div>
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <input id="stat-base-in" type="text" placeholder="예: 0x20b9480" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;outline:none;" />
+          <button class="btn btn-primary" style="padding:8px 10px;font-size:8px;" onclick="statBaseSet()">📖 읽기</button>
+        </div>
         <div id="stat-fields" style="display:none;">
-
-          <!-- 스탯 그리드 -->
-          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;" id="stat-grid"></div>
-
-          <!-- 아이템 -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ ITEM</div>
-            <select id="unit-item-sel" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
-              <option value="255">없음</option>
-            </select>
-          </div>
-
-          <!-- EL 체크박스 -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL (Element)</div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-w"> W(Water)</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-a"> A(Air)</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-e"> E(Earth)</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-f"> F(Fire)</label>
-            </div>
-          </div>
-
-          <!-- MACRO -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ MACRO</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('normal')">Normal</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('knight')">Knight</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('archer')">Archer</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('wizard')">Wizard</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('master')">Master</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;color:var(--red);border-color:var(--red);" onclick="applyMacro('cheater')">Cheater</button>
-            </div>
-          </div>
-
-          <!-- SET / RESET / SAVE -->
-          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;">
-            <button class="btn btn-accent" style="padding:9px;font-size:8px;" onclick="unitSet()">✅ SET</button>
-            <button class="btn btn-ghost"  style="padding:9px;font-size:8px;" onclick="unitReset()">RESET</button>
-            <button class="btn btn-primary" style="padding:9px;font-size:8px;" onclick="unitSaveFile()">💾 저장</button>
-          </div>
-          <div style="margin-top:4px;font-size:7px;color:var(--muted);text-align:center;">SET → 💾저장 → 게임 재시작 필요</div>
+          <div style="font-size:7px;color:var(--accent);margin-bottom:6px;font-family:var(--font-pixel);">▶ 스탯 (클릭하여 수정)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;" id="stat-grid"></div>
+          <button class="btn btn-accent" style="width:100%;padding:9px;" onclick="statApply()">✅ 전체 적용</button>
+          <div style="margin-top:5px;font-size:7px;color:var(--muted);text-align:center;">적용 후 화면전환 시 반영됨</div>
         </div>
-
-        <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:12px 0;">
-          📂 세이브 파일 LOAD 후 유닛 편집 가능
+        <div id="stat-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
+          ⚠ 오프셋 미확정<br><span style="font-size:8px;">게임 실행 후 스캔으로 베이스 주소 찾기</span>
         </div>
       </div>
     </div>
@@ -362,65 +322,29 @@
     <!-- 🎒 아이템 -->
     <div class="tab-panel card" id="panel-item">
       <div class="card-hd">
-        <span class="card-ttl">🎒 FQ4 Item Editor</span>
-        <span class="badge b-green" id="item-badge">세이브 파일 필요</span>
+        <span class="card-ttl">🎒 아이템 편집</span>
+        <span class="badge b-purple" id="item-badge">오프셋 미확정</span>
       </div>
       <div class="card-body" style="padding:10px;">
-
-        <!-- 세이브 파일 선택 -->
-        <div style="background:var(--surface2);border-radius:3px;padding:7px;margin-bottom:8px;">
-          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Save File Select</div>
-          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
-            <select id="item-slot-sel" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
-              <option value="0">FQ4GD.0</option>
-              <option value="1">FQ4GD.1</option>
-              <option value="2">FQ4GD.2</option>
-              <option value="3">FQ4GD.3</option>
-            </select>
-            <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadItemFile()">📂 LOAD</button>
-          </div>
-          <div id="item-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          🔍 스캔으로 아이템 주소 확정<br>
+          → 베이스 주소 입력 → 슬롯 선택 → 적용
         </div>
-
-        <!-- 안내 -->
-        <div style="font-size:8px;line-height:1.6;background:var(--surface2);padding:6px;border-radius:3px;margin-bottom:8px;color:var(--muted);">
-          * Select one in item list (left), Then input value (right)<br>
-          * Owned: 0~99
+        <div class="lbl" style="margin-bottom:4px;">아이템 베이스 주소 (hex)</div>
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <input id="item-base-in" type="text" placeholder="예: 0x20b948b" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;outline:none;" />
+          <button class="btn btn-primary" style="padding:8px 10px;font-size:8px;" onclick="itemBaseSet()">📖 읽기</button>
         </div>
-
         <div id="item-fields" style="display:none;">
-          <!-- 아이템 목록 + 소유수 -->
-          <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Item List</div>
-          <div id="item-list-grid" style="max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:3px;margin-bottom:8px;"></div>
-
-          <!-- Set 버튼들 -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Set Selected Item</div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:4px;">
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(0)">Set 00</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(10)">Set 10</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(20)">Set 20</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(40)">Set 40</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(255)">Set 255</button>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;grid-column:span 2;" onclick="itemSetAllVal(0)">All 00</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(20)">All 20</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(40)">All 40</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(255)">All 255</button>
-            </div>
-          </div>
-
-          <!-- SET / SAVE -->
-          <div style="display:grid;grid-template-columns:2fr 1fr;gap:4px;">
-            <button class="btn btn-accent"  style="padding:9px;font-size:8px;" onclick="itemSet()">✅ SET</button>
-            <button class="btn btn-primary" style="padding:9px;font-size:8px;" onclick="itemSaveFile()">💾 저장</button>
-          </div>
-          <div style="margin-top:4px;font-size:7px;color:var(--muted);text-align:center;">SET → 💾저장 → 게임 재시작 필요</div>
+          <div class="lbl" style="margin-bottom:4px;">슬롯</div>
+          <select id="item-slot-sel" style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:6px;font-size:9px;margin-bottom:8px;"></select>
+          <div class="lbl" style="margin-bottom:4px;">변경할 아이템</div>
+          <select id="item-new-sel" style="width:100%;background:var(--surface);color:var(--text);border:2px solid var(--green);border-radius:4px;padding:6px;font-size:9px;margin-bottom:8px;"></select>
+          <button class="btn btn-accent" style="width:100%;padding:9px;" onclick="applyItem()">✅ 적용</button>
         </div>
-
-        <div id="item-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:12px 0;">
-          📂 세이브 파일 LOAD 후 아이템 편집 가능
+        <div id="item-pending" style="font-size:9px;color:var(--muted);text-align:center;padding:16px 0;">
+          ⚠ 오프셋 미확정<br><span style="font-size:8px;">게임 실행 후 스캔으로 아이템 주소 찾기</span>
         </div>
       </div>
     </div>
@@ -435,11 +359,10 @@
 //  ★ 설정 영역 — 게임에 맞게 수정하세요 ★
 // ══════════════════════════════════════════════════════
 var GAME_EXE  = 'FQ4.BAT';   // 실행 파일명
-var SAVE_FILES = ['FQ4GD.0','FQ4GD.1','FQ4GD.2','FQ4GD.3'];  // 세이브 파일 4개
-var SAVE_FILE = SAVE_FILES[0];  // 하위호환용
-var GOLD_MAX  = 655350;       // 골드 MAX (16bit×10, 저장최대=65535)
-var SCAN_START = 0x800000;
-var SCAN_END   = 0x3000000;
+var SAVE_FILE = null;         // 세이브 파일명 (확인 후 설정, 예: 'FQ4.SAV')
+var GOLD_MAX  = 9999900;      // 골드 MAX 값
+var SCAN_START = 0x1000000;
+var SCAN_END   = 0x2200000;
 
 // 게임 파일 목록 (실제 파일명으로 채우세요)
 var FILES = [
@@ -447,8 +370,7 @@ var FILES = [
   'EVMOVE.COM','GRBUF.COM','HITOBUF.COM',
   'FQ4.SYS','FQ4.KCT','FQ4.MSG','FQ4.CHR',
   'FQ4MES','FQ4OMH.BIN','FQ4OMP.BIN',
-  'FQ4P.CHR','FQ4P2.CHR',
-  // FQ4GD.0~3 는 세이브 파일이므로 FILES에서 제외 — initDos에서 DB로 복원
+  'FQ4P.CHR','FQ4P2.CHR','FQ4GD.0','FQ4GD.1','FQ4GD.2','FQ4GD.3',
   'ALMAP','BGMBANK1','BGMBANK2','CHRBANK','MAPBANK','FQFBANK','TMP',
   'BIGFONT.CHR','CLASS.CHR','FONT.CHR','MAGIC.CHR',
   'FQ4G16.B_','FQ4G16.E_','FQ4G16.G_','FQ4G16.R_',
@@ -469,8 +391,21 @@ var FILES = [
   'INSTALL.BAT','INSTALL1.BAT','IFUE240.inf',
 ];
 
-// STAT_FIELDS는 유닛 에디터에서 UNIT_FIELDS로 대체됨 (미사용)
-var STAT_FIELDS = [];
+// 스탯 오프셋 (게임 실행 후 스캔으로 확정, 아래 주석 예시 참고)
+// off: 베이스 주소로부터의 거리(hex), bits: 8/16/32
+var STAT_FIELDS = [
+  // 확정 후 아래처럼 채워넣으세요:
+  // {id:'sv_curHP', off:0x??, bits:16, label:'현 HP',  min:0, max:9999},
+  // {id:'sv_maxHP', off:0x??, bits:16, label:'MAX HP', min:0, max:9999},
+  // {id:'sv_curMP', off:0x??, bits:16, label:'현 MP',  min:0, max:9999},
+  // {id:'sv_maxMP', off:0x??, bits:16, label:'MAX MP', min:0, max:9999},
+  // {id:'sv_lv',    off:0x??, bits:8,  label:'LV',     min:1, max:99},
+  // {id:'sv_exp',   off:0x??, bits:32, label:'EXP',    min:0, max:999999},
+  // {id:'sv_atk',   off:0x??, bits:8,  label:'ATK',    min:0, max:999},
+  // {id:'sv_def',   off:0x??, bits:8,  label:'DEF',    min:0, max:999},
+  // {id:'sv_spd',   off:0x??, bits:8,  label:'SPD',    min:0, max:999},
+  // {id:'sv_mag',   off:0x??, bits:8,  label:'MAG',    min:0, max:999},
+];
 
 // 아이템 목록 (게임 데이터 분석 후 채우세요)
 var ITEMS = [
@@ -515,43 +450,6 @@ function scanMem(v,b,s,e){
 // ─── IndexedDB ─────────────────────────────────────────
 var DB_NAME='fq4-saves';
 function dbOpen(cb){ var r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');}; r.onsuccess=function(e){cb(e.target.result);}; r.onerror=function(){cb(null);}; }
-
-// 유효한 세이브 파일 목록을 드롭다운에 채우기
-function populateSaveSel(selId, callback){
-  var sel = document.getElementById(selId);
-  if(!sel) return;
-  var original = sel.value;
-  sel.innerHTML = '<option value="" disabled>-- 로딩 중... --</option>';
-  var checked = 0;
-  var valid = [];
-  SAVE_FILES.forEach(function(sf){
-    dbGet(sf, function(d){
-      if(d && d.length > 100){
-        // FQ-4 시그니처 확인
-        var sig = String.fromCharCode(d[0],d[1],d[2],d[3]);
-        if(sig === 'FQ-4') valid.push(sf);
-      }
-      checked++;
-      if(checked === SAVE_FILES.length){
-        sel.innerHTML = '';
-        if(valid.length === 0){
-          sel.innerHTML = '<option value="" disabled>세이브 없음 (💾 저장 먼저)</option>';
-        } else {
-          valid.forEach(function(sf){
-            var opt = document.createElement('option');
-            opt.value = sf.slice(-1); // '0'~'3'
-            opt.textContent = sf;
-            sel.appendChild(opt);
-          });
-          // 이전 선택값 복원 또는 첫번째 선택
-          var restore = valid.find(function(sf){ return sf.slice(-1)===original; });
-          sel.value = restore ? original : valid[0].slice(-1);
-        }
-        if(callback) callback(valid);
-      }
-    });
-  });
-}
 function dbGet(k,cb){ dbOpen(function(db){ if(!db)return cb(null); var r=db.transaction('files','readonly').objectStore('files').get(k); r.onsuccess=function(e){cb(e.target.result||null);}; r.onerror=function(){cb(null);}; }); }
 function dbPut(k,v,cb){ dbOpen(function(db){ if(!db)return cb&&cb(false); var tx=db.transaction('files','readwrite'); tx.objectStore('files').put(v,k); tx.oncomplete=function(){cb&&cb(true);}; tx.onerror=function(){cb&&cb(false);}; }); }
 
@@ -561,12 +459,11 @@ function startGame(){
   gameStarted=true;
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('loading').classList.add('show');
-  var baseUrl=window.location.href.replace(/\/[^\/]*$/,'/');
   var toLoad=FILES.slice(), loaded=0;
   function next(){
     if(!toLoad.length){ initDos(); return; }
     var f=toLoad.shift();
-    fetch(baseUrl+f).then(function(r){ if(!r.ok) throw new Error(f+' 없음'); return r.arrayBuffer(); })
+    fetch(f).then(function(r){ if(!r.ok) throw new Error(f+' 없음'); return r.arrayBuffer(); })
     .then(function(buf){
       loaded++;
       var p=Math.round(loaded/FILES.length*100);
@@ -581,14 +478,12 @@ function initDos(){
   document.getElementById('loading').classList.remove('show');
   Dos(document.getElementById('canvas'),{wdosboxUrl:'https://js-dos.com/6.22/current/wdosbox.js'}).ready(function(fs,main){
     fs0=fs;
-
-
-    Promise.all(FILES.concat(SAVE_FILES).map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d){ try{fs.createFile(f,d);}catch(e){} } res(); }); }); }))
+    Promise.all(FILES.map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d)fs.createFile(f,d); res(); }); }); }))
     .then(function(){
-      main(['-c', GAME_EXE]).then(function(){
+      main(['-c','mount c .','-c','c:','-c',GAME_EXE]).then(function(){
         setInterval(function(){
           var h=heap();
-          if(h&&h.length>0){
+          if(h&&h.length>SCAN_START){
             document.getElementById('gs').textContent='실행중';
             document.getElementById('gs').className='game-status status-on';
           }
@@ -599,60 +494,21 @@ function initDos(){
 }
 
 // ─── 저장/다운로드/불러오기 ───────────────────────────
-function readSaveFile(){
-  var paths=['/'+SAVE_FILE,'c:/'+SAVE_FILE,SAVE_FILE,'./'+SAVE_FILE];
-  for(var i=0;i<paths.length;i++){
-    try{ var d=fs0.fs.readFile(paths[i]); if(d&&d.length>0) return d; }catch(e){}
-  }
-  return null;
-}
 function doSave(){
-  if(!fs0){ toast('⚠ 게임 실행 후 저장하세요','err'); return; }
-  var saved=0, total=SAVE_FILES.length;
-  SAVE_FILES.forEach(function(sf){
-    var paths=['/'+sf,'c:/'+sf,sf,'./'+sf], d=null;
-    for(var i=0;i<paths.length;i++){ try{d=fs0.fs.readFile(paths[i]);if(d&&d.length>0)break;}catch(e){} }
-    if(d&&d.length>0){
-      dbPut(sf,d,function(){ saved++; if(saved===total){ toast('💾 세이브 '+total+'개 저장 완료!','ok'); document.getElementById('save-notice').textContent='💾 저장된 세이브 있음'; } });
-    } else { total--; if(saved===total && total>0){ toast('💾 세이브 '+total+'개 저장 완료!','ok'); } }
-  });
-  if(total===0) toast('⚠ 게임에서 먼저 저장하세요','err');
-  return;
-  // 4개 파일 순차 다운로드
-  var dlFiles = SAVE_FILES.slice(), cnt=0;
-  function dlNext(){
-    if(!dlFiles.length){ if(cnt>0) toast('⬇ 세이브 '+cnt+'개 다운로드!','ok'); else toast('⚠ 다운로드할 세이브 없음','err'); return; }
-    var sf=dlFiles.shift();
-    var d=null;
-    if(fs0){ var pp=['/'+sf,'c:/'+sf,sf]; for(var i=0;i<pp.length;i++){try{d=fs0.fs.readFile(pp[i]);if(d&&d.length>0)break;}catch(e){}} }
-    if(d&&d.length>0){ var b=new Blob([d],{type:'application/octet-stream'}),a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=sf; document.body.appendChild(a); a.click(); document.body.removeChild(a); cnt++; setTimeout(dlNext,300); return; }
-    dbGet(sf,function(dd){ if(dd&&dd.length>0){ var b=new Blob([dd],{type:'application/octet-stream'}),a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=sf; document.body.appendChild(a); a.click(); document.body.removeChild(a); cnt++; } setTimeout(dlNext,300); });
-  }
-  dlNext(); return;
-  if(!SAVE_FILE){ toast('⚠ 세이브 파일명 미확정','err'); return; }
-  if(!fs0){ toast('⚠ 게임 먼저 시작','err'); return; }
-  var data=readSaveFile();
-  if(!data){ toast('⚠ 세이브 파일 없음 — 게임에서 먼저 저장하세요','err'); return; }
-  dbPut(SAVE_FILE, data, function(ok){
-    toast(ok?'💾 저장 완료! ('+data.length+'bytes)':'⚠ 저장 실패', ok?'ok':'err');
-    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+  if(!SAVE_FILE){ toast('⚠ 세이브 파일명 미확정 — SAVE_FILE 설정 필요','err'); return; }
+  var h=heap(); if(!h){ toast('⚠ 게임 먼저 시작','err'); return; }
+  fs0.fs.readFile('/'+SAVE_FILE,function(err,data){
+    if(err){ toast('⚠ 세이브 없음 — 게임에서 먼저 저장하세요','err'); return; }
+    dbPut(SAVE_FILE,data,function(ok){ toast(ok?'💾 저장 완료!':'⚠ 저장 실패', ok?'ok':'err'); });
   });
 }
 function doDownload(){
   if(!SAVE_FILE){ toast('⚠ 세이브 파일명 미확정','err'); return; }
-  var data = null;
-  if(fs0){ data=readSaveFile(); }
-  if(data && data.length>0){
+  fs0.fs.readFile('/'+SAVE_FILE,function(err,data){
+    if(err){ toast('⚠ 세이브 없음','err'); return; }
     var a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));
-    a.download=SAVE_FILE; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    toast('⬇ 다운로드 완료','ok'); return;
-  }
-  dbGet(SAVE_FILE, function(d){
-    if(!d||d.length===0){ toast('⚠ 먼저 💾 저장을 누르세요','err'); return; }
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([d],{type:'application/octet-stream'}));
-    a.download=SAVE_FILE; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    a.download=SAVE_FILE; a.click();
     toast('⬇ 다운로드 완료','ok');
   });
 }
@@ -660,15 +516,8 @@ function doUpload(file){
   if(!file) return;
   var r=new FileReader();
   r.onload=function(e){
-    var d=new Uint8Array(e.target.result);
-    // 파일명에서 세이브 파일 판별 (FQ4GD.0~3)
-    var fn = file.name.toUpperCase();
-    var isSave = SAVE_FILES.some(function(sf){ return sf.toUpperCase()===fn; });
-    var saveFn = isSave ? file.name.toUpperCase() : (SAVE_FILES[0]);
-    dbPut(saveFn, d, function(){
-      if(fs0){ try{ fs0.fs.writeFile('/'+saveFn, d); }catch(e){} }
-      toast('⬆ '+saveFn+' 불러오기 완료 — 게임 재시작 필요','ok');
-    });
+    var d=new Uint8Array(e.target.result), fn=SAVE_FILE||file.name;
+    dbPut(fn,d,function(){ if(fs0)fs0.fs.createFile('/'+fn,d); toast('⬆ 불러오기 완료 — 게임 재시작 필요','ok'); });
   };
   r.readAsArrayBuffer(file);
 }
@@ -683,836 +532,173 @@ document.querySelectorAll('.tab').forEach(function(t){
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
     document.querySelectorAll('.tab-panel').forEach(function(x){x.classList.remove('active');});
     this.classList.add('active');
-    var tab = this.dataset.tab;
-    document.getElementById('panel-'+tab).classList.add('active');
-    // 탭 전환 시 유효 세이브 목록 갱신
-    if(tab==='gold')  populateSaveSel('gold-slot-sel');
-    if(tab==='stat')  populateSaveSel('save-slot-sel');
-    if(tab==='item')  populateSaveSel('item-slot-sel');
+    document.getElementById('panel-'+this.dataset.tab).classList.add('active');
   });
-});
-// 초기 로드 시 골드 탭 드롭다운 갱신
-document.addEventListener('DOMContentLoaded', function(){
-  populateSaveSel('gold-slot-sel');
 });
 
 // ─── 골드 ──────────────────────────────────────────────
-// ─── 골드 에디터 (세이브파일 직접 파싱) ───────────────────
-var goldSaveData = null;
-var goldSaveName = null;
-
-function loadGoldFile(){
-  var slotVal = document.getElementById('gold-slot-sel').value;
-  var slot = (slotVal===''||slotVal===null) ? '0' : slotVal;
-  goldSaveName = slot.startsWith('FQ4GD') ? slot : 'FQ4GD.'+slot;
-  dbGet(goldSaveName, function(d){
-    if(!d||d.length===0){ toast('⚠ '+goldSaveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
-    if(!d||d.length<100){ toast('⚠ '+goldSaveName+' 크기 오류','err'); return; }
-    goldSaveData = new Uint8Array(d);
-    var sig = String.fromCharCode(goldSaveData[0],goldSaveData[1],goldSaveData[2],goldSaveData[3]);
-    if(sig !== 'FQ-4'){ toast('⚠ FQ4 세이브 파일이 아닙니다','err'); return; }
-    var goldRaw = goldSaveData[SAV_GOLD_OFF]|(goldSaveData[SAV_GOLD_OFF+1]<<8);
-    var gold = goldRaw * 10;
-    document.getElementById('gold-cur-in').textContent = gold.toLocaleString();
-    document.getElementById('gold-file-info').textContent = goldSaveName+' 로드 완료 — 현재 골드: '+gold.toLocaleString()+'G';
-    document.getElementById('gold-badge').textContent = goldSaveName+' 로드됨';
-    document.getElementById('gold-badge').className = 'badge b-green';
-    toast('📂 '+goldSaveName+' 골드 로드 완료!','ok');
-  });
-}
-
 function goldPad(k){
-  var el = document.getElementById('gold-cur-in');
-  var cur = el.textContent.replace(/,/g,'');
-  if(cur === '-') cur = '';
-  if(k==='C'){ el.textContent='0'; return; }
-  if(k==='⌫'){ el.textContent = cur.length<=1 ? '0' : parseInt(cur.slice(0,-1)).toLocaleString(); return; }
-  var n = cur+k;
-  if(parseInt(n) > GOLD_MAX) return;
-  el.textContent = parseInt(n).toLocaleString();
+  var el=document.getElementById('gold-cur-in'), cur=el.textContent==='0'?'':el.textContent;
+  if(k==='C'){el.textContent='0';return;}
+  if(k==='⌫'){el.textContent=cur.length<=1?'0':cur.slice(0,-1);return;}
+  var n=cur+k; if(parseInt(n)>GOLD_MAX)return;
+  el.textContent=String(parseInt(n));
+}
+function goldScan(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var cur=parseInt(document.getElementById('gold-cur-in').textContent)||0;
+  if(!cur){toast('⚠ 현재 골드 입력하세요','err');return;}
+  var r32=scanMem(cur,32,SCAN_START,SCAN_END);
+  var r16=scanMem(cur,16,SCAN_START,SCAN_END);
+  var res=r32.length?r32:r16, bits=r32.length?32:16;
+  document.getElementById('gold-log').textContent=res.length+'개 발견 ('+bits+'bit)';
+  if(!res.length){toast('⚠ 결과 없음','err');return;}
+  goldAddrs=res;
+  var cnt=0;
+  res.forEach(function(a){if(mWrite(a,GOLD_MAX,bits))cnt++;});
+  toast('💰 골드 MAX! ('+cnt+'곳)','ok');
+  document.getElementById('gold-log').textContent='✅ '+GOLD_MAX.toLocaleString()+' 적용 ('+cnt+'곳)';
 }
 
-function goldMax(){
-  document.getElementById('gold-cur-in').textContent = GOLD_MAX.toLocaleString();
-}
-
-function goldSet(){
-  if(!goldSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var val = parseInt(document.getElementById('gold-cur-in').textContent.replace(/,/g,''))||0;
-  val = Math.max(0, Math.min(GOLD_MAX, val));
-  var goldRaw = Math.floor(val / 10);
-  goldSaveData[SAV_GOLD_OFF]   = goldRaw & 0xFF;
-  goldSaveData[SAV_GOLD_OFF+1] = (goldRaw >> 8) & 0xFF;
-  document.getElementById('gold-log').textContent = '✅ '+val.toLocaleString()+'G SET 완료 (저장값='+goldRaw+') — 💾 저장 버튼으로 반영하세요';
-  toast('💰 골드 SET 완료!','ok');
-}
-
-function goldSaveFile(){
-  if(!goldSaveData||!goldSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  dbPut(goldSaveName, goldSaveData, function(ok){
-    if(!ok){ toast('⚠ 저장 실패','err'); return; }
-    if(fs0){ try{ fs0.fs.writeFile('/'+goldSaveName, goldSaveData); }catch(e){} }
-    toast('💾 '+goldSaveName+' 저장 완료!','ok');
-    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
-  });
-}
-
-// 구 goldScan 하위호환
-function goldScan(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
-
-// ─── 유닛 에디터 (FQ4WED1 세이브파일 직접 파싱) ─────────────
-// 세이브파일 구조 (분석 결과)
-var SAV_SIG        = 'FQ-4';
-var SAV_GOLD_OFF   = 0x047E;     // 골드 (16bit, 10G단위) ✓
-var SAV_UNIT_CNT   = 0x0773;     // 유닛 수 (16bit)
-var SAV_UNIT_START = 0x0763;     // ✓ 확정 (세이브파일 교차검증)
-var SAV_UNIT_SIZE  = 63;         // ✓ 확정
-
-// 추가 능력치 테이블 (AD, MD, 아이템)
-var SAV_UNIT_EXT_START = 0x3F2E; // ✓ 확정
-var SAV_UNIT_EXT_SIZE  = 32;     // ✓ 확정
-
-// 기본 유닛 필드 ✓ 전체 교차검증 완료
-// 아레스(idx=139): LV=1,HP=2,HR=3,리더십=4,피로도=5,AT=6,AR=7,DF=8,DR=9,AD=10,AA=11,MD=12
-var UNIT_FIELDS = [
-  {id:'sv_ls', off:0x01, bits:8,  label:'리더십', min:0,  max:99},
-  {id:'sv_ft', off:0x04, bits:8,  label:'피로도', min:0,  max:99},
-  {id:'sv_aa', off:0x0A, bits:8,  label:'AA',     min:0,  max:99},
-  {id:'sv_lv', off:0x12, bits:8,  label:'LV',     min:1,  max:99},
-  {id:'sv_hr', off:0x13, bits:8,  label:'HR',     min:0,  max:99},
-  {id:'sv_hp', off:0x14, bits:16, label:'HP',     min:0,  max:65535},
-  {id:'sv_at', off:0x16, bits:8,  label:'AT',     min:0,  max:99},
-  {id:'sv_ar', off:0x17, bits:8,  label:'AR',     min:0,  max:99},
-  {id:'sv_df', off:0x18, bits:8,  label:'DF',     min:0,  max:99},
-  {id:'sv_dr', off:0x19, bits:8,  label:'DR',     min:0,  max:99},
-  // +0x1A: EL 비트플래그 (별도 체크박스)
-];
-
-// 추가 테이블 필드 ✓ 확정
-var UNIT_EXT_FIELDS = [
-  {id:'sv_ad', off:0x00, bits:8, label:'AD', min:0, max:99},
-  {id:'sv_md', off:0x01, bits:8, label:'MD', min:0, max:99},
-  // +0x16: 아이템 코드 (별도 드롭다운)
-];
-
-var MACROS = {
-  normal:  {sv_lv:1,  sv_hp:100,   sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0, sv_aa:1, sv_md:5,  sv_ls:10},
-  knight:  {sv_lv:10, sv_hp:500,   sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:30},
-  archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
-  wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
-  master:  {sv_lv:20, sv_hp:999,   sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
-  cheater: {sv_lv:99, sv_hp:65535, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
-};
-
-var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
-var saveName = null;   // 세이브 파일명
-var unitIdx  = 0;
-var unitCount = 0;
-
-// FQ4WED1 번호순 캐릭터 이름 배열 (FQ4WED1.exe 0x1B3F2 분석, +1 오프셋 보정)
-// 번호N → UNIT_FQ_NAMES[N-1]
-var UNIT_FQ_NAMES = [
-  '아레스','키리암','오디소스','암드로','나라크','가브리렌','얀디','얀후레트','케얀','아이자크',
-  '사라티스','카이클','타이슨','존트','드렌','사자바','아레스','케이로','오르크','얀디',
-  '오브라인','차리','크리후트','존위','사라티스','나라크','제아스','아폴로','이가','제폴렌',
-  '제니아','키트','카인','애리크','애맨','키제로','지프렌','케이스','더넬','카레스',
-  '나라크','곤라트','얀소스','위인','애딘','애리오트','애리크','크넬','카레스','키미디스',
-  '케라트','오넬','크레맨트','아인','키미디스','아카슨','키리암','아카슨','키미디스','케레스',
-  '케브','크레이','얀후레트','켄타폴','애드먼','크레맨트','애드위드','애드가','크켄','크켄',
-  '사크','사이먼','애드가','크프','애바스','크레크','아트','나라크','사크슨','아이오로스',
-  '크틴','얀소스','사크로','애드먼','사르카','케니호','사렌','사르카','애드먼','아카슨',
-  '지먼','아르키사트','제이슨','자키','자인','케이로','아트','크레크','아이오로스','제아스',
-  '아인','제크','얀후레트','아카슨','케브','나라크','크넬','나라크','케이스','크레크',
-  '키곤','사로트','크레아','지먼','크틴','스티브','소슈','제아스','아이자크','제프리',
-  '사크','나라크','아크라인','슈칼','키미디스','제얀','존바니','스티파','아이자크','제이슨',
-  '케브','아크라인','애바스','지레스','오렌','애스칼','슈로','가라인','제니아','존위',
-  '켄타폴','케이스','자키','애스칼','케이스','제아스','타이클','제프리','가라인','사맨',
-  '스미스','애스칼','사르카','제얀','얀소스','존폴','사로트','애드가','지그암','존폴',
-  '슈로','타토','소얀','제인스','사라티스','애크인','켄타폴','사라티스','지그암','타인',
-  '더스카','애드위드','스레이','아카슨','크켄','자닐','더넬','아먼크스','사크슨','애스칼',
-  '케사','드오','가브리렌','케렌','존킹','제니아','오리바','카레스','지먼','애리오트',
-  '크프','아이자크','위리암','크리스','지먼','그라암','크켄','위넬','오트','크레아',
-  '타인','차프맨','얀디','키미디스','지미','가라인','지렌','크넬','아이오로스','카르로스',
-  '얀바트','소얀','아레크','케사','오스발','사렌','아닐드','위바','드카','애리크',
-  '가라트','인디','타인','크폴','지미','오디소스','이가','지레느스','케라트','스톰',
-  '키제로','제얀','크켄','키스','오스발','오디소스','타이렌','카레스','키리','사로트',
-  '딘트','제아스','타톰','스켄톰','크넬','아크바르','아마르','타리오스','인디','케사',
-  '위스켄티','가비','이카로소','케사','제니스','케니호','암드로','아카슨','케니호','스치트',
-  '얀바트','위티','이가','크미라스','크틴','암트리아','아크바르','크리미아','아딘','아미디오',
-  '스티파','자콜','애스칼','오솔','크리미아','애드먼','키곤','지트','차리','오스발',
-  '암드로','키리암','키트','사크슨','위리암','더스','오스칼','키미디스','카이사','제트',
-  '칼브','존넬','케라트','존틴','케니호','애드가','지프렌','타이슨','아레크','크레이',
-  '슈로','암트리아','크토렌','아이오로스','아이오로스','애마솔','케이스','아이오로스','아이오로스','아이오로스',
-  '크프','크리후트','아이오로스','아이오로스','제트','아이크','아이오로스','아이오로스','오스로','오디소스',
-  '오스틴','애크인','애크터','칼파넬','이그르','아이오로스','위렌','아이오로스','제프','아이오로스',
-  '아이오로스','아이오로스','아이오로스','아이오로스','토라스','토라스','토라스','타톰','타닐','타톰',
-  '아이오로스','크렌','케니호','곤닐','제인스','지먼','아이오로스','지프렌','아이오로스','타톰',
-  '제니아','아이오로스','타톰','칼파넬',
-];
-
-var UNIT_JOB_NAMES = ['토렌크(조련사)', '시스템정보', '마스타(마법성 주인)', '전술사', '', '트라크(캡틴)', '루리아(여장부)', '여마법사', '간호사', '', '아레스왕 변신전', '에레인의 모습(여기사)', '안후레드 변신전', '곤라트(마스타기사)', '라모크(마스타)', '베닉크왕', '아레스 변한 모습(골드)', '상인', '', '그레이스의 마스타', '얀샤프(프리스트)', '', '그레이스 마법사', '마녀', '이제클(마녀두목)', '형제', '형제 2', '기사(라딘칼 같은 놈들)', '', '스카트(도둑)', '닌자', '제넬루', '대마법사', '사천왕', '어디 왕인디.........', '', '위에 아빠', '돼지투사', '알카냐성 왕인가?????', '흑기사', '', '후작', '', '네크로맨서', '마법사(불공쓰는놈)', '적후작', '바바리안(원시인 같다)', '투사', '암흑기사', '전투사', '풀아마', '소드맨', '해골기사', '특전사', '빨간병사', '', '', '', '바르시아전사', '바르시아용사', '바르시아궁사', '바위인간', '', '', '', '마스타', '쿵후맨', '여기사', '적기사', '레스터전사', '레스터궁사', '레크스(왕자)', '크렌(왕자)', '키프트(스리프기사)', '휴리아백기사', '휴리아기사(?)', '휴리아스피아', '란스', '그레이스왕', '그레이스공주', '크레이(그레이스마스타)', '아폴로(연주가)', '녹기사', '그레이스무명용사', '그레이스용사', '카리온무명용사', '카리온용사', '카리온기사', '카리온전사', '카리온활기사', '라오(석상 비슷)', '마리트(슬라임 비슷)', '', '', '', '천사', '저승사자', '데몽', '좀비', '스켈톤', '도깨비', '박쥐인간', '오크', '오크(도끼들었당!!)', '공룡', '공룡인간', '웨베어', '웨알프', '요정왕', '요정', '요정궁사', '요정기사', '요정마법사', '버드맨', '버드궁사', '버드기사', '뮬톤왕', '웨리아', '바이킹', '뮬톤남작', '뮬톤아크스', '뮬톤란스', '뮬톤가드', '니먼(물의왕)', '후레이아(흙의왕)', '바리톰(바람의왕)', '운디네', '노므', '실프', '테르스미스', '테르스미스2', '케크(개구리다)', '칼브가 늑대 의상', '여기사(아지트)', '활기사(아지트)', '사냥꾼(아지트)', '칼브 호랑이 의상', '칼브 팬더 의상', '칼브 거북이 의상', '칼브 방패 의상', '손톱?', '갑옷?', '왕발?', '판톰?', '시프?', '브레트맨', '숙녀', '토도', '지네', '두더지', '인세크트', '크라브', '전갈', '미미크', '바레스타', '왕올챙이', '', '달팽이', '달팽이(우리핀 되는 것)', '링크스', '새끼드레곤', '버섯', '왕쥐', '도마뱀', '사펜트', '만이타', '석상', '크리스탈', '카타팔트', '사라만다', '이빌아이', '남작(요새)', '말탄 흑기사', '호스라이타', '몬스타', '잠자리', '말탄 아레스(변신후)', '말탄 카리온기사', '말탄 스리프기사', '말탄 휴리아기사', '말탄 휴리아란스', '말탄 크렌(왕자)', '말탄 암흑기사', '', '', '', '드레곤(머리)', '드레곤(부품?)', '켄타우로스(칼)', '켄타우로스(활)', '켄타우로스(칼,방패)', '해르비스트', '아크스비크', '병아리', '뱀파이어', '그리온', '쟈이언트', '골렘', '드레곤(작은거 애라가 소환)', '류키헤이', '뱀파이어(완성품?)', '바람의 탑의 악마', '투명인간', '마을주민(남)', '마을주민(여)', '광부', '밀짚모자', '요정상인', '요정숨겨진캐릭', '뮬톤남자', '뮬톤아줌마', '바르시아귀신(남)', '촌장', '할배촌장', '구두쇠촌장', '할배', '남꼬마', '여꼬마', '클래스업', '감정사', '아저씨', '청소부', '박사', '사제', '대주교', '엘프청년', '엘프아저씨', '바르시아귀신(여)', '마법사', '도꺠비왕', '훼릴?', '과학자?'];
-var UNIT_CHAR_NAMES = ['아이라스', '아이오로스', '아이크', '아이자크', '아인', '아카슨', '아크바르', '아크라인', '아트', '아스로트', '아딘', '암트리아', '아마르', '아먼크스', '아미디오', '아니크', '아닐드', '아발', '아폴로', '키미디스', '얀사프', '얀소스', '얀바트', '얀후레트', '아르키사트', '아레스', '아레크', '아레인', '얀디', '암티오', '암톰', '암드로', '이가', '이그르', '인소트', '이카로소', '이인', '인디', '위케리스', '위인', '넬스', '위스켄티', '위리암', '인카르', '위바', '위르타', '위넬', '위라스', '위티', '위렌', '애이오스', '애사', '애드가', '애드먼', '애드위드', '애바스', '애스칼', '애크인', '애크터', '애딘', '애마솔', '애맨', '애리오트', '애리크', '오렌', '오넬', '오르크', '오사리바', '오스칼', '오스발', '오지', '오스틴', '오스로', '오솔', '오디소스', '오트', '오바르', '오브라인', '오닐', '오리바', '카이', '카이클', '카이사', '카인', '카오마', '카스타', '카트', '카트라이트', '가비', '가브리렌', '가라인', '가라트', '가라', '카리바', '칼브', '카르로스', '카레이트', '카레스', '칼파넬', '켄타폴', '키곤', '키제로', '키스', '키리', '키리암', '키트', '키프트', '키리모아', '켄트', '크프', '케리곤', '케라트', '나라크', '그라암', '크렌', '크리미아', '크리스토파', '크리후트', '크리인', '크넬', '크레이', '크레이스', '크레크', '크레아', '크레맨트', '크로드', '케인스', '케인', '케이렌', '케이로', '케얀', '케사', '케브', '케니호', '케렌', '케이스', '케이슨', '케크', '케레스', '케넬', '켄터', '크켄', '크토렌', '크틴', '크폴', '크미라스', '크리스', '크로비', '그로곤', '곤닐', '곤라트', '사이먼', '사크', '사크슨', '사크로', '사자바', '사프트', '사클', '사맨', '사슈', '사렌', '사라티스', '사르카', '지그암', '지트', '지미', '지먼', '제슨', '자콜', '자키', '사로트', '자인', '존트', '제아스', '제인', '제이슨', '제크', '제스', '제트', '제인스', '제프', '제폴렌', '제프리', '제얀', '존폴', '존넬', '존바니', '존킹', '존틴', '존위', '소슈', '소얀', '지넬트', '지레스', '지레느스', '지렌', '지프렌', '스케트', '스타트', '스티브', '스티파', '스치트', '스톰', '스켄톰', '스미스', '스라스', '스리틴', '스레이', '슈칼', '슈스르', '제티클', '제니스', '제니아', '미렌', '제레스', '클라크', '슈리트', '슈로', '자닐', '타이슨', '타이클', '타이라', '타이타로스', '타이렌', '타브라스', '타이틴', '타토', '타나', '타닐', '나니렌', '타리오스', '타인', '타톰', '차프맨', '차스', '차리', '차크', '토크스', '토마스', '디나틴', '디가', '드오', '드카먼', '드카', '더스', '더스카', '딘트', '더니스', '더넬', '더리', '드렌', '토토', '토니', '톰넬', '톰슨', '토미니크', '토라스', '토렌스', '토렌크', '트라폴타', '트리스렌', '톰맨', '트라크', '톰얀', '나이존', '나솔', '니오라', '니키타', '니크', '니콜라이', '니르', '니이브', '넬슨', '닌르', '닌클', '느틴클', '닐톰', '느킹먼', '느렌', '느맨', '파이아스', '하이아트', '하이맨', '파위', '하이렌', '파위로', '바레트', '바트렌', '하자인', '바슈', '파스칼', '파제스', '파슨', '파티아스', '하트', '바톰', '파트', '바트먼', '파트라슈', '파트라', '바나트', '하니바', '해파', '하먼', '하미틴', '바인', '파라터스', '파리슈', '바르티', '바르톰', '하르틴', '하이드', '하솔', '바스', '바크스', '하켄', '바트', '하프슈', '비크맨', '화스터', '화타', '화타슨', '프이', '프스톰', '프맨', '비치', '비스틴', '파트맨', '파비', '화이트', '파레로', '파닐', '파모아', '후부아', '화니크스', '화렌트', '파렌트스', '파켄넬', '부부카', '브라암', '프렌크', '후렌소아', '프렌치카', '브르트', '후레이아', '브레크', '후레트', '후레이더', '프레스토', '바이스', '하켄클', '발모아', '해리오스', '해리아', '해리크스', '폴카', '폴먼', '폴레스', '바르슨', '해리', '해곤드', '하키스', '호크', '호슨', '호나', '부이아', '호르톰', '폴켄클', '부클스', '파이틴', '마이클', '마이얀', '마이곤', '마이칼맨', '마카토니', '마크', '마켄', '마크스', '마크슨', '마킹위', '마타폴', '마트리트', '마리크', '마리티나', '마렌스', '마칼', '마레암', '마넬루', '마티슨', '미솔렌', '미크', '미클', '미켄넬', '미라슈', '미레로', '모크', '미톰', '모바라크', '먼켄로', '먼티', '먼틴렌', '먼로', '먼디르', '모틴', '모지리아', '파하맨트', '모제', '모렌킹', '모리슨', '모르트', '모틴카르로', '모그니', '얀킹', '얀크맨', '닌폴렌', '닌콜슨', '오위케', '오제슈', '오위리아', '오얀', '오렌슨', '오암', '라이오스', '라이오넬', '라이오트', '라이틴', '라이렌', '라이타', '라크', '라거', '라슨', '라슈티', '라트크리아', '라스칼', '라니오스', '라파렌', '라발', '라인', '라모크', '라리', '라딘칼', '라그라', '라디오', '라트마크', '라디폴', '리클', '리가슈', '리스레', '리크', '리차드', '리바브', '리먼트', '루이', '루아스', '루카', '루크', '루크슨', '루터', '루드카', '루톰클', '르이르', '르리크', '르리트', '레이', '레이틴', '레이먼트', '레인', '레오', '레오나르드', '레얀', '레곤', '레크스', '레크맨', '레지프', '레나', '레나드', '레파트', '레비', '레후리', '렌브라트', '로이드', '로스먼', '로크', '로그나', '로자', '로케스', '로딘비', '로발트', '로나르드', '로인', '로렌', '로렌스', '위르드', '위스', '위트', '위트슨', '위얀', '위크나', '토크타', '아스토리아', '아니', '아나', '이사브', '이제클', '애드리얀', '애마넬', '애리자브', '애리제', '애레인', '애라', '칼루이스', '크리스틴', '사라사', '사리아', '사리', '슈가니', '슈티', '슈리', '슈이키', '슈니', '슈인', '슈니아', '슈미터', '슈비아', '솔비아', '슈존', '나이아나', '치르킹', '터미', '트레이슨', '나타슨', '나타리', '니나', '니먼', '바바라', '하니', '비니아', '비리얀', '프리제트', '프리렌', '프로레스', '마리얀', '마리렌', '미미', '미넬', '먼폴슨', '클라리아', '크레인', '루리아', '라라', '리리아', '로비', '레이스', '로슈아', '로스', '로아', '로리아', '렌틴', '애르파', '애르틴', '애르존', '애프렌', '애라먼', '애트라트', '애르먼스', '애리암', '애리위', '애르파차', '애르사트르', '애르폴', '애르스트', '애르사이스', '애렌', '애르사렌', '애르트크', '애라인스', '애르슨', '애르슈비수', '크라이얀', '크곤', '크트렌', '크라크슨', '크인', '크브렌', '오라슨', '오라타', '토톰', '토르톰', '파티암', '레크놈', '레터먼', '미니암', '파켄', '비부스', '얀슨', '터리발', '켄타스', '켄타크', '켙타인', '켄타슨', '켄타느스', '켄타맨스', '켄타가이', '켄맨', '켄타렌', '켄타크스', '켄타오', '켄타닐', '켄타켄', '켄타칼', '켄타키', '케트', '케인톰', '케르먼', '케르트', '케르인', '게맨', '게스터', '게모루', '게라트', '게딘', '케폴', '케바톰', '케로', '케를렌', '', '병사1', '병사2', '병사3', '', '먼티맨토', '케로브딘', '브드로이티', '로닌라솔', '크티맨', '아르슈', '브슨티위로', '부레트리', '파티부', '소토미', '브토티'];
-
-// 세이브 파일에서 값 읽기
-function savRead(off, bits){
-  if(!saveData) return 0;
-  if(bits===8)  return saveData[off];
-  if(bits===16) return saveData[off]|(saveData[off+1]<<8);
-  return (saveData[off]|(saveData[off+1]<<8)|(saveData[off+2]<<16)|(saveData[off+3]<<24))>>>0;
-}
-// 세이브 파일에 값 쓰기
-function savWrite(off, val, bits){
-  if(!saveData) return;
-  val = val>>>0;
-  if(bits>=8)  saveData[off]   = val&0xFF;
-  if(bits>=16) saveData[off+1] = (val>>8)&0xFF;
-  if(bits>=32){ saveData[off+2]=(val>>16)&0xFF; saveData[off+3]=(val>>24)&0xFF; }
-}
-
-// DB에서 세이브파일 로드
-function loadSaveFile(){
-  var slotVal = document.getElementById('save-slot-sel').value;
-  var slot = (slotVal===''||slotVal===null) ? '0' : slotVal;
-  saveName = slot.startsWith('FQ4GD') ? slot : 'FQ4GD.'+slot;
-  dbGet(saveName, function(d){
-    if(!d||d.length===0){ toast('⚠ '+saveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
-    if(!d||d.length<100){ toast('⚠ '+saveName+' 크기 오류','err'); return; }
-    saveData = new Uint8Array(d);
-    // 시그니처 확인
-    var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
-    if(sig !== SAV_SIG){
-      toast('⚠ FQ4 세이브 파일이 아닙니다 (sig:'+sig+')','err');
-      return;
-    }
-    unitCount = savRead(SAV_UNIT_CNT, 16);
-    document.getElementById('unit-total').textContent = '/ '+unitCount;
-    document.getElementById('save-file-info').textContent =
-      saveName+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
-    document.getElementById('stat-badge').textContent = saveName+' 로드됨';
-    document.getElementById('stat-badge').className = 'badge b-green';
-    unitBuildSelect();
-    unitIdx = 0;
-    document.getElementById('unit-no').value = 0;
-    unitRender();
-    toast('📂 '+saveName+' 로드 완료!','ok');
-  });
-}
-
-// 드롭다운 빌드
-function unitBuildSelect(){
-  var sel = document.getElementById('unit-sel');
-  if(!sel) return;
-  sel.innerHTML = '';
-  var total = unitCount || 354;
-
-  // ext+0x02에서 이름idx 읽기
-  // 같은 이름idx가 여러 슬롯에 있으면 LV 1~99 중 가장 작은 슬롯 우선
-  var nameIdxToSlot = {};  // 이름idx → 최적 슬롯
-  var noNameSlots   = [];  // ext+0x02=0인 유효 슬롯
-
-  for(var slot=0; slot<total; slot++){
-    var base    = SAV_UNIT_START     + slot * SAV_UNIT_SIZE;
-    var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
-    if(base + SAV_UNIT_SIZE > saveData.length) break;
-    var lv = saveData[base + 0x12];
-    if(lv === 0 || lv === 255) continue;
-
-    var ni = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
-    var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
-    var at = saveData[base+0x16];
-    // 유효 슬롯: LV 1~99, HP < 10000, AT < 100
-    var isValid = (lv >= 1 && lv <= 99 && hp < 10000 && at < 100);
-
-    if(ni > 0){
-      if(!(ni in nameIdxToSlot)){
-        nameIdxToSlot[ni] = {slot:slot, valid:isValid};
-      } else if(!nameIdxToSlot[ni].valid && isValid){
-        // 더 유효한 슬롯으로 교체
-        nameIdxToSlot[ni] = {slot:slot, valid:isValid};
-      }
-    } else {
-      if(isValid) noNameSlots.push(slot);
-    }
+// ─── 범용 스캐너 ───────────────────────────────────────
+function doScan(rescan){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var val=parseInt(document.getElementById('scan-val').value);
+  if(isNaN(val)){toast('⚠ 값을 입력하세요','err');return;}
+  scanBits=parseInt(document.getElementById('scan-bits').value);
+  var res=[];
+  if(rescan&&scanAddrs.length){
+    scanAddrs.forEach(function(a){ if(mRead(a,scanBits)===(val>>>0))res.push(a); });
+  } else {
+    res=scanMem(val,scanBits,SCAN_START,SCAN_END);
   }
-
-  // 이름 있는 슬롯: UNIT_CHAR_NAMES 순서로 정렬
-  var named = Object.keys(nameIdxToSlot).map(Number).sort(function(a,b){return a-b;});
-  named.forEach(function(ni){
-    var slot = nameIdxToSlot[ni].slot;
-    var base = SAV_UNIT_START + slot * SAV_UNIT_SIZE;
-    var lv   = saveData[base + 0x12];
-    var name = (UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni]) ? UNIT_CHAR_NAMES[ni] : ('idx'+ni);
-    var opt  = document.createElement('option');
-    opt.value = slot;
-    opt.dataset.nameidx = ni;
-    opt.textContent = ni + ': ' + name + ' (LV.' + lv + ')';
-    sel.appendChild(opt);
-  });
-
-  // 이름 없는 슬롯: 슬롯 번호로 표시
-  noNameSlots.forEach(function(slot){
-    var base = SAV_UNIT_START + slot * SAV_UNIT_SIZE;
-    var lv   = saveData[base + 0x12];
-    var opt  = document.createElement('option');
-    opt.value = slot;
-    opt.dataset.nameidx = 0;
-    opt.textContent = '슬롯' + (slot+1) + ' (LV.' + lv + ')';
-    sel.appendChild(opt);
-  });
+  scanAddrs=res;
+  document.getElementById('scan-count').textContent=res.length;
+  document.getElementById('scan-warn').textContent=res.length>500?'(너무 많음 — 재스캔으로 좁히세요)':'';
+  renderScan();
+  if(res.length<=500)toast('🔍 '+res.length+'개 발견','ok');
+}
+function renderScan(){
+  var box=document.getElementById('scan-results');
+  if(!scanAddrs.length){box.innerHTML='<div class="scan-empty">결과 없음</div>';return;}
+  var show=scanAddrs.slice(0,100);
+  box.innerHTML=show.map(function(a){
+    var v=mRead(a,scanBits);
+    return '<div class="scan-item'+(a===selAddr?' sel':'')+'" onclick="selectAddr('+a+')">'
+      +'<span class="scan-addr">0x'+a.toString(16)+'</span>'
+      +'<span class="scan-v">'+v+'</span></div>';
+  }).join('')+(scanAddrs.length>100?'<div class="scan-empty">... 외 '+(scanAddrs.length-100)+'개</div>':'');
+}
+function selectAddr(a){
+  selAddr=a;
+  document.getElementById('sel-addr').textContent='0x'+a.toString(16);
+  document.getElementById('write-val').value=mRead(a,scanBits);
+  renderScan();
+}
+function doWrite(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(selAddr===null){toast('⚠ 주소를 선택하세요','err');return;}
+  var v=parseInt(document.getElementById('write-val').value);
+  if(isNaN(v)){toast('⚠ 값을 입력하세요','err');return;}
+  mWrite(selAddr,v,scanBits);
+  toast('✏ 0x'+selAddr.toString(16)+' ← '+v,'ok');
+  renderScan();
+}
+function clearScan(){
+  scanAddrs=[];selAddr=null;
+  document.getElementById('scan-results').innerHTML='<div class="scan-empty">초기화됨</div>';
+  document.getElementById('scan-count').textContent='-';
+  document.getElementById('sel-addr').textContent='없음';
+  document.getElementById('scan-warn').textContent='';
 }
 
-function unitSelectChange(){
-  var sel = document.getElementById('unit-sel');
-  if(!sel) return;
-  unitIdx = parseInt(sel.value)||0;
-  document.getElementById('unit-no').value = unitIdx + 1; // FQ4WED1 번호(1-based)
-  unitRender();
-}
-
-// 유닛 장착 아이템: base+0x0F가 실제 필드 (세이브코드 = FQ4WED1표시idx + 1)
-function unitItemSaveToDisp(saveCode){
-  if(saveCode === 255 || saveCode === 0) return 255;
-  return saveCode - 1;  // 세이브코드 - 1 = 표시idx
-}
-function unitItemDispToSave(dispIdx){
-  if(dispIdx === 255) return 255;
-  return dispIdx + 1;   // 표시idx + 1 = 세이브코드
-}
-
-// 유닛 렌더링
-function unitRender(){
-  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base    = SAV_UNIT_START     + unitIdx * SAV_UNIT_SIZE;
-  var extBase = SAV_UNIT_EXT_START + unitIdx * SAV_UNIT_EXT_SIZE;
-  var grid = document.getElementById('stat-grid');
-  grid.innerHTML = '';
-  var sel = document.getElementById('unit-sel');
-  if(sel) sel.value = unitIdx;
-  document.getElementById('unit-no').value = unitIdx + 1; // FQ4WED1 번호(1-based)
-
-  // 기본 필드 (LV HR HP AT AR DF DR)
-  UNIT_FIELDS.forEach(function(f){
-    var val = savRead(base+f.off, f.bits);
-    var div = document.createElement('div');
-    div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-      +'<div id=\"'+f.id+'\" class=\"stat-disp\" data-off=\"'+f.off+'\" data-bits=\"'+f.bits
-      +'\" data-min=\"'+(f.min||0)+'\" data-max=\"'+(f.max||9999)+'\" onclick=\"statEdit(this)\">'+val+'</div>';
+// ─── 스탯 ──────────────────────────────────────────────
+function statBaseSet(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var raw=document.getElementById('stat-base-in').value.trim();
+  var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
+  if(isNaN(base)){toast('⚠ 주소 형식 오류 (예: 0x20b9480)','err');return;}
+  if(!STAT_FIELDS.length){toast('⚠ STAT_FIELDS 미설정 — 오프셋 확정 후 코드 수정','err');return;}
+  statBaseAddr=base;
+  var grid=document.getElementById('stat-grid');
+  grid.innerHTML='';
+  STAT_FIELDS.forEach(function(f){
+    var val=mRead(base+f.off,f.bits);
+    var div=document.createElement('div');
+    div.innerHTML='<div class="lbl" style="font-size:7px;margin-bottom:2px;">'+f.label+'</div>'
+      +'<div id="'+f.id+'" class="stat-disp" data-off="'+f.off+'" data-bits="'+f.bits
+      +'" data-min="'+(f.min||0)+'" data-max="'+(f.max||9999)+'" onclick="statEdit(this)">'+val+'</div>';
     grid.appendChild(div);
   });
-
-  // 추가 테이블 필드 (AD MD 리더십)
-  UNIT_EXT_FIELDS.forEach(function(f){
-    var val = extBase+f.off < saveData.length ? saveData[extBase+f.off] : 0;
-    var div = document.createElement('div');
-    div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-      +'<div id=\"'+f.id+'\" class=\"stat-disp\" style=\"border-color:var(--blue);\" data-ext=\"1\" data-off=\"'+f.off
-      +'\" data-min=\"'+(f.min||0)+'\" data-max=\"'+(f.max||99)+'\" onclick=\"statEditExt(this)\">'+val+'</div>';
-    grid.appendChild(div);
-  });
-
-  // AA 읽기전용 (기본테이블 +0x0F)
-  var aaVal = saveData[base+0x0F]||0;
-  var divAA = document.createElement('div');
-  divAA.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">AA <span style=\"color:var(--muted);font-size:6px;\">(RO)</span></div>'
-    +'<div class=\"stat-disp\" style=\"opacity:0.5;cursor:default;\">'+aaVal+'</div>';
-  grid.appendChild(divAA);
-
-  // EL 체크박스 (+0x08)
-  var elVal = saveData[base+0x1A]||0;
-  document.getElementById("el-f").checked = !!(elVal & 0x80);
-  document.getElementById("el-e").checked = !!(elVal & 0x40);
-  document.getElementById("el-a").checked = !!(elVal & 0x20);
-  document.getElementById("el-w").checked = !!(elVal & 0x10);
-
-  // 아이템 드롭다운 (추가테이블 +0x16)
-  var itemCode = saveData[base+0x0F] || 255;
-  var itemDispIdx = unitItemSaveToDisp(itemCode);
-  var itemSel = document.getElementById('unit-item-sel');
-  if(itemSel){
-    itemSel.innerHTML = '<option value=\"255\">없음</option>';
-    UNIT_ITEM_LIST.forEach(function(item){
-      var opt = document.createElement('option');
-      opt.value = item.idx;
-      opt.textContent = item.name;
-      if(item.idx === itemDispIdx) opt.selected = true;
-      itemSel.appendChild(opt);
-    });
-    if(itemDispIdx === 255) itemSel.value = 255;
-  }
-
-  document.getElementById('stat-fields').style.display = 'block';
-  document.getElementById('stat-pending').style.display = 'none';
+  document.getElementById('stat-fields').style.display='block';
+  document.getElementById('stat-pending').style.display='none';
+  document.getElementById('stat-badge').textContent='읽기 완료';
+  document.getElementById('stat-badge').className='badge b-green';
+  toast('📖 스탯 읽기 완료 (base:0x'+base.toString(16)+')','ok');
 }
-
-function statEditExt(el){
-  var cur = parseInt(el.textContent)||0;
-  var mn = parseInt(el.dataset.min)||0, mx = parseInt(el.dataset.max)||99;
-  var nv = prompt(el.id+' 입력 ('+mn+'~'+mx+')', cur);
-  if(nv===null) return;
-  el.textContent = Math.max(mn, Math.min(mx, parseInt(nv)||0));
-}
-
-function unitGetName(idx){
-  if(UNIT_CHAR_NAMES[idx]) return UNIT_CHAR_NAMES[idx];
-  return 'Unit #'+idx;
-}
-
-function unitGo(){
-  // unit-no 입력값은 FQ4WED1 번호(1-based) → 슬롯 = 번호-1
-  var fqNo = parseInt(document.getElementById('unit-no').value)||1;
-  var slot = fqNo - 1;
-  if(slot < 0) slot = 0;
-  // 드롭다운에서 해당 슬롯 option 찾아 선택
-  var sel = document.getElementById('unit-sel');
-  if(sel){
-    for(var i=0; i<sel.options.length; i++){
-      if(parseInt(sel.options[i].value) === slot){
-        sel.selectedIndex = i;
-        unitIdx = slot;
-        unitRender();
-        return;
-      }
-    }
-  }
-  toast('⚠ 해당 번호의 캐릭터를 찾을 수 없습니다','err');
-}
-function unitNext(){
-  var sel = document.getElementById('unit-sel');
-  if(!sel || sel.selectedIndex >= sel.options.length-1){ toast('⚠ 마지막 유닛입니다','nfo'); return; }
-  sel.selectedIndex++;
-  unitIdx = parseInt(sel.options[sel.selectedIndex].value)||0;
-  unitRender();
-}
-function unitPrev(){
-  var sel = document.getElementById('unit-sel');
-  if(!sel || sel.selectedIndex <= 0){ toast('⚠ 첫 번째 유닛입니다','nfo'); return; }
-  sel.selectedIndex--;
-  unitIdx = parseInt(sel.options[sel.selectedIndex].value)||0;
-  unitRender();
-}
-
 function statEdit(el){
-  var cur = parseInt(el.textContent)||0;
-  var mn = parseInt(el.dataset.min)||0, mx = parseInt(el.dataset.max)||9999;
-  var nv = prompt(el.querySelector ? el.id : (el.id)+' 입력 ('+mn+'~'+mx+')', cur);
-  if(nv===null) return;
-  nv = Math.max(mn, Math.min(mx, parseInt(nv)||0));
-  el.textContent = nv;
+  var cur=parseInt(el.textContent)||0;
+  var mn=parseInt(el.dataset.min)||0, mx=parseInt(el.dataset.max)||9999;
+  var nv=prompt(el.id+' 입력 ('+mn+'~'+mx+')',cur);
+  if(nv===null)return;
+  nv=Math.max(mn,Math.min(mx,parseInt(nv)||0));
+  el.textContent=nv;
 }
-
-function applyMacro(type){
-  var m = MACROS[type]; if(!m) return;
-  UNIT_FIELDS.forEach(function(f){
-    var el = document.getElementById(f.id); if(!el) return;
-    if(m[f.id]!==undefined) el.textContent = m[f.id];
+function statApply(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(!statBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
+  STAT_FIELDS.forEach(function(f){
+    var el=document.getElementById(f.id); if(!el)return;
+    mWrite(statBaseAddr+f.off,parseInt(el.textContent)||0,f.bits);
   });
-  UNIT_EXT_FIELDS.forEach(function(f){
-    var el = document.getElementById(f.id); if(!el) return;
-    if(m[f.id]!==undefined) el.textContent = m[f.id];
-  });
-  toast('🎮 Macro: '+type,'ok');
+  toast('✅ 스탯 적용!','ok');
 }
-
-// SET: UI 값을 saveData에 기록
-function unitSet(){
-  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base    = SAV_UNIT_START     + unitIdx * SAV_UNIT_SIZE;
-  var extBase = SAV_UNIT_EXT_START + unitIdx * SAV_UNIT_EXT_SIZE;
-
-  // 기본 필드 쓰기
-  UNIT_FIELDS.forEach(function(f){
-    var el = document.getElementById(f.id); if(!el) return;
-    savWrite(base+f.off, parseInt(el.textContent)||0, f.bits);
-  });
-
-  // EL 체크박스 쓰기
-  var elVal = 0;
-  if(document.getElementById("el-f").checked) elVal |= 0x80;
-  if(document.getElementById("el-e").checked) elVal |= 0x40;
-  if(document.getElementById("el-a").checked) elVal |= 0x20;
-  if(document.getElementById("el-w").checked) elVal |= 0x10;
-  savWrite(base+0x1A, elVal, 8);
-
-  // 추가 테이블 쓰기 (AD MD 리더십)
-  if(extBase + SAV_UNIT_EXT_SIZE <= saveData.length){
-    UNIT_EXT_FIELDS.forEach(function(f){
-      var el = document.getElementById(f.id); if(!el) return;
-      saveData[extBase+f.off] = Math.max(f.min||0, Math.min(f.max||99, parseInt(el.textContent)||0));
-    });
-    // 아이템 드롭다운 쓰기 (+0x16)
-    var itemSel = document.getElementById('unit-item-sel');
-    if(itemSel) saveData[base+0x0F] = unitItemDispToSave(parseInt(itemSel.value)||255);
-  }
-
-  toast('✅ SET 완료 — 💾 저장 버튼으로 파일에 반영하세요','ok');
-}
-
-// RESET: saveData에서 다시 읽기
-function unitReset(){
-  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  unitRender();
-  toast('🔄 RESET 완료','ok');
-}
-
-// 💾 세이브파일 저장 (DB + 게임 중이면 DOSBox에도)
-function unitSaveFile(){
-  if(!saveData||!saveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  dbPut(saveName, saveData, function(ok){
-    if(!ok){ toast('⚠ DB 저장 실패','err'); return; }
-    // DOSBox에도 반영
-    if(fs0){ try{ fs0.fs.writeFile('/'+saveName, saveData); }catch(e){} }
-    toast('💾 '+saveName+' 저장 완료!','ok');
-    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
-  });
-}
-
-// 하위호환: statBaseSet (스캔탭 연동용, 현재 미사용)
-function statBaseSet(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
-function statApply(){ unitSet(); }
-function statReset(){ unitReset(); }
 
 // ─── 아이템 ────────────────────────────────────────────
-// ─── 아이템 에디터 (세이브파일 직접 파싱) ─────────────────
-// FQ4WED1 Item Editor 방식: 아이템 목록 + 소유수(Owned) 편집
-// ※ 아이템 데이터 오프셋은 확정 필요
-var SAV_ITEM_START = 0x0381;   // 아이템 데이터 시작 오프셋 ✓ 확정 (세이브파일 분석)
-var SAV_ITEM_COUNT = 72;   // ✓ FQ4WED1.exe 확정
-
-var itemSaveData = null;
-var itemSaveName = null;
-var selectedItemIdx = 0;
-
-// 아이템 목록 (FQ4WED1.exe 화면 순서 ✓ 확정 72개)
-var ITEM_LIST = [
-  {idx:0,  name:'숏소드'},
-  {idx:1,  name:'롱소드'},
-  {idx:2,  name:'아이스소드'},
-  {idx:3,  name:'히트소드'},
-  {idx:4,  name:'크레이모아'},
-  {idx:5,  name:'절명검'},
-  {idx:6,  name:'축검'},
-  {idx:7,  name:'제인검'},
-  {idx:8,  name:'암살단검'},
-  {idx:9,  name:'제비검'},
-  {idx:10, name:'용검'},
-  {idx:11, name:'동결검'},
-  {idx:12, name:'번개검'},
-  {idx:13, name:'분쇄검'},
-  {idx:14, name:'불검'},
-  {idx:15, name:'엑스칼리버'},
-  {idx:16, name:'하르벨트'},
-  {idx:17, name:'파르티산'},
-  {idx:18, name:'롱의창'},
-  {idx:19, name:'신의창'},
-  {idx:20, name:'도끼'},
-  {idx:21, name:'파괴도끼'},
-  {idx:22, name:'프레일'},
-  {idx:23, name:'모닝스타'},
-  {idx:24, name:'마법지팡이'},
-  {idx:25, name:'가브틴'},
-  {idx:26, name:'마법의활'},
-  {idx:27, name:'극도의활'},
-  {idx:28, name:'집념의활'},
-  {idx:29, name:'체인갑옷'},
-  {idx:30, name:'프레트값옷'},
-  {idx:31, name:'스케일갑옷'},
-  {idx:32, name:'토바토'},
-  {idx:33, name:'은갑옷'},
-  {idx:34, name:'금갑옷'},
-  {idx:35, name:'동갑옷'},
-  {idx:36, name:'사자갑옷'},
-  {idx:37, name:'바람의베일'},
-  {idx:38, name:'웃음마스크'},
-  {idx:39, name:'메듀사의머리'},
-  {idx:40, name:'늑대반지'},
-  {idx:41, name:'범의반지'},
-  {idx:42, name:'사자반지'},
-  {idx:43, name:'천사반지'},
-  {idx:44, name:'적십자'},
-  {idx:45, name:'불부적'},
-  {idx:46, name:'땅부적'},
-  {idx:47, name:'바람부적'},
-  {idx:48, name:'물부적'},
-  {idx:49, name:'나팔'},
-  {idx:50, name:'카라흐호름'},
-  {idx:51, name:'흡혈피리'},
-  {idx:52, name:'요정피리'},
-  {idx:53, name:'천사피리'},
-  {idx:54, name:'흙의호각'},
-  {idx:55, name:'물의호각'},
-  {idx:56, name:'바람호각'},
-  {idx:57, name:'발스타키드'},
-  {idx:58, name:'빛돌'},
-  {idx:59, name:'불꽃돌'},
-  {idx:60, name:'번개돌'},
-  {idx:61, name:'얼음결정'},
-  {idx:62, name:'암흑돌'},
-  {idx:63, name:'파괴의돌'},
-  {idx:64, name:'안약'},
-  {idx:65, name:'박카스의술'},
-  {idx:66, name:'인삼엑기스'},
-  {idx:67, name:'체력회복제'},
-  {idx:68, name:'피로회복제'},
-  {idx:69, name:'해독약'},
-  {idx:70, name:'석화해제약'},
-  {idx:71, name:'부활약'},
-];
-
-// 유닛 장착 아이템 목록 (인덱스 체계가 아이템 탭과 다름 - 용검/동결검/번개검 없음)
-var UNIT_ITEM_LIST = [
-  {idx:0,  name:'숏소드'},
-  {idx:1,  name:'롱소드'},
-  {idx:2,  name:'아이스소드'},
-  {idx:3,  name:'히트소드'},
-  {idx:4,  name:'크레이모아'},
-  {idx:5,  name:'절명검'},
-  {idx:6,  name:'축검'},
-  {idx:7,  name:'제인검'},
-  {idx:8,  name:'암살단검'},
-  {idx:9,  name:'제비검'},
-  {idx:10, name:'용검'},
-  {idx:11, name:'동결검'},
-  {idx:12, name:'번개검'},
-  {idx:13, name:'분쇄검'},
-  {idx:14, name:'불검'},
-  {idx:15, name:'엑스칼리버'},
-  {idx:16, name:'하르벨트'},
-  {idx:17, name:'파르티산'},
-  {idx:18, name:'롱의창'},
-  {idx:19, name:'신의창'},
-  {idx:20, name:'도끼'},
-  {idx:21, name:'파괴도끼'},
-  {idx:22, name:'프레일'},
-  {idx:23, name:'모닝스타'},
-  {idx:24, name:'마법지팡이'},
-  {idx:25, name:'가브틴'},
-  {idx:26, name:'마법의활'},
-  {idx:27, name:'극도의활'},
-  {idx:28, name:'집념의활'},
-  {idx:29, name:'체인갑옷'},
-  {idx:30, name:'프레트값옷'},
-  {idx:31, name:'스케일갑옷'},
-  {idx:32, name:'토바토'},
-  {idx:33, name:'은갑옷'},
-  {idx:34, name:'금갑옷'},
-  {idx:35, name:'동갑옷'},
-  {idx:36, name:'사자갑옷'},
-  {idx:37, name:'바람의베일'},
-  {idx:38, name:'웃음마스크'},
-  {idx:39, name:'메듀사의머리'},
-  {idx:40, name:'늑대반지'},
-  {idx:41, name:'범의반지'},
-  {idx:42, name:'사자반지'},
-  {idx:43, name:'천사반지'},
-  {idx:44, name:'적십자'},
-  {idx:45, name:'불부적'},
-  {idx:46, name:'땅부적'},
-  {idx:47, name:'바람부적'},
-  {idx:48, name:'물부적'},
-  {idx:49, name:'나팔'},
-  {idx:50, name:'카라흐호름'},
-  {idx:51, name:'흡혈피리'},
-  {idx:52, name:'요정피리'},
-  {idx:53, name:'천사피리'},
-  {idx:54, name:'흙의호각'},
-  {idx:55, name:'물의호각'},
-  {idx:56, name:'바람호각'},
-  {idx:57, name:'발스타키드'},
-  {idx:58, name:'빛돌'},
-  {idx:59, name:'불꽃돌'},
-  {idx:60, name:'번개돌'},
-  {idx:61, name:'얼음결정'},
-  {idx:62, name:'암흑돌'},
-  {idx:63, name:'파괴의돌'},
-  {idx:64, name:'안약'},
-  {idx:65, name:'박카스의술'},
-  {idx:66, name:'인삼엑기스'},
-  {idx:67, name:'체력회복제'},
-  {idx:68, name:'피로회복제'},
-  {idx:69, name:'해독약'},
-  {idx:70, name:'석화해제약'},
-  {idx:71, name:'부활약'},
-];
-
-var UNIT_ITEM_LIST = [
-  {idx:0,  name:'숏소드'},
-  {idx:1,  name:'롱소드'},
-  {idx:2,  name:'아이스소드'},
-  {idx:3,  name:'히트소드'},
-  {idx:4,  name:'크레이모아'},
-  {idx:5,  name:'절명검'},
-  {idx:6,  name:'축검'},
-  {idx:7,  name:'제인검'},
-  {idx:8,  name:'암살단검'},
-  {idx:9,  name:'제비검'},
-  {idx:10, name:'분쇄검'},
-  {idx:11, name:'불검'},
-  {idx:12, name:'엑스칼리버'},
-  {idx:13, name:'하르벨트'},
-  {idx:14, name:'파르티산'},
-  {idx:15, name:'롱의창'},
-  {idx:16, name:'신의창'},
-  {idx:17, name:'도끼'},
-  {idx:18, name:'파괴도끼'},
-  {idx:19, name:'프레일'},
-  {idx:20, name:'모닝스타'},
-  {idx:21, name:'마법지팡이'},
-  {idx:22, name:'가브틴'},
-  {idx:23, name:'마법의활'},
-  {idx:24, name:'극도의활'},
-  {idx:25, name:'집념의활'},
-  {idx:26, name:'체인갑옷'},
-  {idx:27, name:'프레트값옷'},
-  {idx:28, name:'스케일갑옷'},
-  {idx:29, name:'토바토'},
-  {idx:30, name:'은갑옷'},
-  {idx:31, name:'금갑옷'},
-  {idx:32, name:'동갑옷'},
-  {idx:33, name:'사자갑옷'},
-  {idx:34, name:'바람의베일'},
-  {idx:35, name:'웃음마스크'},
-  {idx:36, name:'메듀사의머리'},
-  {idx:37, name:'늑대반지'},
-  {idx:38, name:'범의반지'},
-  {idx:39, name:'사자반지'},
-  {idx:40, name:'천사반지'},
-  {idx:41, name:'적십자'},
-  {idx:42, name:'불부적'},
-  {idx:43, name:'땅부적'},
-  {idx:44, name:'바람부적'},
-  {idx:45, name:'물부적'},
-  {idx:46, name:'나팔'},
-  {idx:47, name:'카라흐호름'},
-  {idx:48, name:'흡혈피리'},
-  {idx:49, name:'요정피리'},
-  {idx:50, name:'천사피리'},
-  {idx:51, name:'흙의호각'},
-  {idx:52, name:'물의호각'},
-  {idx:53, name:'바람호각'},
-  {idx:54, name:'발스타키드'},
-  {idx:55, name:'빛돌'},
-  {idx:56, name:'불꽃돌'},
-  {idx:57, name:'번개돌'},
-  {idx:58, name:'얼음결정'},
-  {idx:59, name:'암흑돌'},
-  {idx:60, name:'파괴의돌'},
-  {idx:61, name:'안약'},
-  {idx:62, name:'박카스의술'},
-  {idx:63, name:'인삼엑기스'},
-  {idx:64, name:'체력회복제'},
-  {idx:65, name:'피로회복제'},
-  {idx:66, name:'해독약'},
-  {idx:67, name:'석화해제약'},
-  {idx:68, name:'부활약'},
-];
-
-function loadItemFile(){
-  var slotVal = document.getElementById('item-slot-sel').value;
-  var slot = (slotVal===''||slotVal===null) ? '0' : slotVal;
-  itemSaveName = slot.startsWith('FQ4GD') ? slot : 'FQ4GD.'+slot;
-  dbGet(itemSaveName, function(d){
-    if(!d||d.length===0){ toast('⚠ '+itemSaveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
-    if(!d||d.length<100){ toast('⚠ '+itemSaveName+' 크기 오류','err'); return; }
-    itemSaveData = new Uint8Array(d);
-    var sig = String.fromCharCode(itemSaveData[0],itemSaveData[1],itemSaveData[2],itemSaveData[3]);
-    if(sig !== 'FQ-4'){ toast('⚠ FQ4 세이브 파일이 아닙니다','err'); return; }
-    document.getElementById('item-file-info').textContent = itemSaveName+' 로드 완료 ('+itemSaveData.length+'bytes)';
-    document.getElementById('item-badge').textContent = itemSaveName+' 로드됨';
-    document.getElementById('item-badge').className = 'badge b-green';
-    itemRenderList();
-    document.getElementById('item-fields').style.display='block';
-    document.getElementById('item-pending').style.display='none';
-    toast('📂 '+itemSaveName+' 로드 완료!','ok');
-  });
-}
-
-function itemRenderList(){
-  var grid = document.getElementById('item-list-grid');
-  if(!itemSaveData){ grid.innerHTML=''; return; }
-  if(ITEM_LIST.length === 0){
-    // 아이템 목록 미확정: 오프셋 기반 raw 표시
-    var rows = '';
-    for(var i=0; i<SAV_ITEM_COUNT; i++){
-      var off = SAV_ITEM_START + i;
-      var val = itemSaveData[off];
-      var sel = i===selectedItemIdx;
-      rows += '<div onclick="itemSelect('+i+')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;cursor:pointer;font-size:9px;'
-        +(sel?'background:var(--accent);color:#000;':'border-bottom:1px solid var(--border);')
-        +'"><span>Item '+i+'</span><span id="item-owned-'+i+'" style="font-family:var(--font-pixel);font-size:8px;">'+val+'</span></div>';
-    }
-    grid.innerHTML = rows;
-  } else {
-    var rows = '';
-    ITEM_LIST.forEach(function(item, i){
-      var off = SAV_ITEM_START + i;
-      var val = itemSaveData[off];
-      var sel = i===selectedItemIdx;
-      rows += '<div onclick="itemSelect('+i+')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;cursor:pointer;font-size:9px;'
-        +(sel?'background:var(--accent);color:#000;':'border-bottom:1px solid var(--border);')
-        +'"><span>'+item.name+'</span><span id="item-owned-'+i+'" style="font-family:var(--font-pixel);font-size:8px;">'+val+'</span></div>';
-    });
-    grid.innerHTML = rows;
+function itemBaseSet(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var raw=document.getElementById('item-base-in').value.trim();
+  var base=raw.startsWith('0x')||raw.startsWith('0X')?parseInt(raw,16):parseInt(raw,10);
+  if(isNaN(base)){toast('⚠ 주소 형식 오류','err');return;}
+  itemBaseAddr=base;
+  var slotSel=document.getElementById('item-slot-sel');
+  slotSel.innerHTML='';
+  for(var s=0;s<ITEM_SLOT_COUNT;s++){
+    var v=mRead(base+s,8);
+    var obj=ITEMS.find(function(x){return x.code===v;});
+    var nm=obj?obj.name:(v===0xFF?'없음':'?0x'+('0'+v.toString(16)).slice(-2).toUpperCase());
+    var opt=document.createElement('option');
+    opt.value=s; opt.textContent='슬롯'+(s+1)+' ['+nm+']';
+    slotSel.appendChild(opt);
   }
-}
-
-function itemSelect(idx){
-  selectedItemIdx = idx;
-  itemRenderList();
-}
-
-function itemSetVal(val){
-  if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var off = SAV_ITEM_START + selectedItemIdx;
-  itemSaveData[off] = Math.max(0, Math.min(255, val));
-  var el = document.getElementById('item-owned-'+selectedItemIdx);
-  if(el) el.textContent = itemSaveData[off];
-  toast('🎒 Item '+selectedItemIdx+' → '+val,'ok');
-}
-
-function itemSetAllVal(val){
-  if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var count = ITEM_LIST.length || SAV_ITEM_COUNT;
-  for(var i=0; i<count; i++){
-    itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(255, val));
-  }
-  itemRenderList();
-  toast('🎒 전체 아이템 → '+val,'ok');
-}
-
-function itemSet(){ toast('개별 아이템은 목록 클릭 → Set 버튼으로 설정하세요','nfo'); }
-
-function itemSaveFile(){
-  if(!itemSaveData||!itemSaveName){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  dbPut(itemSaveName, itemSaveData, function(ok){
-    if(!ok){ toast('⚠ 저장 실패','err'); return; }
-    if(fs0){ try{ fs0.fs.writeFile('/'+itemSaveName, itemSaveData); }catch(e){} }
-    toast('💾 '+itemSaveName+' 저장 완료!','ok');
-    document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+  var newSel=document.getElementById('item-new-sel');
+  newSel.innerHTML='<option value="255">없음 (FF)</option>';
+  ITEMS.forEach(function(item){
+    if(item.code===0xFF)return;
+    var opt=document.createElement('option');
+    opt.value=item.code; opt.textContent=item.name;
+    newSel.appendChild(opt);
   });
+  document.getElementById('item-fields').style.display='block';
+  document.getElementById('item-pending').style.display='none';
+  document.getElementById('item-badge').textContent='읽기 완료';
+  document.getElementById('item-badge').className='badge b-green';
+  toast('📖 아이템 읽기 완료','ok');
 }
-
-function itemBaseSet(){ toast('세이브파일 방식 사용 중 — LOAD 버튼을 이용하세요','nfo'); }
-function applyItem(){ itemSet(); }
+function applyItem(){
+  var h=heap(); if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  if(!itemBaseAddr){toast('⚠ 베이스 주소 먼저 설정','err');return;}
+  var s=parseInt(document.getElementById('item-slot-sel').value);
+  var code=parseInt(document.getElementById('item-new-sel').value);
+  mWrite(itemBaseAddr+s,code,8);
+  var obj=ITEMS.find(function(x){return x.code===code;});
+  toast('🎒 슬롯'+(s+1)+': '+(obj?obj.name:'없음')+' 적용!','ok');
+}
 
 // ─── 버튼 연결 ─────────────────────────────────────────
-function doDelete(){
-  if(!confirm('IndexedDB 세이브 데이터를 모두 삭제할까요?\n(PC에 다운로드된 파일은 유지됩니다)')) return;
-  dbOpen(function(db){
-    if(!db){ toast('⚠ DB 오류','err'); return; }
-    var tx = db.transaction('files','readwrite');
-    var store = tx.objectStore('files');
-    SAVE_FILES.forEach(function(sf){ try{ store.delete(sf); }catch(e){} });
-    tx.oncomplete = function(){
-      toast('🗑 세이브 데이터 삭제 완료','ok');
-      document.getElementById('save-notice').textContent = '';
-    };
-  });
-}
-
 document.getElementById('btn-start').addEventListener('click',startGame);
 document.getElementById('btn-play').addEventListener('click',startGame);
 document.getElementById('btn-save').addEventListener('click',doSave);
-document.getElementById('btn-del').addEventListener('click',doDelete);
 document.getElementById('btn-dl').addEventListener('click',doDownload);
 document.getElementById('btn-ul-t').addEventListener('click',function(){document.getElementById('btn-ul').click();});
 document.getElementById('btn-ul').addEventListener('change',function(e){doUpload(e.target.files[0]);});
