@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v78</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v79</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -287,6 +287,11 @@
               <option value="3">FQ4GD.3</option>
             </select>
             <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadSaveFile()">📂 LOAD</button>
+          </div>
+          <!-- 직접 파일 업로드 -->
+          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
+            <input type="file" id="save-file-input" accept=".0,.1,.2,.3" style="flex:1;font-size:8px;color:var(--muted);background:var(--bg);border:1px solid var(--border2);border-radius:3px;padding:3px;" />
+            <button class="btn btn-accent" style="padding:5px 8px;font-size:7px;" onclick="loadSaveFileFromDisk()">📁 파일로드</button>
           </div>
           <div id="save-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
         </div>
@@ -882,32 +887,42 @@ function loadSaveFile(){
   dbGet(saveName, function(d){
     if(!d||d.length===0){ toast('⚠ '+saveName+' 비어있음 — 게임에서 먼저 저장하세요','err'); return; }
     if(!d||d.length<100){ toast('⚠ '+saveName+' 크기 오류','err'); return; }
-    saveData = new Uint8Array(d);
-    // 시그니처 확인
-    var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
-    if(sig !== SAV_SIG){
-      toast('⚠ FQ4 세이브 파일이 아닙니다 (sig:'+sig+')','err');
-      return;
-    }
-    unitCount = savRead(SAV_UNIT_CNT, 16);
-    document.getElementById('unit-total').textContent = '/ '+unitCount;
-    document.getElementById('save-file-info').textContent =
-      saveName+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
-    document.getElementById('stat-badge').textContent = saveName+' 로드됨';
-    document.getElementById('stat-badge').className = 'badge b-green';
-    unitBuildSelect();
-    // 첫 번째 유효 캐릭터 선택
-    var sel = document.getElementById('unit-sel');
-    if(sel && sel.options.length > 0){
-      unitIdx = parseInt(sel.options[0].value)||1;
-      sel.selectedIndex = 0;
-    } else {
-      unitIdx = 1;
-    }
-    document.getElementById('unit-no').value = unitIdx;
-    unitRender();
-    toast('📂 '+saveName+' 로드 완료!','ok');
+    _loadSaveData(new Uint8Array(d), saveName);
   });
+}
+
+function loadSaveFileFromDisk(){
+  var inp = document.getElementById('save-file-input');
+  if(!inp||!inp.files||!inp.files[0]){ toast('⚠ 파일을 선택하세요','err'); return; }
+  var file = inp.files[0];
+  saveName = file.name;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    _loadSaveData(new Uint8Array(e.target.result), file.name);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function _loadSaveData(data, name){
+  saveData = data;
+  saveName = name;
+  var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
+  if(sig !== SAV_SIG){ toast('⚠ FQ4 세이브 파일이 아닙니다 (sig:'+sig+')','err'); return; }
+  unitCount = savRead(SAV_UNIT_CNT, 16);
+  document.getElementById('unit-total').textContent = '/ '+unitCount;
+  document.getElementById('save-file-info').textContent =
+    name+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
+  document.getElementById('stat-badge').textContent = name+' 로드됨';
+  document.getElementById('stat-badge').className = 'badge b-green';
+  unitBuildSelect();
+  var sel = document.getElementById('unit-sel');
+  if(sel && sel.options.length > 0){
+    unitIdx = parseInt(sel.options[0].value)||1;
+    sel.selectedIndex = 0;
+  } else { unitIdx = 1; }
+  document.getElementById('unit-no').value = unitIdx;
+  unitRender();
+  toast('📂 '+name+' 로드 완료!','ok');
 }
 
 function unitSearch(keyword){
@@ -929,8 +944,7 @@ function unitSearch(keyword){
     var at = saveData[base+0x16];
     if(hp > 999 || hr > 16 || at > 99 || lv > 99) continue;
 
-    var name = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? UNIT_FQ_NAMES[fqNo-1] : ('번호'+fqNo);
-    var label = fqNo + ': ' + name + ' (LV.' + lv + ')';
+    var label = fqNo + ' (LV.' + lv + ')';
     if(keyword && label.indexOf(keyword) < 0) continue;
 
     var opt = document.createElement('option');
@@ -964,7 +978,6 @@ function unitBuildSelect(){
   if(!sel) return;
   sel.innerHTML = '';
   var total = unitCount || 354;
-  var shown = 0;
 
   for(var fqNo=1; fqNo<=total; fqNo++){
     var base = fqBase(fqNo);
@@ -972,21 +985,16 @@ function unitBuildSelect(){
     var lv = saveData[base+0x12];
     if(lv === 255) continue;
 
-    // 범위 초과 = 잘못된 데이터 → 제외
     var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
     var hr = saveData[base+0x13];
     var at = saveData[base+0x16];
     if(hp > 999 || hr > 16 || at > 99 || lv > 99) continue;
 
-    var name = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? UNIT_FQ_NAMES[fqNo-1] : ('번호'+fqNo);
-
     var opt = document.createElement('option');
     opt.value = fqNo;
-    opt.textContent = fqNo + ': ' + name + ' (LV.' + lv + ')';
+    opt.textContent = fqNo + ' (LV.' + lv + ')';
     sel.appendChild(opt);
-    shown++;
   }
-  console.log('[unitBuildSelect] total='+total+' shown='+shown+' 번호198 LV='+saveData[fqBase(198)+0x12]);
 }
 
 function unitSelectChange(){
