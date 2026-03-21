@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v77</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v78</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -896,8 +896,15 @@ function loadSaveFile(){
     document.getElementById('stat-badge').textContent = saveName+' 로드됨';
     document.getElementById('stat-badge').className = 'badge b-green';
     unitBuildSelect();
-    unitIdx = 0;
-    document.getElementById('unit-no').value = 0;
+    // 첫 번째 유효 캐릭터 선택
+    var sel = document.getElementById('unit-sel');
+    if(sel && sel.options.length > 0){
+      unitIdx = parseInt(sel.options[0].value)||1;
+      sel.selectedIndex = 0;
+    } else {
+      unitIdx = 1;
+    }
+    document.getElementById('unit-no').value = unitIdx;
     unitRender();
     toast('📂 '+saveName+' 로드 완료!','ok');
   });
@@ -957,6 +964,7 @@ function unitBuildSelect(){
   if(!sel) return;
   sel.innerHTML = '';
   var total = unitCount || 354;
+  var shown = 0;
 
   for(var fqNo=1; fqNo<=total; fqNo++){
     var base = fqBase(fqNo);
@@ -970,15 +978,15 @@ function unitBuildSelect(){
     var at = saveData[base+0x16];
     if(hp > 999 || hr > 16 || at > 99 || lv > 99) continue;
 
-    // 이름: UNIT_CHAR_NAMES (FQ4WED1.exe 번호→이름idx 배열 기반)
-    var nameIdx = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? fqNo-1 : -1;
     var name = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? UNIT_FQ_NAMES[fqNo-1] : ('번호'+fqNo);
 
     var opt = document.createElement('option');
     opt.value = fqNo;
     opt.textContent = fqNo + ': ' + name + ' (LV.' + lv + ')';
     sel.appendChild(opt);
+    shown++;
   }
+  console.log('[unitBuildSelect] total='+total+' shown='+shown+' 번호198 LV='+saveData[fqBase(198)+0x12]);
 }
 
 function unitSelectChange(){
