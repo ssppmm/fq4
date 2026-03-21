@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v100</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v101</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -412,13 +412,13 @@
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(10)">Set 10</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(20)">Set 20</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(40)">Set 40</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(255)">Set 255</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetVal(99)">Set 99</button>
             </div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;grid-column:span 2;" onclick="itemSetAllVal(0)">All 00</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(20)">All 20</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(40)">All 40</button>
-              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(255)">All 255</button>
+              <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="itemSetAllVal(99)">All 99</button>
             </div>
           </div>
 
@@ -1037,7 +1037,7 @@ var STATE_CODES = {0x10:'아군', 0x00:'적', 0x12:'전직가능', 0x15:'사망'
 
 // 마법코드 (+0x11)
 var MAGIC_CODES = {
-  0x00:'無', 0x01:'단검던지기', 0x02:'용부르기', 0x03:'사자부르기',
+  0x00:'없음', 0x01:'단검던지기', 0x02:'용부르기', 0x03:'사자부르기',
   0x04:'영혼부르기', 0x05:'천사부르기', 0x06:'번개', 0x07:'천둥',
   0x08:'지진', 0x09:'전투이탈', 0x0A:'분신', 0x0B:'불꽃탄',
   0x0C:'회오리바람', 0x0D:'얼음칼날', 0x0E:'얼음우박', 0x0F:'회복',
@@ -1261,65 +1261,113 @@ function unitRender(){
   if(sel) sel.value = unitIdx;
   document.getElementById('unit-no').value = unitIdx;
 
-  // 기본 필드 (CLASS는 드롭다운, 나머지는 클릭편집)
+  // 기본 필드 - 모두 DOM 방식으로 생성 (innerHTML concat 방지)
   UNIT_FIELDS.forEach(function(f){
     var val = savRead(base+f.off, f.bits);
     var div = document.createElement('div');
+    var lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.style.cssText = 'font-size:7px;margin-bottom:2px;';
+    lbl.textContent = f.label;
+    div.appendChild(lbl);
     if(f.id === 'sv_cl'){
       // CLASS 드롭다운 + 스프라이트 미리보기
+      var sprWrap = document.createElement('div');
+      sprWrap.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:3px;';
+      var sprDiv = document.createElement('div');
+      sprDiv.id = 'sv_cl_sprite';
+      if(typeof classSprite==='function') sprDiv.style.cssText = classSprite(val);
+      var sprName = document.createElement('span');
+      sprName.id = 'sv_cl_name';
+      sprName.style.cssText = 'font-size:8px;color:var(--accent);';
+      sprName.textContent = CLASS_CODES[val]||('코드'+val);
+      sprWrap.appendChild(sprDiv); sprWrap.appendChild(sprName);
+      div.appendChild(sprWrap);
       var allCodes = {};
       Object.keys(CLASS_CODES).forEach(function(c){ allCodes[c]=CLASS_CODES[c]; });
       if(!allCodes[val]) allCodes[val] = '코드'+val;
-      div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-        +'<select id=\"sv_cl\" style=\"width:100%;background:var(--bg);border:1px solid var(--accent);color:var(--accent);font-size:8px;padding:2px;border-radius:3px;\">';
+      var sel2 = document.createElement('select');
+      sel2.id = 'sv_cl';
+      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--accent);color:var(--accent);font-size:8px;padding:2px;border-radius:3px;';
       Object.keys(allCodes).sort(function(a,b){return a-b;}).forEach(function(c){
-        var sel = (parseInt(c)===val) ? ' selected' : '';
-        div.innerHTML += '<option value=\"'+c+'\"'+sel+'>'+c+' '+allCodes[c]+'</option>';
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = c+' '+allCodes[c];
+        if(parseInt(c)===val) opt.selected = true;
+        sel2.appendChild(opt);
       });
-      div.innerHTML += '</select>';
+      sel2.addEventListener('change', function(){
+        var code = parseInt(this.value)||0;
+        var sp = document.getElementById('sv_cl_sprite');
+        var sn = document.getElementById('sv_cl_name');
+        if(sp && typeof classSprite==='function') sp.style.cssText = classSprite(code);
+        if(sn) sn.textContent = CLASS_CODES[code]||('코드'+code);
+      });
+      div.appendChild(sel2);
     } else if(f.id === 'sv_st'){
-      // 상태코드 드롭다운 (+0x07)
-      div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-        +'<select id=\"sv_st\" style=\"width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:8px;padding:2px;border-radius:3px;\">';
+      var sel2 = document.createElement('select');
+      sel2.id = 'sv_st';
+      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:8px;padding:2px;border-radius:3px;';
       Object.keys(STATE_CODES).forEach(function(c){
-        var sel2 = (parseInt(c)===val) ? ' selected' : '';
-        div.innerHTML += '<option value=\"'+c+'\"'+sel2+'>0x'+parseInt(c).toString(16).toUpperCase().padStart(2,'0')+' '+STATE_CODES[c]+'</option>';
+        var opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = '0x'+parseInt(c).toString(16).toUpperCase().padStart(2,'0')+' '+STATE_CODES[c];
+        if(parseInt(c)===val) opt.selected = true;
+        sel2.appendChild(opt);
       });
       if(!STATE_CODES[val]){
-        div.innerHTML += '<option value=\"'+val+'\" selected>0x'+val.toString(16).toUpperCase().padStart(2,'0')+' (알수없음)</option>';
+        var opt = document.createElement('option');
+        opt.value = val; opt.selected = true;
+        opt.textContent = '0x'+val.toString(16).toUpperCase().padStart(2,'0')+' (알수없음)';
+        sel2.appendChild(opt);
       }
-      div.innerHTML += '</select>';
+      div.appendChild(sel2);
     } else if(f.id === 'sv_al'){
-      // AL저항 비트플래그 체크박스
-      div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-        +'<div style=\"display:flex;flex-wrap:wrap;gap:3px;\">'
-        +'<label style=\"font-size:7px;cursor:pointer;\"><input type=\"checkbox\" id=\"al_f\" '+(val&0x10?'checked':'')+'>F</label>'
-        +'<label style=\"font-size:7px;cursor:pointer;\"><input type=\"checkbox\" id=\"al_e\" '+(val&0x20?'checked':'')+'>E</label>'
-        +'<label style=\"font-size:7px;cursor:pointer;\"><input type=\"checkbox\" id=\"al_a\" '+(val&0x40?'checked':'')+'>A</label>'
-        +'<label style=\"font-size:7px;cursor:pointer;\"><input type=\"checkbox\" id=\"al_w\" '+(val&0x80?'checked':'')+'>W</label>'
-        +'</div>';
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
+      [['al_f','F(불)',0x10],['al_e','E(땅)',0x20],['al_a','A(바람)',0x40],['al_w','W(물)',0x80]].forEach(function(x){
+        var lbl2 = document.createElement('label');
+        lbl2.style.cssText = 'font-size:7px;cursor:pointer;';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.id = x[0]; cb.checked = !!(val&x[2]);
+        lbl2.appendChild(cb); lbl2.appendChild(document.createTextNode(x[1]));
+        wrap.appendChild(lbl2);
+      });
+      div.appendChild(wrap);
     } else if(f.id === 'sv_mg'){
-      // 마법코드 드롭다운 (+0x11)
-      div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-        +'<select id=\"sv_mg\" style=\"width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:8px;padding:2px;border-radius:3px;\">';
+      var sel2 = document.createElement('select');
+      sel2.id = 'sv_mg';
+      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:8px;padding:2px;border-radius:3px;';
       Object.keys(MAGIC_CODES).sort(function(a,b){return a-b;}).forEach(function(c){
-        var sel2 = (parseInt(c)===val) ? ' selected' : '';
-        div.innerHTML += '<option value=\"'+c+'\"'+sel2+'>'+parseInt(c).toString(16).toUpperCase().padStart(2,'0')+' '+MAGIC_CODES[c]+'</option>';
+        var opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = parseInt(c).toString(16).toUpperCase().padStart(2,'0')+' '+MAGIC_CODES[c];
+        if(parseInt(c)===val) opt.selected = true;
+        sel2.appendChild(opt);
       });
       if(!MAGIC_CODES[val] && val!==0){
-        div.innerHTML += '<option value=\"'+val+'\" selected>'+val.toString(16).toUpperCase().padStart(2,'0')+' (알수없음)</option>';
+        var opt = document.createElement('option');
+        opt.value = val; opt.selected = true;
+        opt.textContent = val.toString(16).toUpperCase().padStart(2,'0')+' (알수없음)';
+        sel2.appendChild(opt);
       }
-      div.innerHTML += '</select>';
+      div.appendChild(sel2);
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
-      // AD/MD: FQ4WED1표시값 = 30 - 저장값
-      var dispVal = 30 - val;
-      div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-        +'<div id=\"'+f.id+'\" class=\"stat-disp\" style=\"border-color:var(--blue);\" data-off=\"'+f.off+'\" data-bits=\"'+f.bits
-        +'\" data-min=\"0\" data-max=\"30\" data-admd=\"1\" onclick=\"statEditAdMd(this)\">'+dispVal+'</div>';
+      var vdiv = document.createElement('div');
+      vdiv.id = f.id; vdiv.className = 'stat-disp';
+      vdiv.style.borderColor = 'var(--blue)';
+      vdiv.dataset.off = f.off; vdiv.dataset.bits = f.bits;
+      vdiv.dataset.min = 0; vdiv.dataset.max = 30;
+      vdiv.textContent = 30 - val;
+      vdiv.onclick = function(){ statEditAdMd(this); };
+      div.appendChild(vdiv);
     } else {
-      div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-        +'<div id=\"'+f.id+'\" class=\"stat-disp\" data-off=\"'+f.off+'\" data-bits=\"'+f.bits
-        +'\" data-min=\"'+(f.min||0)+'\" data-max=\"'+(f.max||9999)+'\" onclick=\"statEdit(this)\">'+val+'</div>';
+      var vdiv = document.createElement('div');
+      vdiv.id = f.id; vdiv.className = 'stat-disp';
+      vdiv.dataset.off = f.off; vdiv.dataset.bits = f.bits;
+      vdiv.dataset.min = f.min||0; vdiv.dataset.max = f.max||9999;
+      vdiv.textContent = val;
+      vdiv.onclick = function(){ statEdit(this); };
+      div.appendChild(vdiv);
     }
     grid.appendChild(div);
   });
@@ -1719,7 +1767,7 @@ function itemSelect(idx){
 function itemSetVal(val){
   if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var off = SAV_ITEM_START + selectedItemIdx;
-  itemSaveData[off] = Math.max(0, Math.min(255, val));
+  itemSaveData[off] = Math.max(0, Math.min(99, val));
   var el = document.getElementById('item-owned-'+selectedItemIdx);
   if(el) el.textContent = itemSaveData[off];
   toast('🎒 Item '+selectedItemIdx+' → '+val,'ok');
@@ -1729,7 +1777,7 @@ function itemSetAllVal(val){
   if(!itemSaveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var count = ITEM_LIST.length || SAV_ITEM_COUNT;
   for(var i=0; i<count; i++){
-    itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(255, val));
+    itemSaveData[SAV_ITEM_START+i] = Math.max(0, Math.min(99, val));
   }
   itemRenderList();
   toast('🎒 전체 아이템 → '+val,'ok');
