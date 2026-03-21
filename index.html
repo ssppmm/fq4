@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v61</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v62</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -582,12 +582,12 @@ function initDos(){
   Dos(document.getElementById('canvas'),{wdosboxUrl:'https://js-dos.com/6.22/current/wdosbox.js'}).ready(function(fs,main){
     fs0=fs;
 
-    // dosbox.conf: cycles=max로 속도 최적화
+    // dosbox.conf: FQ4 전용 고정 cycles
     var conf = [
       '[cpu]',
-      'cycles=max',
-      'cycleup=500',
-      'cycledown=20',
+      'cycles=fixed 60000',
+      'cycleup=1000',
+      'cycledown=500',
       '[render]',
       'frameskip=0',
     ].join('\n');
