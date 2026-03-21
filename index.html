@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v112</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v113</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1351,37 +1351,25 @@ function unitRender(){
       }
       div.appendChild(sel2);
     } else if(f.id === 'sv_jc2'){
-      // 전직코드2: CLASS 드롭다운 재사용 (전직 시 이 직업코드로 전직됨)
+      // 전직코드: CLASS 드롭다운 동일 사용 — 전직 전 원하는 CLASS 코드 입력
       var sel2 = document.createElement('select');
       sel2.id = 'sv_jc2';
-      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);font-size:8px;padding:2px;border-radius:3px;';
-      var jcOpt0 = document.createElement('option');
-      jcOpt0.value = 0; jcOpt0.textContent = '00 없음(여백)';
-      if(val===0) jcOpt0.selected = true;
-      sel2.appendChild(jcOpt0);
+      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--yellow);color:var(--yellow);font-size:8px;padding:2px;border-radius:3px;';
       Object.keys(CLASS_CODES).sort(function(a,b){return a-b;}).forEach(function(c){
-        if(parseInt(c)===0) return;
         var opt = document.createElement('option');
-        opt.value = c; opt.textContent = parseInt(c)+' '+CLASS_CODES[c];
+        opt.value = c;
+        opt.textContent = parseInt(c)+' '+CLASS_CODES[c];
         if(parseInt(c)===val) opt.selected = true;
         sel2.appendChild(opt);
       });
-      if(val!==0 && !CLASS_CODES[val]){
+      if(!CLASS_CODES[val]){
         var opt = document.createElement('option');
         opt.value = val; opt.selected = true;
         opt.textContent = val+' (코드'+val+')';
         sel2.appendChild(opt);
       }
       div.appendChild(sel2);
-      var vdiv = document.createElement('div');
-      vdiv.id = f.id; vdiv.className = 'stat-disp';
-      vdiv.style.borderColor = 'var(--blue)';
-      vdiv.dataset.off = f.off; vdiv.dataset.bits = f.bits;
-      vdiv.dataset.min = 0; vdiv.dataset.max = 30;
-      vdiv.textContent = 30 - val;
-      vdiv.onclick = function(){ statEditAdMd(this); };
-      div.appendChild(vdiv);
-    } else {
+    } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
       var vdiv = document.createElement('div');
       vdiv.id = f.id; vdiv.className = 'stat-disp';
       vdiv.dataset.off = f.off; vdiv.dataset.bits = f.bits;
@@ -1519,36 +1507,14 @@ function unitSet(){
       val = parseInt(el.value)||0;
     } else if(f.id === 'sv_ls'){
       val = Math.max(0, Math.min(16, parseInt(el.value)||0));
-    } else if(f.id === 'sv_ls'){
-      // 리더십: 숫자입력(0~16) + 투구ON 버튼 나란히
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;gap:3px;align-items:center;';
-      var inp = document.createElement('input');
-      inp.type = 'number'; inp.id = 'sv_ls';
-      inp.min = 0; inp.max = 16;
-      inp.value = val;
-      inp.style.cssText = 'flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:4px 6px;font-family:var(--font-pixel);font-size:11px;border-radius:3px;outline:none;text-align:center;min-width:0;';
-      var btnOn = document.createElement('button');
-      btnOn.className = 'btn btn-accent';
-      btnOn.style.cssText = 'padding:4px 6px;font-size:7px;white-space:nowrap;';
-      btnOn.textContent = '👑ON';
-      btnOn.onclick = function(){ applyHelmet(true); };
-      var btnOff = document.createElement('button');
-      btnOff.className = 'btn btn-del';
-      btnOff.style.cssText = 'padding:4px 6px;font-size:7px;white-space:nowrap;';
-      btnOff.textContent = '✖OFF';
-      btnOff.onclick = function(){ applyHelmet(false); };
-      row.appendChild(inp);
-      row.appendChild(btnOn);
-      row.appendChild(btnOff);
-      div.appendChild(row);
-      val = 30 - (parseInt(el.textContent)||0);
-      val = Math.max(0, Math.min(30, val));
     } else if(f.id === 'sv_al'){
       // 저항코드 체크박스는 아래에서 별도 처리
       return;
     } else if(f.id === 'sv_jc2'){
       val = parseInt(el.value)||0;
+    } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
+      val = 30 - (parseInt(el.textContent)||0);
+      val = Math.max(0, Math.min(30, val));
     } else {
       val = parseInt(el.textContent)||0;
     }
