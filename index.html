@@ -1033,7 +1033,14 @@ var CLASS_CODES = {
 };
 
 // 상태코드 (+0x07) - 확정
-var STATE_CODES = {0x10:'아군', 0x00:'적', 0x12:'전직가능', 0x15:'사망'};
+// +0x07 상태코드 — 세이브파일 직접 분석 확정
+// 0x00=일반병사(투구없음), 0x10=대장(투구★), 0x12=전직가능(0x10|0x02추정), 0x15=사망
+var STATE_CODES = {
+  0x00:'일반(투구없음)',
+  0x10:'대장(투구★)',
+  0x12:'전직가능',
+  0x15:'사망',
+};
 
 // 마법코드 (+0x11)
 var MAGIC_CODES = {
@@ -1053,32 +1060,39 @@ var MAGIC_CODES = {
   0x32:'물(⚠팅김)', 0x33:'불', 0x34:'바람', 0x35:'화염소나기',
 };
 
-// FQ4WED1 32바이트 유닛 레코드 필드 - 최종 확정 오프셋
-// +00=AI지휘, +01=LS, +02=AL저항, +03=저항hi, +04=FT
-// +05=속도, +06=CLASS, +07=상태(식별), +08=타입
-// +09=X, +0A=AA, +0B=AD(30-저장), +0C=MD(30-저장)
-// +0D=X, +0E=X, +0F=ITEM, +10=X, +11=마법코드
-// +12=LV, +13=HR, +14,15=HP, +16=AT, +17=AR, +18=DF, +19=DR
+// FQ4WED1 32바이트 유닛 레코드 필드 — 커뮤니티 분석 + 세이브파일 직접 확인 반영
+// +00=일련번호?(케릭코드)/아레스F0=전저항, +01=?(무명용사숫자)
+// +02=저항코드1(불F0x10/땅0x20/바람0x40/물0x80), +03=저항코드2(아레스외 캐릭은 여기)
+// +04=FT(피로도), +05=속도, +06=CLASS(케릭고유번호)
+// +07=상태코드(0x00=일반/0x10=대장투구★/0x12=전직가능/0x15=사망) ← 세이브파일 확정
+// +08=투구모양?(커뮤니티분석, 실제확인시 0x00), +09=X
+// +0A=AA(투과율), +0B=AD(활방어,30-저장), +0C=MD(마법방어,30-저장)
+// +0D=전직코드1(불명), +0E=전직코드2(전직직업코드), +0F=ITEM, +10=X, +11=마법코드
+// +12=LV, +13=HR, +14,15=HP(리틀엔디안), +16=AT, +17=AR, +18=DF, +19=DR(D0→99)
 // +1A=일련번호lo, +1B=일련번호hi, +1C=이름인덱스, +1D=이름세트
 var UNIT_FIELDS = [
-  {id:'sv_cl', off:0x06, bits:8,  label:'CLASS',  min:0,  max:255},
-  {id:'sv_st', off:0x07, bits:8,  label:'상태',   min:0,  max:255},
-  {id:'sv_ai', off:0x00, bits:8,  label:'AI지휘', min:0,  max:255},
-  {id:'sv_ls', off:0x01, bits:8,  label:'리더십', min:0,  max:16},
-  {id:'sv_al', off:0x02, bits:8,  label:'AL저항', min:0,  max:255},
-  {id:'sv_ft', off:0x04, bits:8,  label:'피로도', min:0,  max:99},
-  {id:'sv_sp', off:0x05, bits:8,  label:'속도',   min:0,  max:255},
-  {id:'sv_aa', off:0x0A, bits:8,  label:'AA',     min:0,  max:30},
-  {id:'sv_ad', off:0x0B, bits:8,  label:'AD',     min:0,  max:30},
-  {id:'sv_md', off:0x0C, bits:8,  label:'MD',     min:0,  max:30},
-  {id:'sv_mg', off:0x11, bits:8,  label:'마법',   min:0,  max:255},
-  {id:'sv_lv', off:0x12, bits:8,  label:'LV',     min:1,  max:99},
-  {id:'sv_hr', off:0x13, bits:8,  label:'HR',     min:0,  max:16},
-  {id:'sv_hp', off:0x14, bits:16, label:'HP',     min:0,  max:999},
-  {id:'sv_at', off:0x16, bits:8,  label:'AT',     min:0,  max:99},
-  {id:'sv_ar', off:0x17, bits:8,  label:'AR',     min:0,  max:99},
-  {id:'sv_df', off:0x18, bits:8,  label:'DF',     min:0,  max:99},
-  {id:'sv_dr', off:0x19, bits:8,  label:'DR',     min:0,  max:99},
+  {id:'sv_cl',  off:0x06, bits:8,  label:'CLASS',       min:0, max:255},
+  {id:'sv_st',  off:0x07, bits:8,  label:'상태',        min:0, max:255},
+  {id:'sv_ai',  off:0x00, bits:8,  label:'일련번호?',   min:0, max:255},
+  {id:'sv_ls',  off:0x01, bits:8,  label:'?(무명숫자)', min:0, max:255},
+  {id:'sv_hm',  off:0x08, bits:8,  label:'투구(참고)',  min:0, max:255},
+  {id:'sv_al',  off:0x02, bits:8,  label:'저항코드1',   min:0, max:255},
+  {id:'sv_al2', off:0x03, bits:8,  label:'저항코드2',   min:0, max:255},
+  {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',      min:0, max:99},
+  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',        min:0, max:255},
+  {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(투과)',    min:0, max:30},
+  {id:'sv_ad',  off:0x0B, bits:8,  label:'AD(활방어)',  min:0, max:30},
+  {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)',  min:0, max:30},
+  {id:'sv_jc1', off:0x0D, bits:8,  label:'전직코드1',   min:0, max:255},
+  {id:'sv_jc2', off:0x0E, bits:8,  label:'전직코드2',   min:0, max:255},
+  {id:'sv_mg',  off:0x11, bits:8,  label:'마법',        min:0, max:255},
+  {id:'sv_lv',  off:0x12, bits:8,  label:'LV',          min:1, max:99},
+  {id:'sv_hr',  off:0x13, bits:8,  label:'HR',          min:0, max:16},
+  {id:'sv_hp',  off:0x14, bits:16, label:'HP',          min:0, max:999},
+  {id:'sv_at',  off:0x16, bits:8,  label:'AT',          min:0, max:99},
+  {id:'sv_ar',  off:0x17, bits:8,  label:'AR',          min:0, max:99},
+  {id:'sv_df',  off:0x18, bits:8,  label:'DF',          min:0, max:99},
+  {id:'sv_dr',  off:0x19, bits:8,  label:'DR',          min:0, max:99},
 ];
 
 // AD/MD: 저장값 = 30 - FQ4WED1표시값 (0=최대30, 30=최소0)
@@ -1351,7 +1365,42 @@ function unitRender(){
         sel2.appendChild(opt);
       }
       div.appendChild(sel2);
-    } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
+    } else if(f.id === 'sv_al2'){
+      // 저항코드2 체크박스 (아레스 외 캐릭은 여기 F0=전저항)
+      var wrap2 = document.createElement('div');
+      wrap2.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
+      [['al2_f','F(불)',0x10],['al2_e','E(땅)',0x20],['al2_a','A(바람)',0x40],['al2_w','W(물)',0x80]].forEach(function(x){
+        var lbl2 = document.createElement('label');
+        lbl2.style.cssText = 'font-size:7px;cursor:pointer;';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.id = x[0]; cb.checked = !!(val&x[2]);
+        lbl2.appendChild(cb); lbl2.appendChild(document.createTextNode(x[1]));
+        wrap2.appendChild(lbl2);
+      });
+      div.appendChild(wrap2);
+    } else if(f.id === 'sv_jc2'){
+      // 전직코드2: CLASS 드롭다운 재사용 (전직 시 이 직업코드로 전직됨)
+      var sel2 = document.createElement('select');
+      sel2.id = 'sv_jc2';
+      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);font-size:8px;padding:2px;border-radius:3px;';
+      var jcOpt0 = document.createElement('option');
+      jcOpt0.value = 0; jcOpt0.textContent = '00 없음(여백)';
+      if(val===0) jcOpt0.selected = true;
+      sel2.appendChild(jcOpt0);
+      Object.keys(CLASS_CODES).sort(function(a,b){return a-b;}).forEach(function(c){
+        if(parseInt(c)===0) return;
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = parseInt(c)+' '+CLASS_CODES[c];
+        if(parseInt(c)===val) opt.selected = true;
+        sel2.appendChild(opt);
+      });
+      if(val!==0 && !CLASS_CODES[val]){
+        var opt = document.createElement('option');
+        opt.value = val; opt.selected = true;
+        opt.textContent = val+' (코드'+val+')';
+        sel2.appendChild(opt);
+      }
+      div.appendChild(sel2);
       var vdiv = document.createElement('div');
       vdiv.id = f.id; vdiv.className = 'stat-disp';
       vdiv.style.borderColor = 'var(--blue)';
@@ -1488,22 +1537,32 @@ function unitSet(){
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
       val = 30 - (parseInt(el.textContent)||0);
       val = Math.max(0, Math.min(30, val));
-    } else if(f.id === 'sv_al'){
-      // AL저항은 체크박스로 처리 (아래에서 별도)
+    } else if(f.id === 'sv_al' || f.id === 'sv_al2'){
+      // 저항코드 체크박스는 아래에서 별도 처리
       return;
+    } else if(f.id === 'sv_jc2'){
+      val = parseInt(el.value)||0;
     } else {
       val = parseInt(el.textContent)||0;
     }
     savWrite(base+f.off, val, f.bits);
   });
 
-  // AL저항 비트플래그 쓰기 (+0x02)
+  // 저항코드1 비트플래그 쓰기 (+0x02) — 아레스는 여기 F0=전저항
   var al = 0;
   if(document.getElementById('al_f') && document.getElementById('al_f').checked) al |= 0x10;
   if(document.getElementById('al_e') && document.getElementById('al_e').checked) al |= 0x20;
   if(document.getElementById('al_a') && document.getElementById('al_a').checked) al |= 0x40;
   if(document.getElementById('al_w') && document.getElementById('al_w').checked) al |= 0x80;
   saveData[base+0x02] = al;
+
+  // 저항코드2 비트플래그 쓰기 (+0x03) — 아레스 외 캐릭은 여기 F0=전저항
+  var al2 = 0;
+  if(document.getElementById('al2_f') && document.getElementById('al2_f').checked) al2 |= 0x10;
+  if(document.getElementById('al2_e') && document.getElementById('al2_e').checked) al2 |= 0x20;
+  if(document.getElementById('al2_a') && document.getElementById('al2_a').checked) al2 |= 0x40;
+  if(document.getElementById('al2_w') && document.getElementById('al2_w').checked) al2 |= 0x80;
+  saveData[base+0x03] = al2;
 
   // EL 체크박스 쓰기: E=+0x00 bit1, W=+0x1D bit1
   if(document.getElementById("el-e").checked)
