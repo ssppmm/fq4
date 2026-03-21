@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v69</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v71</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -293,6 +293,11 @@
 
         <!-- 유닛 선택: 드롭다운 + PREV/NEXT -->
         <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Unit Select</div>
+        <!-- 이름 검색 -->
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px;">
+          <input id="unit-search" type="text" placeholder="이름 검색..." oninput="unitSearch(this.value)" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:4px 8px;font-size:11px;border-radius:3px;outline:none;" />
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:7px;" onclick="unitSearchClear()">✕</button>
+        </div>
         <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px;">
           <button class="btn btn-ghost" style="padding:5px 8px;font-size:10px;" onclick="unitPrev()">◀</button>
           <select id="unit-sel" onchange="unitSelectChange()" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px 6px;font-size:9px;border-radius:3px;"></select>
@@ -897,6 +902,55 @@ function loadSaveFile(){
   });
 }
 
+function unitSearch(keyword){
+  var sel = document.getElementById('unit-sel');
+  if(!sel || !saveData) return;
+  keyword = keyword.trim();
+
+  // 전체 목록 다시 빌드하되 키워드로 필터링
+  sel.innerHTML = '';
+  var total = unitCount || 354;
+  var firstMatch = -1;
+
+  for(var slot=0; slot<total; slot++){
+    var base    = SAV_UNIT_START     + slot * SAV_UNIT_SIZE;
+    var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
+    if(base + SAV_UNIT_SIZE > saveData.length) break;
+    var lv = saveData[base + 0x12];
+    if(lv === 255) continue;
+
+    var ni   = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
+    var name = (ni > 0 && UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni])
+               ? UNIT_CHAR_NAMES[ni] : ('슬롯' + (slot+1));
+    var label = (slot+1) + ': ' + name + ' (LV.' + lv + ')';
+
+    // 키워드 필터
+    if(keyword && label.indexOf(keyword) < 0) continue;
+
+    var opt = document.createElement('option');
+    opt.value = slot;
+    opt.textContent = label;
+    sel.appendChild(opt);
+    if(firstMatch < 0) firstMatch = slot;
+  }
+
+  // 첫 번째 매칭 항목으로 이동
+  if(keyword && firstMatch >= 0){
+    sel.value = firstMatch;
+    unitIdx = firstMatch;
+    document.getElementById('unit-no').value = firstMatch + 1;
+    unitRender();
+  } else if(!keyword && sel.options.length > 0){
+    // 검색어 없으면 현재 unitIdx 유지
+    sel.value = unitIdx;
+  }
+}
+function unitSearchClear(){
+  var inp = document.getElementById('unit-search');
+  if(inp) inp.value = '';
+  unitSearch('');
+}
+
 // 드롭다운 빌드 (FQ4WED1 방식: 전체 슬롯 표시)
 function unitBuildSelect(){
   var sel = document.getElementById('unit-sel');
@@ -909,6 +963,7 @@ function unitBuildSelect(){
     var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
     if(base + SAV_UNIT_SIZE > saveData.length) break;
     var lv = saveData[base + 0x12];
+    if(lv === 255) continue;
 
     var ni   = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
     var name = (ni > 0 && UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni])
