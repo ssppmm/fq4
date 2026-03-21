@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v64</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v65</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -592,6 +592,14 @@ function initDos(){
       'frameskip=0',
       '[mixer]',
       'nosound=true',
+      '[sblaster]',
+      'sbtype=none',
+      '[gus]',
+      'gus=false',
+      '[speaker]',
+      'pcspeaker=false',
+      '[midi]',
+      'mpu401=none',
     ].join('\n');
     try { fs.createFile('dosbox.conf', conf); } catch(e) {}
 
