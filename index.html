@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v114</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v117</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -317,7 +317,15 @@
           <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;" id="stat-grid"></div>
 
-          <!-- EL 취약 (Ability 바로 아래) -->
+          <!-- 아이템 -->
+          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ ITEM (+0x0F)</div>
+            <select id="unit-item-sel" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
+              <option value="255">없음</option>
+            </select>
+          </div>
+
+          <!-- EL+ 체크박스 -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
             <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL+</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -326,14 +334,6 @@
               <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-e"> E(Earth)</label>
               <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-f"> F(Fire)</label>
             </div>
-          </div>
-
-          <!-- 아이템 -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ ITEM (+0x0F)</div>
-            <select id="unit-item-sel" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
-              <option value="255">없음</option>
-            </select>
           </div>
 
           <!-- MACRO -->
@@ -1071,7 +1071,7 @@ var UNIT_FIELDS = [
   {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(투과)',   min:0, max:30},
   {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)', min:0, max:30},
   {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',     min:0, max:99},
-  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:255},
+  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:99},
   {id:'sv_al',  off:0x02, bits:8,  label:'저항코드',   min:0, max:255},
 ];
 
@@ -1356,7 +1356,7 @@ function unitRender(){
       row.appendChild(inp); row.appendChild(btnOn); row.appendChild(btnOff);
       div.appendChild(row);
     } else if(f.id === 'sv_al'){
-      // 저항코드: 체크박스
+      // 저항코드: 체크박스 (비트플래그)
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
       [['al_f','F(불)',0x10],['al_e','E(땅)',0x20],['al_a','A(바람)',0x40],['al_w','W(물)',0x80]].forEach(function(x){
@@ -1406,11 +1406,11 @@ function unitRender(){
     if(itemDispIdx === 255) itemSel.value = 255;
   }
 
-  // EL 체크박스: E=+0x00 bit1, W=+0x1D bit1
-  document.getElementById("el-f").checked = false;
+  // EL+ 체크박스 읽기: E=+0x00 bit1, W=+0x1D bit1
   document.getElementById("el-e").checked = !!(saveData[base+0x00] & 0x02);
-  document.getElementById("el-a").checked = false;
   document.getElementById("el-w").checked = !!(saveData[base+0x1D] & 0x02);
+  document.getElementById("el-f").checked = false;
+  document.getElementById("el-a").checked = false;
 
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
@@ -1516,11 +1516,10 @@ function unitSet(){
       val = parseInt(el.value)||0;
     } else if(f.id === 'sv_ls'){
       val = Math.max(0, Math.min(16, parseInt(el.value)||0));
-    } else if(f.id === 'sv_al'){
-      // 저항코드 체크박스는 아래에서 별도 처리
-      return;
     } else if(f.id === 'sv_jc2'){
       val = parseInt(el.value)||0;
+    } else if(f.id === 'sv_al'){
+      return; // 저항코드는 아래 비트플래그로 별도 처리
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
       val = 30 - (parseInt(el.textContent)||0);
       val = Math.max(0, Math.min(30, val));
@@ -1530,7 +1529,7 @@ function unitSet(){
     savWrite(base+f.off, val, f.bits);
   });
 
-  // 저항코드 비트플래그 쓰기 (+0x02) ← 확정
+  // 저항코드 비트플래그 쓰기 (+0x02)
   var al = 0;
   if(document.getElementById('al_f') && document.getElementById('al_f').checked) al |= 0x10;
   if(document.getElementById('al_e') && document.getElementById('al_e').checked) al |= 0x20;
@@ -1538,7 +1537,7 @@ function unitSet(){
   if(document.getElementById('al_w') && document.getElementById('al_w').checked) al |= 0x80;
   saveData[base+0x02] = al;
 
-  // EL 체크박스 쓰기: E=+0x00 bit1, W=+0x1D bit1
+  // EL+ 쓰기: E=+0x00 bit1, W=+0x1D bit1
   if(document.getElementById("el-e").checked)
     saveData[base+0x00] = saveData[base+0x00] | 0x02;
   else
