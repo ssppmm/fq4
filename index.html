@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v122</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v124</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -150,7 +150,7 @@
         <div class="prog-outer"><div class="prog-inner" id="prog"></div></div>
         <div class="prog-label" id="prog-label">0 / 0</div>
       </div>
-      <canvas id="canvas"></canvas>
+      <canvas id="canvas" tabindex="0"></canvas>
       <div class="touch-controls">
         <!-- 조이스틱 (마우스 이동) -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
@@ -1921,7 +1921,8 @@ document.getElementById('btn-full').addEventListener('click',function(){
 
   // rAF 루프 — 조이스틱 활성 중 마우스 계속 이동
   function loop() {
-    if(jsActive && (jsVX !== 0 || jsVY !== 0)) {
+    if(!jsActive) { jsVX = 0; jsVY = 0; }
+    if(jsVX !== 0 || jsVY !== 0) {
       var rect = canvas.getBoundingClientRect();
       mouseX = Math.max(0, Math.min(1, mouseX + jsVX / rect.width));
       mouseY = Math.max(0, Math.min(1, mouseY + jsVY / rect.height));
@@ -1985,13 +1986,48 @@ document.getElementById('btn-full').addEventListener('click',function(){
   mbtnR.addEventListener('mouseup',   function() { dispatchMouseBtn('mouseup',   2); });
 })();
 
+// ─── SDL 키코드 매핑 ─────────────────────────────────
+var SDL_KEY = {
+  'ArrowUp':    273,
+  'ArrowDown':  274,
+  'ArrowRight': 275,
+  'ArrowLeft':  276,
+  'Enter':       13,
+  'Escape':      27,
+  'Control':    306,
+};
+
+function fireSDLKey(keyName, down) {
+  var canvas = document.getElementById('canvas');
+  canvas.focus();
+  // 1차: KeyboardEvent (일부 환경에서 동작)
+  var code = keyName;
+  var keyCode = SDL_KEY[keyName] || 0;
+  var ev = new KeyboardEvent(down ? 'keydown' : 'keyup', {
+    key: keyName, code: code, keyCode: keyCode,
+    which: keyCode, bubbles: true, cancelable: true
+  });
+  canvas.dispatchEvent(ev);
+  // 2차: fs0.em을 통한 직접 주입 시도
+  if(fs0 && fs0.em) {
+    try {
+      var sym = SDL_KEY[keyName];
+      if(sym) fs0.em.ccall('SDL_JoyAxisMotion', null, ['number','number','number'], [0, 0, 0]);
+    } catch(e) {}
+    try {
+      // js-dos 내부 키 핸들러 직접 호출 시도
+      var fn = down ? 'simulateKeyEvent' : 'simulateKeyEvent';
+      if(typeof fs0.em[fn] === 'function') {
+        fs0.em[fn](SDL_KEY[keyName] || 0, down);
+      }
+    } catch(e) {}
+  }
+}
+
 // ─── 방향키 + 엔터 ──────────────────────────────────
 document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
-  var canvas = document.getElementById('canvas');
   function fire(down){
-    canvas.focus();
-    var ev = new KeyboardEvent(down?'keydown':'keyup', {key:btn.dataset.key, bubbles:true, cancelable:true});
-    canvas.dispatchEvent(ev);
+    fireSDLKey(btn.dataset.key, down);
     if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
   }
   btn.addEventListener('touchstart', function(e){e.preventDefault(); fire(true);},  {passive:false});
@@ -2002,14 +2038,10 @@ document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
 
 // ─── ESC 버튼 ────────────────────────────────────────
 (function(){
-  var canvas = document.getElementById('canvas');
-  canvas.tabIndex = 0; // 포커스 받을 수 있도록
   var btn = document.getElementById('btn-esc');
   if(!btn) return;
   function fireEsc(down){
-    canvas.focus();
-    var ev = new KeyboardEvent(down?'keydown':'keyup', {key:'Escape', code:'Escape', keyCode:27, bubbles:true, cancelable:true});
-    canvas.dispatchEvent(ev);
+    fireSDLKey('Escape', down);
     if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
   }
   btn.addEventListener('touchstart', function(e){e.preventDefault(); fireEsc(true);},  {passive:false});
@@ -2020,28 +2052,23 @@ document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
 
 // ─── Ctrl 토글 버튼 (한번 누르면 유지, 다시 누르면 해제) ──
 (function(){
-  var canvas = document.getElementById('canvas');
   var btn = document.getElementById('btn-ctrl');
   if(!btn) return;
   var ctrlOn = false;
 
   function setCtrl(on){
     ctrlOn = on;
-    canvas.focus();
+    fireSDLKey('Control', on);
     if(on){
       btn.classList.add('pressed');
       btn.style.background = 'var(--green)';
       btn.style.color = '#000';
       btn.style.borderColor = 'var(--green)';
-      var ev = new KeyboardEvent('keydown', {key:'Control', code:'ControlLeft', ctrlKey:true, bubbles:true, cancelable:true});
-      canvas.dispatchEvent(ev);
     } else {
       btn.classList.remove('pressed');
       btn.style.background = '';
       btn.style.color = '';
       btn.style.borderColor = '';
-      var ev = new KeyboardEvent('keyup', {key:'Control', code:'ControlLeft', ctrlKey:false, bubbles:true, cancelable:true});
-      canvas.dispatchEvent(ev);
     }
   }
 
