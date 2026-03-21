@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v119</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v120</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -180,7 +180,11 @@
             <button class="touch-btn dp-d"   data-key="ArrowDown">↓</button>
           </div>
         </div>
-      </div>
+        <!-- ESC + Ctrl -->
+        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
+          <button class="touch-btn" id="btn-esc" style="width:64px;height:46px;font-family:var(--font-pixel);font-size:7px;">ESC</button>
+          <button class="touch-btn" id="btn-ctrl" style="width:64px;height:46px;font-family:var(--font-pixel);font-size:7px;">CTRL</button>
+        </div>
     </div>
     <div class="game-toolbar">
       <button class="btn btn-start" id="btn-start">▶ 시작</button>
@@ -1967,6 +1971,56 @@ document.querySelectorAll('.touch-btn[data-key]').forEach(function(btn){
   btn.addEventListener('mousedown',  function(){ fire(true); });
   btn.addEventListener('mouseup',    function(){ fire(false); });
 });
+
+// ─── ESC 버튼 ────────────────────────────────────────
+(function(){
+  var canvas = document.getElementById('canvas');
+  var btn = document.getElementById('btn-esc');
+  if(!btn) return;
+  function fireEsc(down){
+    var ev = new KeyboardEvent(down?'keydown':'keyup', {key:'Escape', code:'Escape', keyCode:27, bubbles:true, cancelable:true});
+    canvas.dispatchEvent(ev);
+    if(down) btn.classList.add('pressed'); else btn.classList.remove('pressed');
+  }
+  btn.addEventListener('touchstart', function(e){e.preventDefault(); fireEsc(true);},  {passive:false});
+  btn.addEventListener('touchend',   function(e){e.preventDefault(); fireEsc(false);}, {passive:false});
+  btn.addEventListener('mousedown',  function(){ fireEsc(true); });
+  btn.addEventListener('mouseup',    function(){ fireEsc(false); });
+})();
+
+// ─── Ctrl 토글 버튼 (한번 누르면 유지, 다시 누르면 해제) ──
+(function(){
+  var canvas = document.getElementById('canvas');
+  var btn = document.getElementById('btn-ctrl');
+  if(!btn) return;
+  var ctrlOn = false;
+
+  function setCtrl(on){
+    ctrlOn = on;
+    if(on){
+      btn.classList.add('pressed');
+      btn.style.background = 'var(--green)';
+      btn.style.color = '#000';
+      btn.style.borderColor = 'var(--green)';
+      // keydown 유지 — 일부 DOSBox 키 이벤트는 ctrlKey 플래그로 동작
+      var ev = new KeyboardEvent('keydown', {key:'Control', code:'ControlLeft', ctrlKey:true, bubbles:true, cancelable:true});
+      canvas.dispatchEvent(ev);
+    } else {
+      btn.classList.remove('pressed');
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+      var ev = new KeyboardEvent('keyup', {key:'Control', code:'ControlLeft', ctrlKey:false, bubbles:true, cancelable:true});
+      canvas.dispatchEvent(ev);
+    }
+  }
+
+  btn.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    setCtrl(!ctrlOn);
+  }, {passive:false});
+  btn.addEventListener('mousedown', function(){ setCtrl(!ctrlOn); });
+})();
 </script>
 </body>
 </html>
