@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v106</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v110</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -317,21 +317,7 @@
           <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ Ability (클릭하여 수정)</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;" id="stat-grid"></div>
 
-          <!-- 아이템 -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ ITEM (+0x0F)</div>
-            <select id="unit-item-sel" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
-              <option value="255">없음</option>
-            </select>
-          </div>
-
-          <!-- 이름코드 -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ 이름코드 (+0x1C,1D)</div>
-            <div id="unit-name-code" style="font-size:9px;color:var(--text);padding:3px;background:var(--bg);border-radius:3px;border:1px solid var(--border2);">-</div>
-          </div>
-
-          <!-- EL 체크박스 -->
+          <!-- EL 취약 (Ability 바로 아래) -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
             <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL (Element 취약)</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -340,6 +326,14 @@
               <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-e"> E(Earth)</label>
               <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-f"> F(Fire)</label>
             </div>
+          </div>
+
+          <!-- 아이템 -->
+          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ ITEM (+0x0F)</div>
+            <select id="unit-item-sel" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:5px;font-size:9px;border-radius:3px;">
+              <option value="255">없음</option>
+            </select>
           </div>
 
           <!-- MACRO -->
@@ -353,16 +347,6 @@
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;" onclick="applyMacro('master')">Master</button>
               <button class="btn btn-ghost" style="padding:5px;font-size:7px;color:var(--red);border-color:var(--red);" onclick="applyMacro('cheater')">Cheater</button>
             </div>
-          </div>
-
-          <!-- 투구 ON/OFF -->
-          <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ 투구(대장) — +0x07/08/1B 동시 변경</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-              <button class="btn btn-accent" style="padding:7px;font-size:8px;" onclick="applyHelmet(true)">👑 투구 ON</button>
-              <button class="btn btn-del"   style="padding:7px;font-size:8px;" onclick="applyHelmet(false)">✖ 투구 OFF</button>
-            </div>
-            <div style="font-size:7px;color:var(--muted);margin-top:4px;">ON: [07]=10 [08]=08 [09]=05 / OFF: [07]=00 [08]=09 [09]=00</div>
           </div>
 
           <!-- SET / RESET / SAVE -->
@@ -1043,11 +1027,11 @@ var CLASS_CODES = {
 };
 
 // 상태코드 (+0x07) - 확정
-// +0x07 상태코드 확정 / 투구★ = +0x07이 0x10or0x12 AND +0x0F=0x10 동시충족
+// +0x07 상태코드
 var STATE_CODES = {
-  0x00:'일반',
-  0x10:'대장(투구★: ITEM도 0x10필요)',
-  0x12:'대장+전직가능(투구★: ITEM도 0x10필요)',
+  0x00:'없음',
+  0x10:'아군',
+  0x12:'전직가능',
   0x15:'사망',
 };
 
@@ -1069,52 +1053,41 @@ var MAGIC_CODES = {
   0x32:'물(⚠팅김)', 0x33:'불', 0x34:'바람', 0x35:'화염소나기',
 };
 
-// FQ4WED1 32바이트 유닛 레코드 필드 — 커뮤니티 분석 + 세이브파일 직접 확인 반영
-// +00=일련번호?(케릭코드)/아레스F0=전저항, +01=?(무명용사숫자)
-// +02=저항코드1(불F0x10/땅0x20/바람0x40/물0x80), +03=저항코드2(아레스외 캐릭은 여기)
-// +04=FT(피로도), +05=속도, +06=CLASS(케릭고유번호)
-// +07=상태코드(0x00=일반/0x10=대장/0x12=대장+전직가능/0x15=사망) ← 확정
-// +08=X(미확정), +09=X
-// 투구★ 최종확정: [07]=0x10(or 0x12) AND [08]=0x00 AND [1B]=0x00 — 11캐릭 전수검증
-// +0A=AA(투과율), +0B=AD(활방어,30-저장), +0C=MD(마법방어,30-저장)
-// +0D=전직코드1(불명), +0E=전직코드2(전직직업코드), +0F=ITEM, +10=X, +11=마법코드
-// +12=LV, +13=HR, +14,15=HP(리틀엔디안), +16=AT, +17=AR, +18=DF, +19=DR(D0→99)
-// +1A=일련번호lo, +1B=일련번호hi, +1C=이름인덱스, +1D=이름세트
+// FQ4WED1 32바이트 유닛 레코드 — 확정 필드만 포함
+// +02=저항코드(불0x10/땅0x20/바람0x40/물0x80), +04=FT, +05=속도, +06=CLASS, +07=상태
+// +0A=AA, +0B=AD(30-저장), +0C=MD(30-저장), +0E=전직코드, +0F=ITEM, +11=마법
+// +12=LV, +13=HR, +14~15=HP, +16=AT, +17=AR, +18=DF, +19=DR
+// +1C=이름인덱스, +1D=이름세트
 var UNIT_FIELDS = [
-  {id:'sv_cl',  off:0x06, bits:8,  label:'CLASS',       min:0, max:255},
-  {id:'sv_st',  off:0x07, bits:8,  label:'상태',        min:0, max:255},
-  {id:'sv_ai',  off:0x00, bits:8,  label:'일련번호?',   min:0, max:255},
-  {id:'sv_ls',  off:0x01, bits:8,  label:'?(무명숫자)', min:0, max:255},
-  {id:'sv_hm',  off:0x08, bits:8,  label:'타입?(미확정)',  min:0, max:255},
-  {id:'sv_al',  off:0x02, bits:8,  label:'저항코드1',   min:0, max:255},
-  {id:'sv_al2', off:0x03, bits:8,  label:'저항코드2',   min:0, max:255},
-  {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',      min:0, max:99},
-  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',        min:0, max:255},
-  {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(투과)',    min:0, max:30},
-  {id:'sv_ad',  off:0x0B, bits:8,  label:'AD(활방어)',  min:0, max:30},
-  {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)',  min:0, max:30},
-  {id:'sv_jc1', off:0x0D, bits:8,  label:'전직코드1',   min:0, max:255},
-  {id:'sv_jc2', off:0x0E, bits:8,  label:'전직코드2',   min:0, max:255},
-  {id:'sv_mg',  off:0x11, bits:8,  label:'마법',        min:0, max:255},
-  {id:'sv_lv',  off:0x12, bits:8,  label:'LV',          min:1, max:99},
-  {id:'sv_hr',  off:0x13, bits:8,  label:'HR',          min:0, max:16},
-  {id:'sv_hp',  off:0x14, bits:16, label:'HP',          min:0, max:999},
-  {id:'sv_at',  off:0x16, bits:8,  label:'AT',          min:0, max:99},
-  {id:'sv_ar',  off:0x17, bits:8,  label:'AR',          min:0, max:99},
-  {id:'sv_df',  off:0x18, bits:8,  label:'DF',          min:0, max:99},
-  {id:'sv_dr',  off:0x19, bits:8,  label:'DR',          min:0, max:99},
+  {id:'sv_cl',  off:0x06, bits:8,  label:'CLASS',      min:0, max:255},
+  {id:'sv_st',  off:0x07, bits:8,  label:'상태',       min:0, max:255},
+  {id:'sv_al',  off:0x02, bits:8,  label:'저항코드',   min:0, max:255},
+  {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',     min:0, max:99},
+  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:255},
+  {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(투과)',   min:0, max:30},
+  {id:'sv_ad',  off:0x0B, bits:8,  label:'AD(활방어)', min:0, max:30},
+  {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)', min:0, max:30},
+  {id:'sv_jc2', off:0x0E, bits:8,  label:'전직코드',   min:0, max:255},
+  {id:'sv_mg',  off:0x11, bits:8,  label:'마법',       min:0, max:255},
+  {id:'sv_lv',  off:0x12, bits:8,  label:'LV',         min:1, max:99},
+  {id:'sv_hr',  off:0x13, bits:8,  label:'HR',         min:0, max:16},
+  {id:'sv_hp',  off:0x14, bits:16, label:'HP',         min:0, max:999},
+  {id:'sv_at',  off:0x16, bits:8,  label:'AT',         min:0, max:99},
+  {id:'sv_ar',  off:0x17, bits:8,  label:'AR',         min:0, max:99},
+  {id:'sv_df',  off:0x18, bits:8,  label:'DF',         min:0, max:99},
+  {id:'sv_dr',  off:0x19, bits:8,  label:'DR',         min:0, max:99},
 ];
 
 // AD/MD: 저장값 = 30 - FQ4WED1표시값 (0=최대30, 30=최소0)
 var UNIT_EXT_FIELDS = [];
 
 var MACROS = {
-  normal:  {sv_lv:1,  sv_hp:100, sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_aa:1, sv_ls:5},
-  knight:  {sv_lv:10, sv_hp:500, sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_aa:2, sv_ls:10},
-  archer:  {sv_lv:10, sv_hp:300, sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_aa:2, sv_ls:8},
-  wizard:  {sv_lv:10, sv_hp:200, sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_aa:1, sv_ls:6},
-  master:  {sv_lv:20, sv_hp:900, sv_hr:16, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_aa:3, sv_ls:16},
-  cheater: {sv_lv:99, sv_hp:999, sv_hr:16, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_aa:9, sv_ls:16},
+  normal:  {sv_lv:1,  sv_hp:100, sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_aa:1},
+  knight:  {sv_lv:10, sv_hp:500, sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_aa:2},
+  archer:  {sv_lv:10, sv_hp:300, sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_aa:2},
+  wizard:  {sv_lv:10, sv_hp:200, sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_aa:1},
+  master:  {sv_lv:20, sv_hp:900, sv_hr:16, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_aa:3},
+  cheater: {sv_lv:99, sv_hp:999, sv_hr:16, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_aa:9},
 };
 
 var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
@@ -1377,19 +1350,6 @@ function unitRender(){
         sel2.appendChild(opt);
       }
       div.appendChild(sel2);
-    } else if(f.id === 'sv_al2'){
-      // 저항코드2 체크박스 (아레스 외 캐릭은 여기 F0=전저항)
-      var wrap2 = document.createElement('div');
-      wrap2.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
-      [['al2_f','F(불)',0x10],['al2_e','E(땅)',0x20],['al2_a','A(바람)',0x40],['al2_w','W(물)',0x80]].forEach(function(x){
-        var lbl2 = document.createElement('label');
-        lbl2.style.cssText = 'font-size:7px;cursor:pointer;';
-        var cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.id = x[0]; cb.checked = !!(val&x[2]);
-        lbl2.appendChild(cb); lbl2.appendChild(document.createTextNode(x[1]));
-        wrap2.appendChild(lbl2);
-      });
-      div.appendChild(wrap2);
     } else if(f.id === 'sv_jc2'){
       // 전직코드2: CLASS 드롭다운 재사용 (전직 시 이 직업코드로 전직됨)
       var sel2 = document.createElement('select');
@@ -1454,15 +1414,6 @@ function unitRender(){
   document.getElementById("el-e").checked = !!(saveData[base+0x00] & 0x02);
   document.getElementById("el-a").checked = false;
   document.getElementById("el-w").checked = !!(saveData[base+0x1D] & 0x02);
-
-  // 이름코드 표시 (+0x1C=인덱스, +0x1D=세트)
-  var nameEl = document.getElementById('unit-name-code');
-  if(nameEl){
-    var nc_idx = saveData[base+0x1C];
-    var nc_set = saveData[base+0x1D];
-    var nc_name = UNIT_CHAR_NAMES[nc_set*256 + nc_idx] || '?';
-    nameEl.textContent = '세트'+nc_set+' #0x'+nc_idx.toString(16).toUpperCase().padStart(2,'0')+' → '+nc_name;
-  }
 
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
@@ -1535,26 +1486,6 @@ function applyMacro(type){
   toast('🎮 Macro: '+type,'ok');
 }
 
-// 투구 ON/OFF — [07]=0x10 AND [08]=0x08 AND [09]=0x05 (커뮤니티+세이브파일 분석)
-function applyHelmet(on){
-  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base = fqBase(unitIdx);
-  if(on){
-    saveData[base+0x07] = 0x10;
-    saveData[base+0x08] = 0x08;
-    saveData[base+0x09] = 0x05;
-  } else {
-    saveData[base+0x07] = 0x00;
-    saveData[base+0x08] = 0x09;
-    saveData[base+0x09] = 0x00;
-  }
-  // UI 갱신
-  var stEl = document.getElementById('sv_st');
-  if(stEl) stEl.value = on ? 0x10 : 0x00;
-  var hmEl = document.getElementById('sv_hm');
-  if(hmEl) hmEl.textContent = on ? 8 : 9;
-  toast(on ? '👑 투구 ON ([07]=10 [08]=08 [09]=05) — 💾 저장하세요' : '✖ 투구 OFF ([07]=00 [08]=09 [09]=00) — 💾 저장하세요', on ? 'ok' : 'nfo');
-}
 
 // SET: UI 값을 saveData에 기록 (FQ4WED1 32바이트 배열)
 function unitSet(){
@@ -1570,7 +1501,7 @@ function unitSet(){
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
       val = 30 - (parseInt(el.textContent)||0);
       val = Math.max(0, Math.min(30, val));
-    } else if(f.id === 'sv_al' || f.id === 'sv_al2'){
+    } else if(f.id === 'sv_al'){
       // 저항코드 체크박스는 아래에서 별도 처리
       return;
     } else if(f.id === 'sv_jc2'){
@@ -1581,21 +1512,13 @@ function unitSet(){
     savWrite(base+f.off, val, f.bits);
   });
 
-  // 저항코드1 비트플래그 쓰기 (+0x02) — 아레스는 여기 F0=전저항
+  // 저항코드 비트플래그 쓰기 (+0x02) ← 확정
   var al = 0;
   if(document.getElementById('al_f') && document.getElementById('al_f').checked) al |= 0x10;
   if(document.getElementById('al_e') && document.getElementById('al_e').checked) al |= 0x20;
   if(document.getElementById('al_a') && document.getElementById('al_a').checked) al |= 0x40;
   if(document.getElementById('al_w') && document.getElementById('al_w').checked) al |= 0x80;
   saveData[base+0x02] = al;
-
-  // 저항코드2 비트플래그 쓰기 (+0x03) — 아레스 외 캐릭은 여기 F0=전저항
-  var al2 = 0;
-  if(document.getElementById('al2_f') && document.getElementById('al2_f').checked) al2 |= 0x10;
-  if(document.getElementById('al2_e') && document.getElementById('al2_e').checked) al2 |= 0x20;
-  if(document.getElementById('al2_a') && document.getElementById('al2_a').checked) al2 |= 0x40;
-  if(document.getElementById('al2_w') && document.getElementById('al2_w').checked) al2 |= 0x80;
-  saveData[base+0x03] = al2;
 
   // EL 체크박스 쓰기: E=+0x00 bit1, W=+0x1D bit1
   if(document.getElementById("el-e").checked)
