@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v117</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v119</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -325,14 +325,14 @@
             </select>
           </div>
 
-          <!-- EL+ 체크박스 -->
+          <!-- 저항코드 체크박스 (고정 블록) -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL+</div>
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ 저항코드</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-w"> W(Water)</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-a"> A(Air)</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-e"> E(Earth)</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-f"> F(Fire)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="al_f"> F(불)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="al_e"> E(땅)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="al_a"> A(바람)</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="al_w"> W(물)</label>
             </div>
           </div>
 
@@ -1072,7 +1072,6 @@ var UNIT_FIELDS = [
   {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)', min:0, max:30},
   {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',     min:0, max:99},
   {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:99},
-  {id:'sv_al',  off:0x02, bits:8,  label:'저항코드',   min:0, max:255},
 ];
 
 // AD/MD: 저장값 = 30 - FQ4WED1표시값 (0=최대30, 30=최소0)
@@ -1355,19 +1354,6 @@ function unitRender(){
       btnOff.onclick = function(){ applyHelmet(false); };
       row.appendChild(inp); row.appendChild(btnOn); row.appendChild(btnOff);
       div.appendChild(row);
-    } else if(f.id === 'sv_al'){
-      // 저항코드: 체크박스 (비트플래그)
-      var wrap = document.createElement('div');
-      wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
-      [['al_f','F(불)',0x10],['al_e','E(땅)',0x20],['al_a','A(바람)',0x40],['al_w','W(물)',0x80]].forEach(function(x){
-        var lbl2 = document.createElement('label');
-        lbl2.style.cssText = 'font-size:7px;cursor:pointer;';
-        var cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.id = x[0]; cb.checked = !!(val&x[2]);
-        lbl2.appendChild(cb); lbl2.appendChild(document.createTextNode(x[1]));
-        wrap.appendChild(lbl2);
-      });
-      div.appendChild(wrap);
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
       // AD/MD: 표시값 = 30 - 저장값
       var vdiv = document.createElement('div');
@@ -1406,11 +1392,12 @@ function unitRender(){
     if(itemDispIdx === 255) itemSel.value = 255;
   }
 
-  // EL+ 체크박스 읽기: E=+0x00 bit1, W=+0x1D bit1
-  document.getElementById("el-e").checked = !!(saveData[base+0x00] & 0x02);
-  document.getElementById("el-w").checked = !!(saveData[base+0x1D] & 0x02);
-  document.getElementById("el-f").checked = false;
-  document.getElementById("el-a").checked = false;
+  // 저항코드 체크박스 읽기 (+0x02)
+  var alVal = saveData[base+0x02];
+  document.getElementById("al_f").checked = !!(alVal & 0x10);
+  document.getElementById("al_e").checked = !!(alVal & 0x20);
+  document.getElementById("al_a").checked = !!(alVal & 0x40);
+  document.getElementById("al_w").checked = !!(alVal & 0x80);
 
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
@@ -1518,8 +1505,6 @@ function unitSet(){
       val = Math.max(0, Math.min(16, parseInt(el.value)||0));
     } else if(f.id === 'sv_jc2'){
       val = parseInt(el.value)||0;
-    } else if(f.id === 'sv_al'){
-      return; // 저항코드는 아래 비트플래그로 별도 처리
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
       val = 30 - (parseInt(el.textContent)||0);
       val = Math.max(0, Math.min(30, val));
@@ -1536,16 +1521,6 @@ function unitSet(){
   if(document.getElementById('al_a') && document.getElementById('al_a').checked) al |= 0x40;
   if(document.getElementById('al_w') && document.getElementById('al_w').checked) al |= 0x80;
   saveData[base+0x02] = al;
-
-  // EL+ 쓰기: E=+0x00 bit1, W=+0x1D bit1
-  if(document.getElementById("el-e").checked)
-    saveData[base+0x00] = saveData[base+0x00] | 0x02;
-  else
-    saveData[base+0x00] = saveData[base+0x00] & ~0x02;
-  if(document.getElementById("el-w").checked)
-    saveData[base+0x1D] = saveData[base+0x1D] | 0x02;
-  else
-    saveData[base+0x1D] = saveData[base+0x1D] & ~0x02;
 
   // 아이템 쓰기 (+0x0F)
   var itemSel = document.getElementById('unit-item-sel');
