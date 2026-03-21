@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v74</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v77</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -772,12 +772,18 @@ var SAV_UNIT_CNT   = 0x0773;     // 유닛 수 (16bit)
 var SAV_UNIT_START = 0x0763;     // ✓ 확정 (세이브파일 교차검증)
 var SAV_UNIT_SIZE  = 63;         // ✓ 확정
 
+// FQ4WED1 번호순 32바이트 배열 (핵심 발견)
+// 번호N → FQ_UNIT_BASE + (N-1)*FQ_UNIT_SIZE
+// 오프셋: LS=+01, AA=+0A, LV=+12, HR=+13, HP=+14(LE16), AT=+16, AR=+17, DF=+18, DR=+19
+var FQ_UNIT_BASE = 0x2998;
+var FQ_UNIT_SIZE = 32;
+
 // 추가 능력치 테이블 (AD, MD, 아이템)
 var SAV_UNIT_EXT_START = 0x3F2E; // ✓ 확정
 var SAV_UNIT_EXT_SIZE  = 32;     // ✓ 확정
 
-// 기본 유닛 필드 ✓ 전체 교차검증 완료
-// 아레스(idx=139): LV=1,HP=2,HR=3,리더십=4,피로도=5,AT=6,AR=7,DF=8,DR=9,AD=10,AA=11,MD=12
+// FQ4WED1 32바이트 유닛 레코드 필드 (FQ_UNIT_BASE + (N-1)*FQ_UNIT_SIZE)
+// 확정 오프셋: LS=+01, FT=+04, AA=+0A, 아이템=+0F, LV=+12, HR=+13, HP=+14(LE16), AT=+16, AR=+17, DF=+18, DR=+19
 var UNIT_FIELDS = [
   {id:'sv_ls', off:0x01, bits:8,  label:'리더십', min:0,  max:16},
   {id:'sv_ft', off:0x04, bits:8,  label:'피로도', min:0,  max:99},
@@ -789,23 +795,18 @@ var UNIT_FIELDS = [
   {id:'sv_ar', off:0x17, bits:8,  label:'AR',     min:0,  max:99},
   {id:'sv_df', off:0x18, bits:8,  label:'DF',     min:0,  max:99},
   {id:'sv_dr', off:0x19, bits:8,  label:'DR',     min:0,  max:99},
-  // +0x1A: EL 비트플래그 (별도 체크박스)
 ];
 
-// 추가 테이블 필드 ✓ 확정
-var UNIT_EXT_FIELDS = [
-  {id:'sv_ad', off:0x00, bits:8, label:'AD', min:0, max:30},
-  {id:'sv_md', off:0x01, bits:8, label:'MD', min:0, max:30},
-  // +0x16: 아이템 코드 (별도 드롭다운)
-];
+// AD/MD는 FQ4WED1 내부에서 별도 관리 → 현재 미지원
+var UNIT_EXT_FIELDS = [];
 
 var MACROS = {
-  normal:  {sv_lv:1,  sv_hp:100,   sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0,  sv_aa:1, sv_md:5,  sv_ls:5},
-  knight:  {sv_lv:10, sv_hp:500,   sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:10, sv_aa:2, sv_md:10, sv_ls:10},
-  archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:10, sv_aa:2, sv_md:10, sv_ls:8},
-  wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5,  sv_aa:1, sv_md:30, sv_ls:6},
-  master:  {sv_lv:20, sv_hp:900,   sv_hr:16, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:20, sv_aa:3, sv_md:30, sv_ls:16},
-  cheater: {sv_lv:99, sv_hp:999,   sv_hr:16, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:30, sv_aa:9, sv_md:30, sv_ls:16},
+  normal:  {sv_lv:1,  sv_hp:100, sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_aa:1, sv_ls:5},
+  knight:  {sv_lv:10, sv_hp:500, sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_aa:2, sv_ls:10},
+  archer:  {sv_lv:10, sv_hp:300, sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_aa:2, sv_ls:8},
+  wizard:  {sv_lv:10, sv_hp:200, sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_aa:1, sv_ls:6},
+  master:  {sv_lv:20, sv_hp:900, sv_hr:16, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_aa:3, sv_ls:16},
+  cheater: {sv_lv:99, sv_hp:999, sv_hr:16, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_aa:9, sv_ls:16},
 };
 
 var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
@@ -907,45 +908,37 @@ function unitSearch(keyword){
   if(!sel || !saveData) return;
   keyword = keyword.trim();
 
-  // 전체 목록 다시 빌드하되 키워드로 필터링
   sel.innerHTML = '';
   var total = unitCount || 354;
   var firstMatch = -1;
 
-  for(var slot=0; slot<total; slot++){
-    var base    = SAV_UNIT_START     + slot * SAV_UNIT_SIZE;
-    var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
-    if(base + SAV_UNIT_SIZE > saveData.length) break;
-    var lv = saveData[base + 0x12];
+  for(var fqNo=1; fqNo<=total; fqNo++){
+    var base = fqBase(fqNo);
+    if(base + FQ_UNIT_SIZE > saveData.length) break;
+    var lv = saveData[base+0x12];
     if(lv === 255) continue;
-
-    var ni   = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
-    var name = (ni > 0 && UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni])
-               ? UNIT_CHAR_NAMES[ni] : ('슬롯' + (slot+1));
     var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
     var hr = saveData[base+0x13];
     var at = saveData[base+0x16];
-    var invalid = (hp > 999 || hr > 16 || at > 99 || lv > 99);
-    var label = (slot+1) + ': ' + name + ' (LV.' + lv + ')' + (invalid ? ' ⚠' : '');
+    if(hp > 999 || hr > 16 || at > 99 || lv > 99) continue;
 
-    // 키워드 필터
+    var name = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? UNIT_FQ_NAMES[fqNo-1] : ('번호'+fqNo);
+    var label = fqNo + ': ' + name + ' (LV.' + lv + ')';
     if(keyword && label.indexOf(keyword) < 0) continue;
 
     var opt = document.createElement('option');
-    opt.value = slot;
+    opt.value = fqNo;
     opt.textContent = label;
     sel.appendChild(opt);
-    if(firstMatch < 0) firstMatch = slot;
+    if(firstMatch < 0) firstMatch = fqNo;
   }
 
-  // 첫 번째 매칭 항목으로 이동
   if(keyword && firstMatch >= 0){
     sel.value = firstMatch;
     unitIdx = firstMatch;
-    document.getElementById('unit-no').value = firstMatch + 1;
+    document.getElementById('unit-no').value = firstMatch;
     unitRender();
   } else if(!keyword && sel.options.length > 0){
-    // 검색어 없으면 현재 unitIdx 유지
     sel.value = unitIdx;
   }
 }
@@ -955,35 +948,35 @@ function unitSearchClear(){
   unitSearch('');
 }
 
-// 드롭다운 빌드 (FQ4WED1 방식: 전체 슬롯 표시)
+// FQ4WED1 번호N의 base 주소
+function fqBase(fqNo){ return FQ_UNIT_BASE + (fqNo-1) * FQ_UNIT_SIZE; }
+
+// 드롭다운 빌드 (FQ4WED1 번호순)
 function unitBuildSelect(){
   var sel = document.getElementById('unit-sel');
   if(!sel) return;
   sel.innerHTML = '';
   var total = unitCount || 354;
 
-  for(var slot=0; slot<total; slot++){
-    var base    = SAV_UNIT_START     + slot * SAV_UNIT_SIZE;
-    var extBase = SAV_UNIT_EXT_START + slot * SAV_UNIT_EXT_SIZE;
-    if(base + SAV_UNIT_SIZE > saveData.length) break;
-    var lv = saveData[base + 0x12];
+  for(var fqNo=1; fqNo<=total; fqNo++){
+    var base = fqBase(fqNo);
+    if(base + FQ_UNIT_SIZE > saveData.length) break;
+    var lv = saveData[base+0x12];
     if(lv === 255) continue;
 
-    var ni   = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
-    var name = (ni > 0 && UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni])
-               ? UNIT_CHAR_NAMES[ni]
-               : ('슬롯' + (slot+1));
-
-    // 범위 초과 = 잘못된 데이터 가능성 표시
+    // 범위 초과 = 잘못된 데이터 → 제외
     var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
     var hr = saveData[base+0x13];
     var at = saveData[base+0x16];
-    var invalid = (hp > 999 || hr > 16 || at > 99 || lv > 99);
+    if(hp > 999 || hr > 16 || at > 99 || lv > 99) continue;
 
-    var opt  = document.createElement('option');
-    opt.value = slot;
-    opt.dataset.nameidx = ni;
-    opt.textContent = (slot+1) + ': ' + name + ' (LV.' + lv + ')' + (invalid ? ' ⚠' : '');
+    // 이름: UNIT_CHAR_NAMES (FQ4WED1.exe 번호→이름idx 배열 기반)
+    var nameIdx = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? fqNo-1 : -1;
+    var name = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? UNIT_FQ_NAMES[fqNo-1] : ('번호'+fqNo);
+
+    var opt = document.createElement('option');
+    opt.value = fqNo;
+    opt.textContent = fqNo + ': ' + name + ' (LV.' + lv + ')';
     sel.appendChild(opt);
   }
 }
@@ -991,33 +984,32 @@ function unitBuildSelect(){
 function unitSelectChange(){
   var sel = document.getElementById('unit-sel');
   if(!sel) return;
-  unitIdx = parseInt(sel.value)||0;
-  document.getElementById('unit-no').value = unitIdx + 1; // FQ4WED1 번호(1-based)
+  unitIdx = parseInt(sel.value)||1;  // FQ4WED1 번호 (1-based)
+  document.getElementById('unit-no').value = unitIdx;
   unitRender();
 }
 
-// 유닛 장착 아이템: base+0x0F가 실제 필드 (세이브코드 = FQ4WED1표시idx + 1)
+// 유닛 장착 아이템: FQ_UNIT base+0x0F (세이브코드 = 표시idx+1)
 function unitItemSaveToDisp(saveCode){
   if(saveCode === 255 || saveCode === 0) return 255;
-  return saveCode - 1;  // 세이브코드 - 1 = 표시idx
+  return saveCode - 1;
 }
 function unitItemDispToSave(dispIdx){
   if(dispIdx === 255) return 255;
-  return dispIdx + 1;   // 표시idx + 1 = 세이브코드
+  return dispIdx + 1;
 }
 
-// 유닛 렌더링
+// 유닛 렌더링 (FQ4WED1 32바이트 배열 기준)
 function unitRender(){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base    = SAV_UNIT_START     + unitIdx * SAV_UNIT_SIZE;
-  var extBase = SAV_UNIT_EXT_START + unitIdx * SAV_UNIT_EXT_SIZE;
+  var base = fqBase(unitIdx);  // FQ4WED1 번호 → 32바이트 배열 base
   var grid = document.getElementById('stat-grid');
   grid.innerHTML = '';
   var sel = document.getElementById('unit-sel');
   if(sel) sel.value = unitIdx;
-  document.getElementById('unit-no').value = unitIdx + 1; // FQ4WED1 번호(1-based)
+  document.getElementById('unit-no').value = unitIdx;
 
-  // 기본 필드 (LV HR HP AT AR DF DR)
+  // 기본 필드
   UNIT_FIELDS.forEach(function(f){
     var val = savRead(base+f.off, f.bits);
     var div = document.createElement('div');
@@ -1027,31 +1019,7 @@ function unitRender(){
     grid.appendChild(div);
   });
 
-  // 추가 테이블 필드 (AD MD 리더십)
-  UNIT_EXT_FIELDS.forEach(function(f){
-    var val = extBase+f.off < saveData.length ? saveData[extBase+f.off] : 0;
-    var div = document.createElement('div');
-    div.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">'+f.label+'</div>'
-      +'<div id=\"'+f.id+'\" class=\"stat-disp\" style=\"border-color:var(--blue);\" data-ext=\"1\" data-off=\"'+f.off
-      +'\" data-min=\"'+(f.min||0)+'\" data-max=\"'+(f.max||99)+'\" onclick=\"statEditExt(this)\">'+val+'</div>';
-    grid.appendChild(div);
-  });
-
-  // AA 읽기전용 (기본테이블 +0x0F)
-  var aaVal = saveData[base+0x0F]||0;
-  var divAA = document.createElement('div');
-  divAA.innerHTML = '<div class=\"lbl\" style=\"font-size:7px;margin-bottom:2px;\">AA <span style=\"color:var(--muted);font-size:6px;\">(RO)</span></div>'
-    +'<div class=\"stat-disp\" style=\"opacity:0.5;cursor:default;\">'+aaVal+'</div>';
-  grid.appendChild(divAA);
-
-  // EL 체크박스 (+0x08)
-  var elVal = saveData[base+0x1A]||0;
-  document.getElementById("el-f").checked = !!(elVal & 0x80);
-  document.getElementById("el-e").checked = !!(elVal & 0x40);
-  document.getElementById("el-a").checked = !!(elVal & 0x20);
-  document.getElementById("el-w").checked = !!(elVal & 0x10);
-
-  // 아이템 드롭다운 (추가테이블 +0x16)
+  // 아이템 드롭다운 (FQ_UNIT +0x0F)
   var itemCode = saveData[base+0x0F] || 255;
   var itemDispIdx = unitItemSaveToDisp(itemCode);
   var itemSel = document.getElementById('unit-item-sel');
@@ -1066,6 +1034,12 @@ function unitRender(){
     });
     if(itemDispIdx === 255) itemSel.value = 255;
   }
+
+  // EL 체크박스: 32바이트 배열에 없음 → 숨김 처리
+  document.getElementById("el-f").checked = false;
+  document.getElementById("el-e").checked = false;
+  document.getElementById("el-a").checked = false;
+  document.getElementById("el-w").checked = false;
 
   document.getElementById('stat-fields').style.display = 'block';
   document.getElementById('stat-pending').style.display = 'none';
@@ -1085,17 +1059,13 @@ function unitGetName(idx){
 }
 
 function unitGo(){
-  // unit-no 입력값은 FQ4WED1 번호(1-based) → 슬롯 = 번호-1
   var fqNo = parseInt(document.getElementById('unit-no').value)||1;
-  var slot = fqNo - 1;
-  if(slot < 0) slot = 0;
-  // 드롭다운에서 해당 슬롯 option 찾아 선택
   var sel = document.getElementById('unit-sel');
   if(sel){
     for(var i=0; i<sel.options.length; i++){
-      if(parseInt(sel.options[i].value) === slot){
+      if(parseInt(sel.options[i].value) === fqNo){
         sel.selectedIndex = i;
-        unitIdx = slot;
+        unitIdx = fqNo;
         unitRender();
         return;
       }
@@ -1107,14 +1077,16 @@ function unitNext(){
   var sel = document.getElementById('unit-sel');
   if(!sel || sel.selectedIndex >= sel.options.length-1){ toast('⚠ 마지막 유닛입니다','nfo'); return; }
   sel.selectedIndex++;
-  unitIdx = parseInt(sel.options[sel.selectedIndex].value)||0;
+  unitIdx = parseInt(sel.options[sel.selectedIndex].value)||1;
+  document.getElementById('unit-no').value = unitIdx;
   unitRender();
 }
 function unitPrev(){
   var sel = document.getElementById('unit-sel');
   if(!sel || sel.selectedIndex <= 0){ toast('⚠ 첫 번째 유닛입니다','nfo'); return; }
   sel.selectedIndex--;
-  unitIdx = parseInt(sel.options[sel.selectedIndex].value)||0;
+  unitIdx = parseInt(sel.options[sel.selectedIndex].value)||1;
+  document.getElementById('unit-no').value = unitIdx;
   unitRender();
 }
 
@@ -1140,11 +1112,10 @@ function applyMacro(type){
   toast('🎮 Macro: '+type,'ok');
 }
 
-// SET: UI 값을 saveData에 기록
+// SET: UI 값을 saveData에 기록 (FQ4WED1 32바이트 배열)
 function unitSet(){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
-  var base    = SAV_UNIT_START     + unitIdx * SAV_UNIT_SIZE;
-  var extBase = SAV_UNIT_EXT_START + unitIdx * SAV_UNIT_EXT_SIZE;
+  var base = fqBase(unitIdx);
 
   // 기본 필드 쓰기
   UNIT_FIELDS.forEach(function(f){
@@ -1152,24 +1123,9 @@ function unitSet(){
     savWrite(base+f.off, parseInt(el.textContent)||0, f.bits);
   });
 
-  // EL 체크박스 쓰기
-  var elVal = 0;
-  if(document.getElementById("el-f").checked) elVal |= 0x80;
-  if(document.getElementById("el-e").checked) elVal |= 0x40;
-  if(document.getElementById("el-a").checked) elVal |= 0x20;
-  if(document.getElementById("el-w").checked) elVal |= 0x10;
-  savWrite(base+0x1A, elVal, 8);
-
-  // 추가 테이블 쓰기 (AD MD 리더십)
-  if(extBase + SAV_UNIT_EXT_SIZE <= saveData.length){
-    UNIT_EXT_FIELDS.forEach(function(f){
-      var el = document.getElementById(f.id); if(!el) return;
-      saveData[extBase+f.off] = Math.max(f.min||0, Math.min(f.max||99, parseInt(el.textContent)||0));
-    });
-    // 아이템 드롭다운 쓰기 (+0x16)
-    var itemSel = document.getElementById('unit-item-sel');
-    if(itemSel) saveData[base+0x0F] = unitItemDispToSave(parseInt(itemSel.value)||255);
-  }
+  // 아이템 쓰기 (+0x0F)
+  var itemSel = document.getElementById('unit-item-sel');
+  if(itemSel) saveData[base+0x0F] = unitItemDispToSave(parseInt(itemSel.value)||255);
 
   toast('✅ SET 완료 — 💾 저장 버튼으로 파일에 반영하세요','ok');
 }
