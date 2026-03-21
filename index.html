@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v87</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v88</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -287,11 +287,6 @@
               <option value="3">FQ4GD.3</option>
             </select>
             <button class="btn btn-primary" style="padding:5px 10px;font-size:7px;" onclick="loadSaveFile()">📂 LOAD</button>
-          </div>
-          <!-- 직접 파일 업로드 -->
-          <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
-            <input type="file" id="save-file-input" accept=".0,.1,.2,.3" style="flex:1;font-size:8px;color:var(--muted);background:var(--bg);border:1px solid var(--border2);border-radius:3px;padding:3px;" />
-            <button class="btn btn-accent" style="padding:5px 8px;font-size:7px;" onclick="loadSaveFileFromDisk()">📁 파일로드</button>
           </div>
           <div id="save-file-info" style="font-size:8px;color:var(--muted);">게임에서 저장 후 💾 저장 버튼을 먼저 누르세요</div>
         </div>
@@ -876,17 +871,6 @@ function loadSaveFile(){
   });
 }
 
-function loadSaveFileFromDisk(){
-  var inp = document.getElementById('save-file-input');
-  if(!inp||!inp.files||!inp.files[0]){ toast('⚠ 파일을 선택하세요','err'); return; }
-  var file = inp.files[0];
-  saveName = file.name;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    _loadSaveData(new Uint8Array(e.target.result), file.name);
-  };
-  reader.readAsArrayBuffer(file);
-}
 
 function _loadSaveData(data, name){
   saveData = data;
