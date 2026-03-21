@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v110</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v112</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1054,13 +1054,13 @@ var MAGIC_CODES = {
 };
 
 // FQ4WED1 32바이트 유닛 레코드 — 확정 필드만 포함
-// +02=저항코드(불0x10/땅0x20/바람0x40/물0x80), +04=FT, +05=속도, +06=CLASS, +07=상태
+// +01=리더십(비0=투구표시조건), +02=저항코드, +04=FT, +05=속도, +06=CLASS, +07=상태
 // +0A=AA, +0B=AD(30-저장), +0C=MD(30-저장), +0E=전직코드, +0F=ITEM, +11=마법
 // +12=LV, +13=HR, +14~15=HP, +16=AT, +17=AR, +18=DF, +19=DR
-// +1C=이름인덱스, +1D=이름세트
 var UNIT_FIELDS = [
   {id:'sv_cl',  off:0x06, bits:8,  label:'CLASS',      min:0, max:255},
   {id:'sv_st',  off:0x07, bits:8,  label:'상태',       min:0, max:255},
+  {id:'sv_ls',  off:0x01, bits:8,  label:'리더십',     min:0, max:255},
   {id:'sv_al',  off:0x02, bits:8,  label:'저항코드',   min:0, max:255},
   {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',     min:0, max:99},
   {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:255},
@@ -1486,6 +1486,25 @@ function applyMacro(type){
   toast('🎮 Macro: '+type,'ok');
 }
 
+// 투구 ON/OFF — +0x01(리더십 비0) + +0x07(0x10=아군) ← 전직 분석으로 확정
+function applyHelmet(on){
+  if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
+  var base = fqBase(unitIdx);
+  if(on){
+    saveData[base+0x01] = 0x10;  // 리더십
+    saveData[base+0x07] = 0x10;  // 상태: 아군
+  } else {
+    saveData[base+0x01] = 0x00;  // 리더십 없음
+    saveData[base+0x07] = 0x00;  // 상태: 없음
+  }
+  // UI 갱신
+  var lsEl = document.getElementById('sv_ls');
+  if(lsEl) lsEl.value = on ? 16 : 0;
+  var stEl = document.getElementById('sv_st');
+  if(stEl) stEl.value = on ? 0x10 : 0x00;
+  toast(on ? '👑 투구 ON — 💾 저장하세요' : '✖ 투구 OFF — 💾 저장하세요', on ? 'ok' : 'nfo');
+}
+
 
 // SET: UI 값을 saveData에 기록 (FQ4WED1 32바이트 배열)
 function unitSet(){
@@ -1498,7 +1517,31 @@ function unitSet(){
     var val;
     if(f.id === 'sv_cl' || f.id === 'sv_st' || f.id === 'sv_mg'){
       val = parseInt(el.value)||0;
-    } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
+    } else if(f.id === 'sv_ls'){
+      val = Math.max(0, Math.min(16, parseInt(el.value)||0));
+    } else if(f.id === 'sv_ls'){
+      // 리더십: 숫자입력(0~16) + 투구ON 버튼 나란히
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:3px;align-items:center;';
+      var inp = document.createElement('input');
+      inp.type = 'number'; inp.id = 'sv_ls';
+      inp.min = 0; inp.max = 16;
+      inp.value = val;
+      inp.style.cssText = 'flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:4px 6px;font-family:var(--font-pixel);font-size:11px;border-radius:3px;outline:none;text-align:center;min-width:0;';
+      var btnOn = document.createElement('button');
+      btnOn.className = 'btn btn-accent';
+      btnOn.style.cssText = 'padding:4px 6px;font-size:7px;white-space:nowrap;';
+      btnOn.textContent = '👑ON';
+      btnOn.onclick = function(){ applyHelmet(true); };
+      var btnOff = document.createElement('button');
+      btnOff.className = 'btn btn-del';
+      btnOff.style.cssText = 'padding:4px 6px;font-size:7px;white-space:nowrap;';
+      btnOff.textContent = '✖OFF';
+      btnOff.onclick = function(){ applyHelmet(false); };
+      row.appendChild(inp);
+      row.appendChild(btnOn);
+      row.appendChild(btnOff);
+      div.appendChild(row);
       val = 30 - (parseInt(el.textContent)||0);
       val = Math.max(0, Math.min(30, val));
     } else if(f.id === 'sv_al'){
