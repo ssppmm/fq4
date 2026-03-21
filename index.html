@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v86</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v87</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -189,7 +189,7 @@
       <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
       <button class="btn btn-ul-s"  id="btn-ul-t">⬆ 불러오기</button>
       <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
-      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat,.0,.1,.2,.3" style="display:none" />
+      <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat,.0,.1,.2,.3" style="display:none" multiple />
     </div>
     <div class="pc-ctrl">
       <div class="ctrl-card">
@@ -648,38 +648,60 @@ function doSave(){
   });
 }
 function doDownload(){
-  if(!SAVE_FILE){ toast('⚠ 세이브 파일명 미확정','err'); return; }
-  var data = null;
-  if(fs0){ data=readSaveFile(); }
-  if(data && data.length>0){
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));
-    a.download=SAVE_FILE; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    toast('⬇ 다운로드 완료','ok'); return;
-  }
-  dbGet(SAVE_FILE, function(d){
-    if(!d||d.length===0){ toast('⚠ 먼저 💾 저장을 누르세요','err'); return; }
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([d],{type:'application/octet-stream'}));
-    a.download=SAVE_FILE; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    toast('⬇ 다운로드 완료','ok');
-  });
-}
-function doUpload(file){
-  if(!file) return;
-  var r=new FileReader();
-  r.onload=function(e){
-    var d=new Uint8Array(e.target.result);
-    // 파일명에서 세이브 파일 판별 (FQ4GD.0~3)
-    var fn = file.name.toUpperCase();
-    var isSave = SAVE_FILES.some(function(sf){ return sf.toUpperCase()===fn; });
-    var saveFn = isSave ? file.name.toUpperCase() : (SAVE_FILES[0]);
-    dbPut(saveFn, d, function(){
-      if(fs0){ try{ fs0.fs.writeFile('/'+saveFn, d); }catch(e){} }
-      toast('⬆ '+saveFn+' 불러오기 완료 — 게임 재시작 필요','ok');
+  // 4개 세이브 파일 순차 다운로드
+  var dlFiles = SAVE_FILES.slice(), cnt = 0;
+  function dlNext(){
+    if(!dlFiles.length){
+      if(cnt>0) toast('⬇ 세이브 '+cnt+'개 다운로드 완료!','ok');
+      else toast('⚠ 다운로드할 세이브 없음 — 먼저 💾 저장을 누르세요','err');
+      return;
+    }
+    var sf = dlFiles.shift();
+    // DOSBox fs에서 먼저 시도
+    var data = null;
+    if(fs0){
+      var pp=['/'+sf,'c:/'+sf,sf,'./'+sf];
+      for(var i=0;i<pp.length;i++){
+        try{ data=fs0.fs.readFile(pp[i]); if(data&&data.length>0) break; }catch(e){}
+      }
+    }
+    if(data && data.length>0){
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));
+      a.download=sf; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      cnt++; setTimeout(dlNext,400); return;
+    }
+    // IndexedDB에서 시도
+    dbGet(sf, function(d){
+      if(d && d.length>0){
+        var a=document.createElement('a');
+        a.href=URL.createObjectURL(new Blob([d],{type:'application/octet-stream'}));
+        a.download=sf; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        cnt++;
+      }
+      setTimeout(dlNext,400);
     });
-  };
-  r.readAsArrayBuffer(file);
+  }
+  dlNext();
+}
+function doUpload(files){
+  if(!files || !files.length) return;
+  var loaded = 0;
+  Array.from(files).forEach(function(file){
+    var r = new FileReader();
+    r.onload = function(e){
+      var d = new Uint8Array(e.target.result);
+      var fn = file.name.toUpperCase();
+      var isSave = SAVE_FILES.some(function(sf){ return sf.toUpperCase()===fn; });
+      var saveFn = isSave ? fn : SAVE_FILES[0];
+      dbPut(saveFn, d, function(){
+        if(fs0){ try{ fs0.fs.writeFile('/'+saveFn, d); }catch(e){} }
+        loaded++;
+        toast('⬆ '+saveFn+' 불러오기 완료 ('+loaded+'/'+files.length+')', 'ok');
+      });
+    };
+    r.readAsArrayBuffer(file);
+  });
 }
 
 // ─── 토스트 ────────────────────────────────────────────
@@ -1411,7 +1433,7 @@ document.getElementById('btn-save').addEventListener('click',doSave);
 document.getElementById('btn-del').addEventListener('click',doDelete);
 document.getElementById('btn-dl').addEventListener('click',doDownload);
 document.getElementById('btn-ul-t').addEventListener('click',function(){document.getElementById('btn-ul').click();});
-document.getElementById('btn-ul').addEventListener('change',function(e){doUpload(e.target.files[0]);});
+document.getElementById('btn-ul').addEventListener('change',function(e){doUpload(e.target.files);});
 document.getElementById('btn-full').addEventListener('click',function(){
   var w=document.querySelector('.player-wrapper');
   if(document.fullscreenElement)document.exitFullscreen();
