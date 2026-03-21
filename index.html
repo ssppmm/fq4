@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v71</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v74</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -779,12 +779,12 @@ var SAV_UNIT_EXT_SIZE  = 32;     // ✓ 확정
 // 기본 유닛 필드 ✓ 전체 교차검증 완료
 // 아레스(idx=139): LV=1,HP=2,HR=3,리더십=4,피로도=5,AT=6,AR=7,DF=8,DR=9,AD=10,AA=11,MD=12
 var UNIT_FIELDS = [
-  {id:'sv_ls', off:0x01, bits:8,  label:'리더십', min:0,  max:99},
+  {id:'sv_ls', off:0x01, bits:8,  label:'리더십', min:0,  max:16},
   {id:'sv_ft', off:0x04, bits:8,  label:'피로도', min:0,  max:99},
   {id:'sv_aa', off:0x0A, bits:8,  label:'AA',     min:0,  max:99},
   {id:'sv_lv', off:0x12, bits:8,  label:'LV',     min:1,  max:99},
-  {id:'sv_hr', off:0x13, bits:8,  label:'HR',     min:0,  max:99},
-  {id:'sv_hp', off:0x14, bits:16, label:'HP',     min:0,  max:65535},
+  {id:'sv_hr', off:0x13, bits:8,  label:'HR',     min:0,  max:16},
+  {id:'sv_hp', off:0x14, bits:16, label:'HP',     min:0,  max:999},
   {id:'sv_at', off:0x16, bits:8,  label:'AT',     min:0,  max:99},
   {id:'sv_ar', off:0x17, bits:8,  label:'AR',     min:0,  max:99},
   {id:'sv_df', off:0x18, bits:8,  label:'DF',     min:0,  max:99},
@@ -794,18 +794,18 @@ var UNIT_FIELDS = [
 
 // 추가 테이블 필드 ✓ 확정
 var UNIT_EXT_FIELDS = [
-  {id:'sv_ad', off:0x00, bits:8, label:'AD', min:0, max:99},
-  {id:'sv_md', off:0x01, bits:8, label:'MD', min:0, max:99},
+  {id:'sv_ad', off:0x00, bits:8, label:'AD', min:0, max:30},
+  {id:'sv_md', off:0x01, bits:8, label:'MD', min:0, max:30},
   // +0x16: 아이템 코드 (별도 드롭다운)
 ];
 
 var MACROS = {
-  normal:  {sv_lv:1,  sv_hp:100,   sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0, sv_aa:1, sv_md:5,  sv_ls:10},
-  knight:  {sv_lv:10, sv_hp:500,   sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:30},
-  archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:5, sv_aa:2, sv_md:10, sv_ls:20},
-  wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5, sv_aa:1, sv_md:40, sv_ls:20},
-  master:  {sv_lv:20, sv_hp:999,   sv_hr:20, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:10,sv_aa:3, sv_md:30, sv_ls:60},
-  cheater: {sv_lv:99, sv_hp:65535, sv_hr:99, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:99,sv_aa:9, sv_md:99, sv_ls:99},
+  normal:  {sv_lv:1,  sv_hp:100,   sv_hr:5,  sv_ft:3, sv_at:10, sv_ar:1, sv_df:10, sv_dr:1, sv_ad:0,  sv_aa:1, sv_md:5,  sv_ls:5},
+  knight:  {sv_lv:10, sv_hp:500,   sv_hr:10, sv_ft:4, sv_at:40, sv_ar:1, sv_df:40, sv_dr:1, sv_ad:10, sv_aa:2, sv_md:10, sv_ls:10},
+  archer:  {sv_lv:10, sv_hp:300,   sv_hr:8,  sv_ft:5, sv_at:30, sv_ar:3, sv_df:20, sv_dr:2, sv_ad:10, sv_aa:2, sv_md:10, sv_ls:8},
+  wizard:  {sv_lv:10, sv_hp:200,   sv_hr:5,  sv_ft:3, sv_at:20, sv_ar:4, sv_df:15, sv_dr:3, sv_ad:5,  sv_aa:1, sv_md:30, sv_ls:6},
+  master:  {sv_lv:20, sv_hp:900,   sv_hr:16, sv_ft:6, sv_at:60, sv_ar:3, sv_df:60, sv_dr:3, sv_ad:20, sv_aa:3, sv_md:30, sv_ls:16},
+  cheater: {sv_lv:99, sv_hp:999,   sv_hr:16, sv_ft:9, sv_at:99, sv_ar:9, sv_df:99, sv_dr:9, sv_ad:30, sv_aa:9, sv_md:30, sv_ls:16},
 };
 
 var saveData = null;   // 현재 로드된 세이브 파일 (Uint8Array)
@@ -922,7 +922,11 @@ function unitSearch(keyword){
     var ni   = (extBase + 3 < saveData.length) ? saveData[extBase + 0x02] : 0;
     var name = (ni > 0 && UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni])
                ? UNIT_CHAR_NAMES[ni] : ('슬롯' + (slot+1));
-    var label = (slot+1) + ': ' + name + ' (LV.' + lv + ')';
+    var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
+    var hr = saveData[base+0x13];
+    var at = saveData[base+0x16];
+    var invalid = (hp > 999 || hr > 16 || at > 99 || lv > 99);
+    var label = (slot+1) + ': ' + name + ' (LV.' + lv + ')' + (invalid ? ' ⚠' : '');
 
     // 키워드 필터
     if(keyword && label.indexOf(keyword) < 0) continue;
@@ -969,10 +973,17 @@ function unitBuildSelect(){
     var name = (ni > 0 && UNIT_CHAR_NAMES && UNIT_CHAR_NAMES[ni])
                ? UNIT_CHAR_NAMES[ni]
                : ('슬롯' + (slot+1));
+
+    // 범위 초과 = 잘못된 데이터 가능성 표시
+    var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
+    var hr = saveData[base+0x13];
+    var at = saveData[base+0x16];
+    var invalid = (hp > 999 || hr > 16 || at > 99 || lv > 99);
+
     var opt  = document.createElement('option');
     opt.value = slot;
     opt.dataset.nameidx = ni;
-    opt.textContent = (slot+1) + ': ' + name + ' (LV.' + lv + ')';
+    opt.textContent = (slot+1) + ': ' + name + ' (LV.' + lv + ')' + (invalid ? ' ⚠' : '');
     sel.appendChild(opt);
   }
 }
