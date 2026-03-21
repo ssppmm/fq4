@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v65</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v66_orig</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -582,26 +582,6 @@ function initDos(){
   Dos(document.getElementById('canvas'),{wdosboxUrl:'https://js-dos.com/6.22/current/wdosbox.js'}).ready(function(fs,main){
     fs0=fs;
 
-    // dosbox.conf: FQ4 전용 고정 cycles (사운드 OFF 테스트)
-    var conf = [
-      '[cpu]',
-      'cycles=fixed 50000',
-      'cycleup=1000',
-      'cycledown=500',
-      '[render]',
-      'frameskip=0',
-      '[mixer]',
-      'nosound=true',
-      '[sblaster]',
-      'sbtype=none',
-      '[gus]',
-      'gus=false',
-      '[speaker]',
-      'pcspeaker=false',
-      '[midi]',
-      'mpu401=none',
-    ].join('\n');
-    try { fs.createFile('dosbox.conf', conf); } catch(e) {}
 
     Promise.all(FILES.concat(SAVE_FILES).map(function(f){ return new Promise(function(res){ dbGet(f,function(d){ if(d){ try{fs.createFile(f,d);}catch(e){} } res(); }); }); }))
     .then(function(){
