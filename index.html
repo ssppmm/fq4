@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v104</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v105</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -357,12 +357,12 @@
 
           <!-- 투구 ON/OFF -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ 투구(대장) — +0x07/08/0F 동시 변경</div>
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ 투구(대장) — +0x07/08/1B 동시 변경</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
               <button class="btn btn-accent" style="padding:7px;font-size:8px;" onclick="applyHelmet(true)">👑 투구 ON</button>
               <button class="btn btn-del"   style="padding:7px;font-size:8px;" onclick="applyHelmet(false)">✖ 투구 OFF</button>
             </div>
-            <div style="font-size:7px;color:var(--muted);margin-top:4px;">ON: [07]=10 [08]=00 [0F]=10 / OFF: [07]=00 [08]=09 [0F]=00</div>
+            <div style="font-size:7px;color:var(--muted);margin-top:4px;">ON: [08]=08 [09]=05 / OFF: [08]=09 [09]=00</div>
           </div>
 
           <!-- SET / RESET / SAVE -->
@@ -1075,7 +1075,7 @@ var MAGIC_CODES = {
 // +04=FT(피로도), +05=속도, +06=CLASS(케릭고유번호)
 // +07=상태코드(0x00=일반/0x10=대장/0x12=대장+전직가능/0x15=사망) ← 확정
 // +08=X(미확정), +09=X
-// 투구★ 최종조건: +0x07=0x10(or 0x12) AND +0x0F=0x10 동시충족 ← 9캐릭 전수검증 확정
+// 투구★ 최종확정: [07]=0x10(or 0x12) AND [08]=0x00 AND [1B]=0x00 — 11캐릭 전수검증
 // +0A=AA(투과율), +0B=AD(활방어,30-저장), +0C=MD(마법방어,30-저장)
 // +0D=전직코드1(불명), +0E=전직코드2(전직직업코드), +0F=ITEM, +10=X, +11=마법코드
 // +12=LV, +13=HR, +14,15=HP(리틀엔디안), +16=AT, +17=AR, +18=DF, +19=DR(D0→99)
@@ -1535,30 +1535,21 @@ function applyMacro(type){
   toast('🎮 Macro: '+type,'ok');
 }
 
-// 투구 ON/OFF — +0x07, +0x08, +0x0F 동시 변경
-// ON:  [07]=0x10(대장) [08]=0x00 [0F]=0x10
-// OFF: [07]=0x00(일반) [08]=0x09 [0F]=0x00
-// (OFF 시 [08]=0x09는 크리인 등 일반병사 기준값)
+// 투구 ON/OFF — +0x08=0x08, +0x09=0x05 쌍이 투구 조건 (커뮤니티 원본 데이터 확정)
 function applyHelmet(on){
   if(!saveData){ toast('⚠ 세이브 파일을 먼저 LOAD하세요','err'); return; }
   var base = fqBase(unitIdx);
   if(on){
-    saveData[base+0x07] = 0x10;
-    saveData[base+0x08] = 0x00;
-    saveData[base+0x0F] = 0x10;
+    saveData[base+0x08] = 0x08;
+    saveData[base+0x09] = 0x05;
   } else {
-    saveData[base+0x07] = 0x00;
     saveData[base+0x08] = 0x09;
-    saveData[base+0x0F] = 0x00;
+    saveData[base+0x09] = 0x00;
   }
-  // UI 갱신 (상태 드롭다운, 투구필드, 아이템 드롭다운)
-  var stEl = document.getElementById('sv_st');
-  if(stEl) stEl.value = on ? 0x10 : 0x00;
+  // UI 갱신
   var hmEl = document.getElementById('sv_hm');
-  if(hmEl) hmEl.textContent = on ? 0 : 9;
-  var itemSel = document.getElementById('unit-item-sel');
-  if(itemSel) itemSel.value = on ? unitItemSaveToDisp(0x10) : 255;
-  toast(on ? '👑 투구 ON — 💾 저장 버튼으로 반영하세요' : '✖ 투구 OFF — 💾 저장 버튼으로 반영하세요', on ? 'ok' : 'nfo');
+  if(hmEl) hmEl.textContent = on ? 8 : 9;
+  toast(on ? '👑 투구 ON ([08]=08 [09]=05) — 💾 저장하세요' : '✖ 투구 OFF ([08]=09 [09]=00) — 💾 저장하세요', on ? 'ok' : 'nfo');
 }
 
 // SET: UI 값을 saveData에 기록 (FQ4WED1 32바이트 배열)
