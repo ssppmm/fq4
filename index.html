@@ -131,7 +131,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v113</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v114</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -319,7 +319,7 @@
 
           <!-- EL 취약 (Ability 바로 아래) -->
           <div style="background:var(--surface2);border-radius:3px;padding:6px;margin-bottom:8px;">
-            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL (Element 취약)</div>
+            <div style="font-size:7px;color:var(--accent);font-family:var(--font-pixel);margin-bottom:5px;">▶ EL+</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-w"> W(Water)</label>
               <label style="display:flex;align-items:center;gap:4px;font-size:9px;cursor:pointer;"><input type="checkbox" id="el-a"> A(Air)</label>
@@ -1054,28 +1054,25 @@ var MAGIC_CODES = {
 };
 
 // FQ4WED1 32바이트 유닛 레코드 — 확정 필드만 포함
-// +01=리더십(비0=투구표시조건), +02=저항코드, +04=FT, +05=속도, +06=CLASS, +07=상태
-// +0A=AA, +0B=AD(30-저장), +0C=MD(30-저장), +0E=전직코드, +0F=ITEM, +11=마법
-// +12=LV, +13=HR, +14~15=HP, +16=AT, +17=AR, +18=DF, +19=DR
+// CLASS/전직코드/LV/HP/HR/AT/AR/DF/DR/AD/AA/MD/FT/저항코드 순
 var UNIT_FIELDS = [
   {id:'sv_cl',  off:0x06, bits:8,  label:'CLASS',      min:0, max:255},
-  {id:'sv_st',  off:0x07, bits:8,  label:'상태',       min:0, max:255},
-  {id:'sv_ls',  off:0x01, bits:8,  label:'리더십',     min:0, max:255},
-  {id:'sv_al',  off:0x02, bits:8,  label:'저항코드',   min:0, max:255},
-  {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',     min:0, max:99},
-  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:255},
-  {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(투과)',   min:0, max:30},
-  {id:'sv_ad',  off:0x0B, bits:8,  label:'AD(활방어)', min:0, max:30},
-  {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)', min:0, max:30},
   {id:'sv_jc2', off:0x0E, bits:8,  label:'전직코드',   min:0, max:255},
-  {id:'sv_mg',  off:0x11, bits:8,  label:'마법',       min:0, max:255},
+  {id:'sv_st',  off:0x07, bits:8,  label:'상태',       min:0, max:255},
+  {id:'sv_ls',  off:0x01, bits:8,  label:'리더십',     min:0, max:16},
   {id:'sv_lv',  off:0x12, bits:8,  label:'LV',         min:1, max:99},
-  {id:'sv_hr',  off:0x13, bits:8,  label:'HR',         min:0, max:16},
   {id:'sv_hp',  off:0x14, bits:16, label:'HP',         min:0, max:999},
+  {id:'sv_hr',  off:0x13, bits:8,  label:'HR',         min:0, max:16},
   {id:'sv_at',  off:0x16, bits:8,  label:'AT',         min:0, max:99},
   {id:'sv_ar',  off:0x17, bits:8,  label:'AR',         min:0, max:99},
   {id:'sv_df',  off:0x18, bits:8,  label:'DF',         min:0, max:99},
   {id:'sv_dr',  off:0x19, bits:8,  label:'DR',         min:0, max:99},
+  {id:'sv_ad',  off:0x0B, bits:8,  label:'AD(활방어)', min:0, max:30},
+  {id:'sv_aa',  off:0x0A, bits:8,  label:'AA(투과)',   min:0, max:30},
+  {id:'sv_md',  off:0x0C, bits:8,  label:'MD(마법방)', min:0, max:30},
+  {id:'sv_ft',  off:0x04, bits:8,  label:'피로도',     min:0, max:99},
+  {id:'sv_sp',  off:0x05, bits:8,  label:'속도',       min:0, max:255},
+  {id:'sv_al',  off:0x02, bits:8,  label:'저항코드',   min:0, max:255},
 ];
 
 // AD/MD: 저장값 = 30 - FQ4WED1표시값 (0=최대30, 30=최소0)
@@ -1302,6 +1299,24 @@ function unitRender(){
         if(sn) sn.textContent = CLASS_CODES[code]||('코드'+code);
       });
       div.appendChild(sel2);
+    } else if(f.id === 'sv_jc2'){
+      // 전직코드: CLASS 드롭다운 동일 사용
+      var sel2 = document.createElement('select');
+      sel2.id = 'sv_jc2';
+      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--yellow);color:var(--yellow);font-size:8px;padding:2px;border-radius:3px;';
+      Object.keys(CLASS_CODES).sort(function(a,b){return a-b;}).forEach(function(c){
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = parseInt(c)+' '+CLASS_CODES[c];
+        if(parseInt(c)===val) opt.selected = true;
+        sel2.appendChild(opt);
+      });
+      if(!CLASS_CODES[val]){
+        var opt = document.createElement('option');
+        opt.value = val; opt.selected = true;
+        opt.textContent = val+' (코드'+val+')';
+        sel2.appendChild(opt);
+      }
+      div.appendChild(sel2);
     } else if(f.id === 'sv_st'){
       var sel2 = document.createElement('select');
       sel2.id = 'sv_st';
@@ -1320,7 +1335,28 @@ function unitRender(){
         sel2.appendChild(opt);
       }
       div.appendChild(sel2);
+    } else if(f.id === 'sv_ls'){
+      // 리더십: 숫자입력(0~16) + 투구ON/OFF 버튼
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:3px;align-items:center;';
+      var inp = document.createElement('input');
+      inp.type = 'number'; inp.id = 'sv_ls';
+      inp.min = 0; inp.max = 16; inp.value = val;
+      inp.style.cssText = 'flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--yellow);padding:4px 6px;font-size:11px;border-radius:3px;outline:none;text-align:center;min-width:0;';
+      var btnOn = document.createElement('button');
+      btnOn.className = 'btn btn-accent';
+      btnOn.style.cssText = 'padding:4px 6px;font-size:7px;white-space:nowrap;';
+      btnOn.textContent = '👑ON';
+      btnOn.onclick = function(){ applyHelmet(true); };
+      var btnOff = document.createElement('button');
+      btnOff.className = 'btn btn-del';
+      btnOff.style.cssText = 'padding:4px 6px;font-size:7px;white-space:nowrap;';
+      btnOff.textContent = '✖OFF';
+      btnOff.onclick = function(){ applyHelmet(false); };
+      row.appendChild(inp); row.appendChild(btnOn); row.appendChild(btnOff);
+      div.appendChild(row);
     } else if(f.id === 'sv_al'){
+      // 저항코드: 체크박스
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
       [['al_f','F(불)',0x10],['al_e','E(땅)',0x20],['al_a','A(바람)',0x40],['al_w','W(물)',0x80]].forEach(function(x){
@@ -1332,44 +1368,17 @@ function unitRender(){
         wrap.appendChild(lbl2);
       });
       div.appendChild(wrap);
-    } else if(f.id === 'sv_mg'){
-      var sel2 = document.createElement('select');
-      sel2.id = 'sv_mg';
-      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:8px;padding:2px;border-radius:3px;';
-      Object.keys(MAGIC_CODES).sort(function(a,b){return a-b;}).forEach(function(c){
-        var opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = parseInt(c).toString(16).toUpperCase().padStart(2,'0')+' '+MAGIC_CODES[c];
-        if(parseInt(c)===val) opt.selected = true;
-        sel2.appendChild(opt);
-      });
-      if(!MAGIC_CODES[val] && val!==0){
-        var opt = document.createElement('option');
-        opt.value = val; opt.selected = true;
-        opt.textContent = val.toString(16).toUpperCase().padStart(2,'0')+' (알수없음)';
-        sel2.appendChild(opt);
-      }
-      div.appendChild(sel2);
-    } else if(f.id === 'sv_jc2'){
-      // 전직코드: CLASS 드롭다운 동일 사용 — 전직 전 원하는 CLASS 코드 입력
-      var sel2 = document.createElement('select');
-      sel2.id = 'sv_jc2';
-      sel2.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--yellow);color:var(--yellow);font-size:8px;padding:2px;border-radius:3px;';
-      Object.keys(CLASS_CODES).sort(function(a,b){return a-b;}).forEach(function(c){
-        var opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = parseInt(c)+' '+CLASS_CODES[c];
-        if(parseInt(c)===val) opt.selected = true;
-        sel2.appendChild(opt);
-      });
-      if(!CLASS_CODES[val]){
-        var opt = document.createElement('option');
-        opt.value = val; opt.selected = true;
-        opt.textContent = val+' (코드'+val+')';
-        sel2.appendChild(opt);
-      }
-      div.appendChild(sel2);
     } else if(f.id === 'sv_ad' || f.id === 'sv_md'){
+      // AD/MD: 표시값 = 30 - 저장값
+      var vdiv = document.createElement('div');
+      vdiv.id = f.id; vdiv.className = 'stat-disp';
+      vdiv.style.borderColor = 'var(--blue)';
+      vdiv.dataset.off = f.off; vdiv.dataset.bits = f.bits;
+      vdiv.dataset.min = 0; vdiv.dataset.max = 30;
+      vdiv.textContent = 30 - val;
+      vdiv.onclick = function(){ statEditAdMd(this); };
+      div.appendChild(vdiv);
+    } else {
       var vdiv = document.createElement('div');
       vdiv.id = f.id; vdiv.className = 'stat-disp';
       vdiv.dataset.off = f.off; vdiv.dataset.bits = f.bits;
@@ -1503,7 +1512,7 @@ function unitSet(){
   UNIT_FIELDS.forEach(function(f){
     var el = document.getElementById(f.id); if(!el) return;
     var val;
-    if(f.id === 'sv_cl' || f.id === 'sv_st' || f.id === 'sv_mg'){
+    if(f.id === 'sv_cl' || f.id === 'sv_st'){
       val = parseInt(el.value)||0;
     } else if(f.id === 'sv_ls'){
       val = Math.max(0, Math.min(16, parseInt(el.value)||0));
