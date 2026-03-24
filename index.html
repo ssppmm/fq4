@@ -19,17 +19,43 @@
     }
     html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
     header { padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
-    .header-links { margin-left: auto; }
     .logo { font-family: var(--font-pixel); font-size: 10px; color: var(--accent); }
     .game-status { font-family: var(--font-pixel); font-size: 7px; padding: 4px 8px; border-radius: 2px; }
     .status-off  { background: var(--red);   color: #fff; }
     .status-load { background: var(--blue);  color: #000; }
     .status-on   { background: var(--green); color: #000; }
-    main { max-width: 1300px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+
+    /* ══ 메인 레이아웃: FD2와 동일한 좌우 분할 ══ */
+    main { max-width: 1300px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
     @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+
+    /* ══ 기본 플레이어 ══ */
     .player-wrapper { position: relative; background: #000; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-    .player-wrapper:fullscreen,.player-wrapper:-webkit-full-screen,.player-wrapper:-moz-full-screen { overflow: visible; border-radius: 0; border: none; }
-    #canvas { width: 100%; aspect-ratio: 4/3; max-height: 52vh; display: block; }
+    #canvas { width: 100%; height: auto; max-height: calc(100vh - 140px); display: block; }
+
+    /* ══ 툴바: 항상 표시 ══ */
+    .game-toolbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 0; align-items: center; }
+
+    /* ══ 버튼 ══ */
+    .btn { font-family: var(--font-pixel); font-size: 7px; padding: 7px 10px; border: 1px solid; border-radius: 3px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-start   { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-start:hover { background: transparent; color: var(--accent); }
+    .btn-save    { background: transparent; border-color: var(--blue);  color: var(--blue); }
+    .btn-save:hover  { background: var(--blue);  color: #000; }
+    .btn-dl      { background: transparent; border-color: var(--blue);  color: var(--blue); }
+    .btn-dl:hover    { background: var(--blue);  color: #000; }
+    .btn-ul-s    { background: transparent; border-color: var(--green); color: var(--green); }
+    .btn-ul-s:hover  { background: var(--green); color: #000; }
+    .btn-ghost   { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-del     { background: transparent; border-color: var(--red); color: var(--red); }
+    .btn-del:hover { background: var(--red); color: #fff; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .8; }
+    .btn-accent  { background: var(--green); border-color: var(--green); color: #000; }
+    .btn-accent:hover { opacity: .8; }
+
+    /* ══ 스플래시 / 로딩 ══ */
     #splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 10; transition: opacity .4s; }
     #splash.hidden { opacity: 0; pointer-events: none; }
     .splash-icon { font-size: 64px; margin-bottom: 12px; }
@@ -45,59 +71,89 @@
     .prog-outer { width: 260px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
     .prog-inner { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
     .prog-label { font-size: 10px; color: var(--muted); margin-top: 8px; }
-    .game-toolbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 0; align-items: center; }
-    .btn { font-family: var(--font-pixel); font-size: 7px; padding: 7px 10px; border: 1px solid; border-radius: 3px; cursor: pointer; transition: all .15s; white-space: nowrap; }
-    .btn-start   { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn-start:hover { background: transparent; color: var(--accent); }
-    .btn-save    { background: transparent; border-color: var(--blue);  color: var(--blue); }
-    .btn-save:hover  { background: var(--blue);  color: #000; }
-    .btn-dl      { background: transparent; border-color: var(--blue);  color: var(--blue); }
-    .btn-dl:hover    { background: var(--blue);  color: #000; }
-    .btn-ul-s    { background: transparent; border-color: var(--green); color: var(--green); }
-    .btn-ul-s:hover  { background: var(--green); color: #000; }
-    .btn-ghost   { background: transparent; border-color: var(--border); color: var(--muted); }
-    .btn-del     { background: transparent; border-color: var(--red); color: var(--red); }
-    .btn-del:hover { background: var(--red); color: #fff; }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn-primary:hover { opacity: .8; }
-    .btn-accent  { background: var(--green); border-color: var(--green); color: #000; }
-    .btn-accent:hover { opacity: .8; }
-    .touch-controls { display: none; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; }
-    @media (pointer: coarse) { .touch-controls { display: flex; } .pc-ctrl { display: none !important; } }
-    .player-wrapper:fullscreen .touch-controls,
-    .player-wrapper:-webkit-full-screen .touch-controls,
-    .player-wrapper:-moz-full-screen .touch-controls {
-      display: flex !important; position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 10px 16px; background: rgba(0,0,0,0.65);
-      border: none; border-radius: 0; margin: 0; z-index: 9999; justify-content: center;
+
+    /* ══ 터치컨트롤 기본: 숨김 ══ */
+    .touch-controls { display: none; }
+
+    /* ══ 모바일 일반화면 ══ */
+    @media (pointer: coarse) {
+      .player-wrapper { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0 !important; height: auto !important; }
+      #canvas { position: static !important; width: 100% !important; height: auto !important; max-height: none !important; display: block; }
+      .touch-controls {
+        display: flex !important; position: static !important;
+        width: 100%; height: 160px;
+        justify-content: space-around; align-items: center;
+        padding: 8px 12px; background: #0a0a0f;
+        pointer-events: all; box-sizing: border-box;
+      }
     }
-    /* 조이스틱 */
-    .joystick-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+
+    /* ══ 전체화면 공통 ══ */
+    body.is-fullscreen .player-wrapper {
+      position: fixed !important; inset: 0 !important; z-index: 99999 !important;
+      width: 100vw !important; height: 100vh !important;
+      border: none !important; border-radius: 0 !important;
+      background: #000 !important; overflow: hidden !important;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      padding-bottom: 0 !important;
+    }
+    body.is-fullscreen #canvas {
+      position: static !important; transform: none !important;
+      width: auto !important; height: 100vh !important;
+      max-height: 100vh !important; max-width: 100vw !important; display: block !important;
+    }
+    body.is-fullscreen .touch-controls { display: none !important; }
+
+    /* ══ 모바일 세로 전체화면 ══ */
+    @media (pointer: coarse) and (orientation: portrait) {
+      body.is-fullscreen .player-wrapper { flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; }
+      body.is-fullscreen #canvas { width: 100% !important; height: auto !important; max-height: calc(100vh - 200px) !important; position: static !important; }
+      body.is-fullscreen .touch-controls {
+        display: flex !important; position: static !important;
+        width: 100% !important; height: 200px !important;
+        justify-content: space-around !important; align-items: center !important;
+        padding: 8px 16px !important; background: #0a0a0f !important; pointer-events: all !important;
+      }
+    }
+
+    /* ══ 모바일 가로 전체화면 ══ */
+    @media (pointer: coarse) and (orientation: landscape) {
+      body.is-fullscreen .player-wrapper { flex-direction: row !important; align-items: stretch !important; justify-content: flex-start !important; }
+      body.is-fullscreen #canvas { flex: 1 1 auto !important; width: auto !important; height: 100vh !important; max-height: 100vh !important; max-width: calc(100vw - 220px) !important; position: static !important; }
+      body.is-fullscreen .touch-controls {
+        display: flex !important; position: static !important;
+        flex: 0 0 220px !important; width: 220px !important; height: 100vh !important;
+        flex-direction: column !important; justify-content: space-around !important; align-items: center !important;
+        padding: 12px 8px !important; background: #0a0a0f !important; pointer-events: all !important;
+      }
+    }
+
+    /* ══ 조이스틱 ══ */
+    .joystick-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
     .joystick-base { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #1e1e3a 60%, #12122a); border: 2px solid var(--border2); }
     .joystick-base::after { content:''; position:absolute; inset:30%; border-radius:50%; border:1px dashed rgba(160,68,255,0.3); }
-    .joystick-stick { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 38% 35%, #b060ff, #6020cc); border: 2px solid rgba(200,140,255,0.6); box-shadow: 0 2px 10px rgba(160,68,255,0.5); top: 50%; left: 50%; transform: translate(-50%,-50%); transition: box-shadow .1s; touch-action: none; cursor: grab; }
+    .joystick-stick { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 38% 35%, #b060ff, #6020cc); border: 2px solid rgba(200,140,255,0.6); box-shadow: 0 2px 10px rgba(160,68,255,0.5); top: 50%; left: 50%; transform: translate(-50%,-50%); transition: box-shadow .1s; touch-action: none; cursor: grab; }
     .joystick-stick.active { box-shadow: 0 0 18px rgba(160,68,255,0.9); cursor: grabbing; }
-    /* 마우스 버튼 */
-    .mouse-btn { font-family:var(--font-pixel); font-size:7px; padding:12px 16px; background:#1e1e2e; border:2px solid var(--border2); border-radius:10px; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:64px; }
-    .mouse-btn .icon { font-size:22px; line-height:1; }
+
+    /* ══ 마우스 버튼 ══ */
+    .mouse-btn { font-family:var(--font-pixel); font-size:6px; padding:8px 10px; background:#1e1e2e; border:2px solid var(--border2); border-radius:10px; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:56px; }
+    .mouse-btn .icon { font-size:18px; line-height:1; }
     .mouse-btn.left-btn  { border-color:#4a9eff; color:#4a9eff; }
     .mouse-btn.right-btn { border-color:#c44aff; color:#c44aff; }
     .mouse-btn.left-btn:active,.mouse-btn.left-btn.pressed   { background:#4a9eff; color:#000; transform:scale(0.93); }
     .mouse-btn.right-btn:active,.mouse-btn.right-btn.pressed { background:#c44aff; color:#fff; transform:scale(0.93); }
-    /* 방향키 패드 */
-    .dpad { display:grid; grid-template-columns:repeat(3,46px); grid-template-rows:repeat(3,46px); gap:3px; }
-    .touch-btn { width:46px; height:46px; background:#1e1e2e; border:2px solid var(--border2); border-radius:8px; color:var(--text); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; }
-    .touch-btn:active,.touch-btn.pressed { background:var(--green); border-color:var(--green); color:#000; transform:scale(0.9); }
+
+    /* ══ 방향키 패드 ══ */
+    .dpad { display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); gap:3px; }
+    .touch-btn { width:44px; height:44px; background:rgba(30,30,46,0.8); border:2px solid var(--border2); border-radius:8px; color:var(--text); font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; transition:all .1s; touch-action:manipulation; }
+    .touch-btn:active,.touch-btn.pressed { background:var(--accent); border-color:var(--accent); color:#fff; transform:scale(0.9); }
     .dp-up{grid-column:2;grid-row:1} .dp-l{grid-column:1;grid-row:2}
     .dp-c{grid-column:2;grid-row:2} .dp-r{grid-column:3;grid-row:2} .dp-d{grid-column:2;grid-row:3}
-    .dp-enter { font-family:var(--font-pixel); font-size:6px; background:#1a1a2e; border-color:var(--green); color:var(--green); }
-    .pc-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .ctrl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px; }
-    .ctrl-card h3 { font-family: var(--font-pixel); font-size: 7px; color: var(--accent); margin-bottom: 10px; }
-    .k-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .key { font-family: var(--font-pixel); font-size: 7px; padding: 3px 6px; background: var(--bg); border: 1px solid var(--border2); border-radius: 2px; min-width: 32px; text-align: center; }
-    .k-desc { color: var(--muted); font-size: 11px; }
+    .dp-enter { font-family:var(--font-body); font-size:10px; font-weight:700; background:rgba(26,26,46,0.8); border-color:var(--green); color:var(--green); }
+    .esc-ctrl-btns { display:flex; flex-direction:column; gap:6px; justify-content:center; }
+    .esc-ctrl-btns .touch-btn { width:56px; height:40px; font-family:var(--font-body); font-size:11px; font-weight:700; }
+
+    /* ══ 에디터 ══ */
     .editor-col { display: flex; flex-direction: column; gap: 12px; }
     .tabs { display: flex; gap: 3px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px; }
     .tab { flex:1; font-family:var(--font-pixel); font-size:7px; padding:7px 4px; text-align:center; border:1px solid transparent; border-radius:2px; cursor:pointer; color:var(--muted); transition:all .2s; }
@@ -131,11 +187,12 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v124</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;vertical-align:middle;">v27</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
 <main>
+  <!-- 게임 화면 -->
   <div>
     <div class="player-wrapper">
       <div id="splash">
@@ -151,27 +208,25 @@
         <div class="prog-label" id="prog-label">0 / 0</div>
       </div>
       <canvas id="canvas" tabindex="0"></canvas>
+
+      <!-- 터치 컨트롤 — player-wrapper 안에 있어야 전체화면에서도 보임 -->
       <div class="touch-controls">
-        <!-- 조이스틱 (마우스 이동) -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <div style="font-size:7px;color:var(--muted);font-family:var(--font-pixel);">마우스</div>
+        <!-- 조이스틱 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div style="font-size:6px;color:var(--muted);font-family:var(--font-pixel);">마우스</div>
           <div class="joystick-wrap" id="joystick-wrap">
             <div class="joystick-base"></div>
             <div class="joystick-stick" id="joystick-stick"></div>
           </div>
         </div>
         <!-- 마우스 클릭 버튼 -->
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <button class="mouse-btn left-btn" id="mbtn-left">
-            <span class="icon">🖱️</span>좌클릭
-          </button>
-          <button class="mouse-btn right-btn" id="mbtn-right">
-            <span class="icon">🖱️</span>우클릭
-          </button>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="mouse-btn left-btn" id="mbtn-left"><span class="icon">🖱️</span>좌클릭</button>
+          <button class="mouse-btn right-btn" id="mbtn-right"><span class="icon">🖱️</span>우클릭</button>
         </div>
-        <!-- 방향키 + 엔터 -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <div style="font-size:7px;color:var(--muted);font-family:var(--font-pixel);">키보드</div>
+        <!-- 방향키 + OK -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div style="font-size:6px;color:var(--muted);font-family:var(--font-pixel);">키보드</div>
           <div class="dpad">
             <button class="touch-btn dp-up"  data-key="ArrowUp">↑</button>
             <button class="touch-btn dp-l"   data-key="ArrowLeft">←</button>
@@ -180,33 +235,23 @@
             <button class="touch-btn dp-d"   data-key="ArrowDown">↓</button>
           </div>
         </div>
-        <!-- ESC + Ctrl -->
-        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
-          <button class="touch-btn" id="btn-esc" style="width:64px;height:46px;font-family:var(--font-pixel);font-size:7px;">ESC</button>
-          <button class="touch-btn" id="btn-ctrl" style="width:64px;height:46px;font-family:var(--font-pixel);font-size:7px;">CTRL</button>
+        <!-- ESC + CTRL -->
+        <div class="esc-ctrl-btns">
+          <button class="touch-btn" id="btn-esc">ESC</button>
+          <button class="touch-btn" id="btn-ctrl">CTRL</button>
         </div>
+      </div>
     </div>
+
+    <!-- 툴바: 항상 표시 -->
     <div class="game-toolbar">
       <button class="btn btn-start" id="btn-start">▶ 시작</button>
       <button class="btn btn-save"  id="btn-save">💾 저장</button>
-      <button class="btn btn-ghost" id="btn-del" style="color:var(--red);border-color:var(--red);">🗑 삭제</button>
+      <button class="btn btn-del"   id="btn-del">🗑 삭제</button>
       <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
       <button class="btn btn-ul-s"  id="btn-ul-t">⬆ 불러오기</button>
       <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
       <input type="file" id="btn-ul" accept=".SAV,.sav,.DAT,.dat,.0,.1,.2,.3" style="display:none" multiple />
-    </div>
-    <div class="pc-ctrl">
-      <div class="ctrl-card">
-        <h3>🖱 마우스 조작</h3>
-        <div class="k-row"><span class="key">좌클릭</span><span class="k-desc">선택 / 확인</span></div>
-        <div class="k-row"><span class="key">우클릭</span><span class="k-desc">취소 / 메뉴</span></div>
-        <div class="k-row"><span class="key">드래그</span><span class="k-desc">이동</span></div>
-      </div>
-      <div class="ctrl-card">
-        <h3>🖥 DOSBox</h3>
-        <div class="k-row"><span class="key">Ctrl+F10</span><span class="k-desc">마우스 해제</span></div>
-        <div class="k-row"><span class="key">Alt+Enter</span><span class="k-desc">전체화면</span></div>
-      </div>
     </div>
   </div>
 
@@ -1858,11 +1903,27 @@ document.getElementById('btn-del').addEventListener('click',doDelete);
 document.getElementById('btn-dl').addEventListener('click',doDownload);
 document.getElementById('btn-ul-t').addEventListener('click',function(){document.getElementById('btn-ul').click();});
 document.getElementById('btn-ul').addEventListener('change',function(e){doUpload(e.target.files);});
-document.getElementById('btn-full').addEventListener('click',function(){
-  var w=document.querySelector('.player-wrapper');
-  if(document.fullscreenElement)document.exitFullscreen();
-  else w.requestFullscreen&&w.requestFullscreen();
-});
+
+// ── 전체화면 (FD2 방식) ──
+function isFullscreenActive(){ return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement); }
+function fullscreen(){
+  var el = document.documentElement;
+  if(!isFullscreenActive()){
+    var req = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+    if(req) req.call(el);
+  } else {
+    var ex = document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+    if(ex) ex.call(document);
+  }
+}
+function onFsChange(){
+  if(isFullscreenActive()) document.body.classList.add('is-fullscreen');
+  else document.body.classList.remove('is-fullscreen');
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+document.addEventListener('mozfullscreenchange', onFsChange);
+document.getElementById('btn-full').addEventListener('click', fullscreen);
 // ─── 조이스틱 + 마우스 컨트롤 ────────────────────────
 (function(){
   var canvas  = document.getElementById('canvas');
