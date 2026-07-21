@@ -187,7 +187,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;font-weight:bold;vertical-align:middle;">v125</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;font-weight:bold;vertical-align:middle;">v126</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1208,7 +1208,7 @@ function _loadSaveData(data, name){
   saveName = name;
   var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
   if(sig !== SAV_SIG){ toast('⚠ FQ4 세이브 파일이 아닙니다 (sig:'+sig+')','err'); return; }
-  unitCount = Math.min(savRead(SAV_UNIT_CNT, 16), 318);  // FQ4WED1 최대 318번
+  unitCount = Math.min(savRead(SAV_UNIT_CNT, 16), UNIT_FQ_NAMES.length);  // 이름표 길이(354)에 자동 연동
   document.getElementById('unit-total').textContent = '/ '+unitCount;
   document.getElementById('save-file-info').textContent =
     name+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
@@ -1231,7 +1231,7 @@ function unitSearch(keyword){
   keyword = keyword.trim();
 
   sel.innerHTML = '';
-  var total = unitCount || 318;
+  var total = unitCount || UNIT_FQ_NAMES.length;
   var firstMatch = -1;
 
   for(var fqNo=1; fqNo<=total; fqNo++){
@@ -1279,7 +1279,7 @@ function unitBuildSelect(){
   var sel = document.getElementById('unit-sel');
   if(!sel) return;
   sel.innerHTML = '';
-  var total = unitCount || 318;
+  var total = unitCount || UNIT_FQ_NAMES.length;
 
   for(var fqNo=1; fqNo<=total; fqNo++){
     var base = fqBase(fqNo);
