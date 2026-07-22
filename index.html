@@ -187,7 +187,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;font-weight:bold;vertical-align:middle;">v126</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;font-weight:bold;vertical-align:middle;">v127</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -346,6 +346,18 @@
         <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px;">
           <input id="unit-search" type="text" placeholder="이름 검색..." oninput="unitSearch(this.value)" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:4px 8px;font-size:11px;border-radius:3px;outline:none;" />
           <button class="btn btn-ghost" style="padding:4px 8px;font-size:7px;" onclick="unitSearchClear()">✕</button>
+        </div>
+        <!-- 아이템 소지 필터 -->
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px;">
+          <select id="unit-item-filter" onchange="unitItemFilter()" style="flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--green);padding:4px 6px;font-size:9px;border-radius:3px;">
+            <option value="">🔎 아이템 소지 필터 (전체)</option>
+          </select>
+          <span id="unit-item-filter-cnt" style="font-size:8px;color:var(--muted);white-space:nowrap;min-width:34px;text-align:right;"></span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px;">
+          <button class="btn btn-ghost" style="padding:4px 6px;font-size:8px;" onclick="unitItemQuick(15)">⚔ 엑스칼리버</button>
+          <button class="btn btn-ghost" style="padding:4px 6px;font-size:8px;" onclick="unitItemQuick(27)">🏹 극도의활</button>
+          <button class="btn btn-ghost" style="padding:4px 6px;font-size:8px;" onclick="unitItemFilterClear()">전체</button>
         </div>
         <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px;">
           <button class="btn btn-ghost" style="padding:5px 8px;font-size:10px;" onclick="unitPrev()">◀</button>
@@ -1214,6 +1226,7 @@ function _loadSaveData(data, name){
     name+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
   document.getElementById('stat-badge').textContent = name+' 로드됨';
   document.getElementById('stat-badge').className = 'badge b-green';
+  unitBuildItemFilter();
   unitBuildSelect();
   var sel = document.getElementById('unit-sel');
   if(sel && sel.options.length > 0){
@@ -1269,6 +1282,108 @@ function unitSearchClear(){
   var inp = document.getElementById('unit-search');
   if(inp) inp.value = '';
   unitSearch('');
+}
+
+// ── 아이템 소지 필터 ─────────────────────────────────
+// 유닛이 특정 아이템(엑스칼리버·극도의활 등)을 들고 있는지로 목록을 좁힌다.
+// 유닛의 장착 아이템 = saveData[base+0x0F], 표시idx로 변환은 unitItemSaveToDisp().
+
+// 필터 드롭다운을 UNIT_ITEM_LIST로 채운다 (세이브 로드 시 1회)
+function unitBuildItemFilter(){
+  var f = document.getElementById('unit-item-filter');
+  if(!f) return;
+  var cur = f.value;
+  f.innerHTML = '<option value="">🔎 아이템 소지 필터 (전체)</option>';
+  UNIT_ITEM_LIST.forEach(function(item){
+    var opt = document.createElement('option');
+    opt.value = item.idx;
+    opt.textContent = item.name;
+    f.appendChild(opt);
+  });
+  f.value = cur; // 재로드 시 선택 유지
+}
+
+// 선택된 아이템을 든 유닛만 unit-sel에 채운다. dispIdx==='' 이면 전체.
+function unitApplyItemFilter(dispIdxStr){
+  var sel = document.getElementById('unit-sel');
+  var cntEl = document.getElementById('unit-item-filter-cnt');
+  if(!sel || !saveData) return;
+
+  // 이름 검색과 충돌 방지: 아이템 필터 사용 시 이름 검색은 비운다
+  var srch = document.getElementById('unit-search');
+  if(srch) srch.value = '';
+
+  if(dispIdxStr === '' || dispIdxStr === null){
+    unitBuildSelect();
+    if(cntEl) cntEl.textContent = '';
+    if(sel.options.length > 0){ sel.selectedIndex = 0; unitSelectChange(); }
+    return;
+  }
+
+  var wantDisp = parseInt(dispIdxStr, 10);
+  var total = unitCount || UNIT_FQ_NAMES.length;
+  sel.innerHTML = '';
+  var matched = 0, firstNo = -1;
+
+  for(var fqNo=1; fqNo<=total; fqNo++){
+    var base = fqBase(fqNo);
+    if(base + FQ_UNIT_SIZE > saveData.length) break;
+    var lv = saveData[base+0x12];
+    if(lv === 255) continue;
+    var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
+    var hr = saveData[base+0x13];
+    var at = saveData[base+0x16];
+    if(hp > 999 || hr > 16 || at > 99 || lv > 99) continue;
+    if(lv === 0 && hp === 0 && at === 0) continue; // 빈 슬롯 제외
+
+    // 이 유닛이 든 아이템(표시idx)
+    var heldDisp = unitItemSaveToDisp(saveData[base+0x0F]);
+    if(heldDisp !== wantDisp) continue;
+
+    var name = (UNIT_FQ_NAMES && UNIT_FQ_NAMES[fqNo-1]) ? UNIT_FQ_NAMES[fqNo-1] : ('번호'+fqNo);
+    var opt = document.createElement('option');
+    opt.value = fqNo;
+    opt.textContent = fqNo + ': ' + name + ' (LV.' + lv + ')';
+    sel.appendChild(opt);
+    matched++;
+    if(firstNo < 0) firstNo = fqNo;
+  }
+
+  var itemName = (UNIT_ITEM_LIST[wantDisp] && UNIT_ITEM_LIST[wantDisp].name) ? UNIT_ITEM_LIST[wantDisp].name : ('아이템#'+wantDisp);
+  if(cntEl) cntEl.textContent = matched + '명';
+
+  if(matched === 0){
+    var opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = '— 소지 유닛 없음 —';
+    sel.appendChild(opt0);
+    toast('🔎 「'+itemName+'」 소지 유닛 없음','err');
+  } else {
+    sel.value = firstNo;
+    unitIdx = firstNo;
+    document.getElementById('unit-no').value = firstNo;
+    unitRender();
+    toast('🔎 「'+itemName+'」 소지 '+matched+'명','ok');
+  }
+}
+
+function unitItemFilter(){
+  var f = document.getElementById('unit-item-filter');
+  if(!f) return;
+  unitApplyItemFilter(f.value);
+}
+
+// 퀵버튼: 지정 아이템으로 필터 (엑스칼리버=15, 극도의활=27)
+function unitItemQuick(dispIdx){
+  var f = document.getElementById('unit-item-filter');
+  if(f) f.value = String(dispIdx);
+  unitApplyItemFilter(String(dispIdx));
+}
+
+function unitItemFilterClear(){
+  var f = document.getElementById('unit-item-filter');
+  if(f) f.value = '';
+  unitApplyItemFilter('');
 }
 
 // FQ4WED1 번호N의 base 주소
