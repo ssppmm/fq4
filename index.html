@@ -187,7 +187,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;font-weight:bold;vertical-align:middle;">v127</span></div>
+  <div class="logo">👑 FQ4 <span style="color:var(--yellow);font-size:7px;font-weight:bold;vertical-align:middle;">v128</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -1220,7 +1220,7 @@ function _loadSaveData(data, name){
   saveName = name;
   var sig = String.fromCharCode(saveData[0],saveData[1],saveData[2],saveData[3]);
   if(sig !== SAV_SIG){ toast('⚠ FQ4 세이브 파일이 아닙니다 (sig:'+sig+')','err'); return; }
-  unitCount = Math.min(savRead(SAV_UNIT_CNT, 16), UNIT_FQ_NAMES.length);  // 이름표 길이(354)에 자동 연동
+  unitCount = unitDetectRosterMax();  // 로스터 끝을 데이터에서 동적 탐지 (0x0773 값은 세이브마다 불안정하여 미사용)
   document.getElementById('unit-total').textContent = '/ '+unitCount;
   document.getElementById('save-file-info').textContent =
     name+' 로드 완료 ('+saveData.length+'bytes, 유닛 '+unitCount+'개)';
@@ -1388,6 +1388,35 @@ function unitItemFilterClear(){
 
 // FQ4WED1 번호N의 base 주소
 function fqBase(fqNo){ return FQ_UNIT_BASE + (fqNo-1) * FQ_UNIT_SIZE; }
+
+// 유닛 슬롯이 실제 유닛인지 판정 (드롭다운 필터와 동일 기준)
+function unitSlotValid(fqNo){
+  if(!saveData) return false;
+  var base = fqBase(fqNo);
+  if(base + FQ_UNIT_SIZE > saveData.length) return false;
+  var lv = saveData[base+0x12];
+  if(lv === 255) return false;
+  var hp = saveData[base+0x14]|(saveData[base+0x15]<<8);
+  var hr = saveData[base+0x13];
+  var at = saveData[base+0x16];
+  if(hp > 999 || hr > 16 || at > 99 || lv > 99) return false;
+  if(lv === 0 && hp === 0 && at === 0) return false;
+  return true;
+}
+
+// 로스터 끝(유효 유닛 최대 번호)을 동적으로 탐지한다.
+// 유닛 배열은 1번부터 연속 배치되므로, 실제 유닛을 지나 일정 길이(24칸) 연속 빈칸이 나오면 로스터 끝으로 본다.
+// → 배열 뒤쪽의 다른 데이터 영역을 유닛으로 오검출하는 것을 방지한다. (세이브1=309, 세이브2=365 확인)
+function unitDetectRosterMax(){
+  if(!saveData) return 0;
+  var maxSlot = Math.floor((saveData.length - FQ_UNIT_BASE) / FQ_UNIT_SIZE);
+  var last = 0, gap = 0;
+  for(var n=1; n<=maxSlot; n++){
+    if(unitSlotValid(n)){ last = n; gap = 0; }
+    else { gap++; if(gap >= 24 && last > 0) break; }
+  }
+  return last;
+}
 
 // 드롭다운 빌드 (FQ4WED1 번호순)
 function unitBuildSelect(){
